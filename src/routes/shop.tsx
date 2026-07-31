@@ -1,0 +1,91 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
+import { ProductCard } from "@/components/ProductCard";
+import { products } from "@/data/products";
+import { useReveal } from "@/hooks/use-reveal";
+
+export const Route = createFileRoute("/shop")({
+  head: () => ({
+    meta: [
+      { title: "Shop Pure Camphor Online — Swastik Camphor" },
+      {
+        name: "description",
+        content:
+          "Shop 100% pure camphor tablets, Bhimseni camphor, cones and pooja gift packs online. Free shipping above ₹499 across India.",
+      },
+      { property: "og:title", content: "Shop — Swastik Camphor" },
+      { property: "og:description", content: "Buy pure camphor online with free shipping above ₹499." },
+    ],
+  }),
+  component: Shop,
+});
+
+const filters = ["All", "Daily Pooja", "Temple Use", "Aromatherapy", "Gift Packs", "Household Use"];
+
+function Shop() {
+  useReveal();
+  const [active, setActive] = useState("All");
+  const [sort, setSort] = useState<"popular" | "low" | "high">("popular");
+
+  const visible = useMemo(() => {
+    const list = products.filter((p) => active === "All" || p.bestFor.includes(active));
+    if (sort === "low") return [...list].sort((a, b) => a.price - b.price);
+    if (sort === "high") return [...list].sort((a, b) => b.price - a.price);
+    return list;
+  }, [active, sort]);
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Shop"
+        title="Bring home the purest camphor"
+        subtitle="Free shipping on orders above ₹499. Use code SWASTIK10 for 10% off your first order."
+      />
+
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <ul className="flex flex-wrap gap-2">
+            {filters.map((f) => (
+              <li key={f}>
+                <button
+                  type="button"
+                  onClick={() => setActive(f)}
+                  aria-pressed={active === f}
+                  className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+                    active === f
+                      ? "border-transparent bg-primary text-primary-foreground"
+                      : "border-gold/40 hover:bg-accent/15"
+                  }`}
+                >
+                  {f}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            Sort
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+              className="rounded-full border border-gold/40 bg-card px-3 py-1.5 text-sm text-foreground"
+            >
+              <option value="popular">Most popular</option>
+              <option value="low">Price: low to high</option>
+              <option value="high">Price: high to low</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {visible.map((p, i) => (
+            <ProductCard key={p.slug} product={p} index={i} />
+          ))}
+        </div>
+        {visible.length === 0 && (
+          <p className="py-16 text-center text-muted-foreground">No products in this category yet.</p>
+        )}
+      </div>
+    </>
+  );
+}
