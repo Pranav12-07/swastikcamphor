@@ -1,0 +1,194 @@
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { PageHeader } from "@/components/PageHeader";
+import { formatINR, products } from "@/data/products";
+import { placeOrder } from "@/lib/api.functions";
+import { useCart } from "@/lib/cart";
+
+export const Route = createFileRoute("/checkout")({
+  head: () => ({
+    meta: [
+      { title: "Checkout — Swastik Camphor" },
+      { name: "description", content: "Complete your Swastik Camphor order with secure delivery details." },
+      { property: "og:title", content: "Checkout — Swastik Camphor" },
+      { property: "og:description", content: "Complete your pure camphor order." },
+    ],
+  }),
+  component: Checkout,
+});
+
+const schema = z.object({
+  customer_name: z.string().trim().min(2, "Please enter your full name").max(100),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  phone: z.string().trim().regex(/^[0-9+\-\s]{6,20}$/, "Enter a valid phone number"),
+  address: z.string().trim().min(5, "Enter your full address").max(300),
+  city: z.string().trim().min(2, "Enter your city").max(80),
+  state: z.string().trim().min(2, "Enter your state").max(80),
+  pincode: z.string().trim().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
+});
+
+const fields = [
+  { name: "customer_name", label: "Full name", type: "text", autoComplete: "name" },
+  { name: "email", label: "Email", type: "email", autoComplete: "email" },
+  { name: "phone", label: "Phone", type: "tel", autoComplete: "tel" },
+  { name: "address", label: "Delivery address", type: "text", autoComplete: "street-address" },
+  { name: "city", label: "City", type: "text", autoComplete: "address-level2" },
+  { name: "state", label: "State", type: "text", autoComplete: "address-level1" },
+  { name: "pincode", label: "Pincode", type: "text", autoComplete: "postal-code" },
+] as const;
+
+function Checkout() {
+  const cart = useCart();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+
+  if (orderNumber) {
+    return (
+      <>
+        <PageHeader eyebrow="Order confirmed" title="Dhanyavaad! Your order is placed" />
+        <div className="mx-auto max-w-2xl px-4 py-16 md:px-8">
+          <div className="card-premium p-8 text-center">
+            <p className="text-muted-foreground">Your order reference is</p>
+            <p className="mt-2 font-display text-3xl">{orderNumber}</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Our team will call or email you shortly to confirm delivery and payment details.
+            </p>
+            <Link
+              to="/shop"
+              className="mt-6 inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+            >
+              Continue shopping
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (cart.lines.length === 0) {
+    return (
+      <>
+        <PageHeader eyebrow="Checkout" title="Your cart is empty" />
+        <div className="mx-auto max-w-2xl px-4 py-16 text-center md:px-8">
+          <Link
+            to="/shop"
+            className="inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+          >
+            Browse products
+          </Link>
+        </div>
+      </>
+    );
+  }
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const raw = Object.fromEntries(form.entries());
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      const next: Record<string, string> = {};
+      parsed.error.issues.forEach((i) => {
+        next[String(i.path[0])] = i.message;
+      });
+      setErrors(next);
+      return;
+    }
+    setErrors({});
+    setBusy(true);
+    try {
+      const items = cart.lines.map((l) => {
+        const p = products.find((x) => x.slug === l.slug)!;
+        return { slug: l.slug, name: p.name, size: l.size, qty: l.qty, price: p.price };
+      });
+      const result = await placeOrder({
+        data: {
+          ...parsed.data,
+          items,
+          subtotal: cart.subtotal,
+          shipping: cart.shipping,
+          discount: cart.discount,
+          total: cart.total,
+          coupon_code: cart.coupon,
+        },
+      });
+      cart.clear();
+      setOrderNumber(result.orderNumber);
+    } catch {
+      toast.error("We could not place your order. Please try again or call us.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <PageHeader eyebrow="Checkout" title="Delivery details" subtitle="We confirm every order personally before dispatch." />
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:px-8 lg:grid-cols-[1.4fr_1fr]">
+        <form onSubmit={onSubmit} noValidate className="card-premium grid gap-4 p-6 sm:grid-cols-2">
+          {fields.map((f) => (
+            <div key={f.name} className={f.name === "address" ? "sm:col-span-2" : ""}>
+              <label htmlFor={f.name} className="text-sm font-medium">
+                {f.label}
+              </label>
+              <input
+                id={f.name}
+                name={f.name}
+                type={f.type}
+                autoComplete={f.autoComplete}
+                aria-invalid={Boolean(errors[f.name])}
+                className="mt-1.5 w-full rounded-xl border border-gold/40 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+              {errors[f.name] && <p className="mt-1 text-xs text-destructive">{errors[f.name]}</p>}
+            </div>
+          ))}
+          <button
+            type="submit"
+            disabled={busy}
+            className="sm:col-span-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
+          >
+            {busy ? "Placing order…" : `Place order • ${formatINR(cart.total)}`}
+          </button>
+        </form>
+
+        <aside className="card-premium h-fit p-6">
+          <h2 className="font-display text-xl">Your order</h2>
+          <div className="gold-rule mt-3 w-14" />
+          <ul className="mt-5 space-y-3 text-sm">
+            {cart.lines.map((l) => {
+              const p = products.find((x) => x.slug === l.slug);
+              if (!p) return null;
+              return (
+                <li key={`${l.slug}-${l.size}`} className="flex justify-between gap-3">
+                  <span className="min-w-0">
+                    {p.name} <span className="text-muted-foreground">({l.size}) × {l.qty}</span>
+                  </span>
+                  <span className="shrink-0">{formatINR(p.price * l.qty)}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <dl className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Shipping</dt>
+              <dd>{cart.shipping === 0 ? "Free" : formatINR(cart.shipping)}</dd>
+            </div>
+            {cart.discount > 0 && (
+              <div className="flex justify-between text-primary">
+                <dt>Discount</dt>
+                <dd>-{formatINR(cart.discount)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between font-display text-lg">
+              <dt>Total</dt>
+              <dd>{formatINR(cart.total)}</dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
+    </>
+  );
+}

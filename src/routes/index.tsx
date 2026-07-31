@@ -2,7 +2,6 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import about from "@/assets/about.jpg";
-import { PageHeader } from "@/components/PageHeader";
 import { ProductCard } from "@/components/ProductCard";
 import { products } from "@/data/products";
 import { marketplaces, site } from "@/config/site";
