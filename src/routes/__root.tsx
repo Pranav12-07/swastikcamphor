@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -15,6 +16,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CartProvider } from "@/lib/cart";
+import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -133,10 +135,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showIntro = INTRO_ENABLED && pathname === "/";
 
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
+        {showIntro && <CamphorIntro />}
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">

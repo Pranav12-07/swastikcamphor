@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { createThread, getThreadMessages } from "@/lib/api.functions";
 import { getSessionId } from "@/lib/session";
@@ -59,7 +59,7 @@ export function ChatWidget() {
         <div className="surface-glass animate-rise-in fixed bottom-24 right-4 z-50 flex h-[min(70vh,560px)] w-[min(92vw,25rem)] flex-col rounded-3xl p-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-gold/25 pb-3">
             <div className="flex min-w-0 items-center gap-2">
-              <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" width={36} height={36} />
+              <img src={logoAsset.url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" width={36} height={36} />
               <span className="min-w-0">
                 <span className="block truncate font-display text-base">Swastik Assistant</span>
                 <span className="block text-[0.7rem] text-muted-foreground">Online • replies instantly</span>

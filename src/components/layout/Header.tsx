@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
 import { mainNav, site } from "@/config/site";
 import { useCart } from "@/lib/cart";
 import { cn } from "@/lib/utils";
@@ -28,10 +28,10 @@ export function Header() {
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:flex sm:justify-between md:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
           <img
-            src={logo}
+            src={logoAsset.url}
             alt="Swastik Camphor logo"
-            className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-gold/50"
-            width={44}
+            className="h-11 w-auto shrink-0 object-contain"
+            width={110}
             height={44}
           />
           <span className="min-w-0">
