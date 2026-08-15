@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Mail, MapPin, Phone } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
 import { SocialLinks } from "@/components/SocialLinks";
 import { mainNav, marketplaces, site, supportNav } from "@/config/site";
 
@@ -11,7 +11,7 @@ export function Footer() {
         <div>
           <div className="flex min-w-0 items-center gap-3">
             <img
-              src={logo}
+              src={logoAsset.url}
               alt="Swastik Camphor logo"
               className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-gold/50"
               width={48}

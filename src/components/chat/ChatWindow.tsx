@@ -14,7 +14,7 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
 import { getSessionId } from "@/lib/session";
 
 const SUGGESTIONS = [
@@ -76,7 +76,7 @@ export function ChatWindow({
           {messages.length === 0 && (
             <div className="animate-rise-in px-2 py-6 text-center">
               <img
-                src={logo}
+                src={logoAsset.url}
                 alt=""
                 className="mx-auto h-14 w-14 rounded-full object-cover ring-1 ring-gold/50"
                 width={56}
