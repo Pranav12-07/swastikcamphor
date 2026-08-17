@@ -60,9 +60,21 @@ export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => orderSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+
+    // Derive ownership from the verified bearer token only — never from input.
+    let userId: string | null = null;
+    const authHeader = getRequestHeader("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (token && token.split(".").length === 3) {
+      const { data: userData } = await supabaseAdmin.auth.getUser(token);
+      userId = userData?.user?.id ?? null;
+    }
+
     const orderNumber = `SC${Date.now().toString(36).toUpperCase()}`;
     const { error } = await supabaseAdmin.from("orders").insert({
       order_number: orderNumber,
+      user_id: userId,
       customer_name: data.customer_name,
       email: data.email,
       phone: data.phone,

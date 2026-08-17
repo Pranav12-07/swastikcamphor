@@ -16,6 +16,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CartProvider } from "@/lib/cart";
+import { AuthProvider } from "@/lib/auth";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -140,6 +141,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <CartProvider>
         {showIntro && <CamphorIntro />}
         <div className="flex min-h-screen flex-col">
@@ -153,6 +155,7 @@ function RootComponent() {
         <ChatWidget />
         <Toaster position="top-center" richColors />
       </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

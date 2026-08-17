@@ -52,7 +52,7 @@ function AccountPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Account" title="My account" description="Your profile and order history." />
+      <PageHeader eyebrow="Account" title="My account" subtitle="Your profile and order history." />
       <section className="mx-auto grid w-full max-w-5xl gap-8 px-4 pb-20 md:grid-cols-[320px_1fr] md:px-8">
         <div className="surface-glass h-fit space-y-4 rounded-2xl p-6">
           <h2 className="font-display text-lg">Profile</h2>

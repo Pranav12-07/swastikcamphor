@@ -28,11 +28,14 @@ export function CamphorIntro() {
   const [leaving, setLeaving] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
   const mode = useMemo(() => {
-    if (typeof window === "undefined") return "skip" as const;
+    if (!hydrated || typeof window === "undefined") return "skip" as const;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "short" as const;
     return window.localStorage.getItem(STORAGE_KEY) ? ("short" as const) : ("full" as const);
-  }, []);
+  }, [hydrated]);
 
   useEffect(() => {
     if (mode === "skip") return;

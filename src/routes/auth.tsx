@@ -66,7 +66,7 @@ function AuthPage() {
       <PageHeader
         eyebrow="Account"
         title={mode === "signin" ? "Sign in" : "Create your account"}
-        description="Track orders, save your details and check out faster."
+        subtitle="Track orders, save your details and check out faster."
       />
       <section className="mx-auto w-full max-w-md px-4 pb-20 md:px-8">
         <form onSubmit={onSubmit} className="surface-glass space-y-4 rounded-2xl p-6">
