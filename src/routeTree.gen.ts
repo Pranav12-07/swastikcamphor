@@ -24,6 +24,7 @@ import { Route as ReturnRefundPolicyRouteImport } from './routes/return-refund-p
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
@@ -102,6 +103,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/chat/': typeof ChatIndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/chat': typeof ChatIndexRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/chat/': typeof ChatIndexRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin'
     | '/api/chat'
     | '/chat/$threadId'
     | '/chat/'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin'
     | '/api/chat'
     | '/chat/$threadId'
     | '/chat'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/_authenticated/account'
+    | '/_authenticated/admin'
     | '/api/chat'
     | '/chat/$threadId'
     | '/chat/'
@@ -365,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -391,10 +410,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
