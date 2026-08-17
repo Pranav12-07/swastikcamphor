@@ -1,15 +1,28 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/swastik-logo.png.asset.json";
 import { mainNav, site } from "@/config/site";
 import { useCart } from "@/lib/cart";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { count } = useCart();
+  const { session, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -58,6 +71,40 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="hidden rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15 sm:inline-flex"
+            >
+              Admin
+            </Link>
+          )}
+          {session ? (
+            <>
+              <Link
+                to="/account"
+                aria-label="My account"
+                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+              >
+                <User className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                aria-label="Sign out"
+                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/auth"
+              className="rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
             to="/cart"
             aria-label={`Cart with ${count} items`}
