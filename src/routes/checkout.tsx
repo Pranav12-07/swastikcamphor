@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { formatINR, products } from "@/data/products";
 import { placeOrder } from "@/lib/api.functions";
 import { useCart } from "@/lib/cart";
+import { UpiPayment } from "@/components/checkout/UpiPayment";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -44,21 +45,33 @@ function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [method, setMethod] = useState<"upi" | "cod">("upi");
+  const [placed, setPlaced] = useState<{ email: string; total: number } | null>(null);
 
-  if (orderNumber) {
+  if (orderNumber && placed) {
     return (
       <>
-        <PageHeader eyebrow="Order confirmed" title="Dhanyavaad! Your order is placed" />
-        <div className="mx-auto max-w-2xl px-4 py-16 md:px-8">
+        <PageHeader
+          eyebrow="Order placed"
+          title={method === "upi" ? "Complete your UPI payment" : "Dhanyavaad! Your order is placed"}
+        />
+        <div className="mx-auto max-w-2xl space-y-6 px-4 py-16 md:px-8">
           <div className="card-premium p-8 text-center">
             <p className="text-muted-foreground">Your order reference is</p>
             <p className="mt-2 font-display text-3xl">{orderNumber}</p>
             <p className="mt-4 text-sm text-muted-foreground">
-              Our team will call or email you shortly to confirm delivery and payment details.
+              {method === "upi"
+                ? "Pay securely below with Google Pay, PhonePe or any UPI app to confirm dispatch."
+                : "Our team will call or email you shortly to confirm delivery. Please keep cash ready on delivery."}
             </p>
+          </div>
+          {method === "upi" && (
+            <UpiPayment orderNumber={orderNumber} email={placed.email} amount={placed.total} />
+          )}
+          <div className="text-center">
             <Link
               to="/shop"
-              className="mt-6 inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+              className="inline-flex rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium"
             >
               Continue shopping
             </Link>
@@ -113,8 +126,10 @@ function Checkout() {
           discount: cart.discount,
           total: cart.total,
           coupon_code: cart.coupon,
+          payment_method: method,
         },
       });
+      setPlaced({ email: parsed.data.email, total: cart.total });
       cart.clear();
       setOrderNumber(result.orderNumber);
     } catch {
@@ -145,12 +160,45 @@ function Checkout() {
               {errors[f.name] && <p className="mt-1 text-xs text-destructive">{errors[f.name]}</p>}
             </div>
           ))}
+          <fieldset className="sm:col-span-2">
+            <legend className="text-sm font-medium">Payment method</legend>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              {([
+                { id: "upi", label: "UPI — Google Pay / PhonePe", hint: "Instant, secure QR or app payment" },
+                { id: "cod", label: "Cash on delivery", hint: "Pay the courier when it arrives" },
+              ] as const).map((option) => (
+                <label
+                  key={option.id}
+                  className={`flex cursor-pointer flex-col rounded-xl border px-4 py-3 text-sm transition-colors ${
+                    method === option.id ? "border-primary bg-primary/5" : "border-gold/40"
+                  }`}
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value={option.id}
+                      checked={method === option.id}
+                      onChange={() => setMethod(option.id)}
+                      className="accent-primary"
+                    />
+                    {option.label}
+                  </span>
+                  <span className="mt-1 pl-6 text-xs text-muted-foreground">{option.hint}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <button
             type="submit"
             disabled={busy}
             className="sm:col-span-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
           >
-            {busy ? "Placing order…" : `Place order • ${formatINR(cart.total)}`}
+            {busy
+              ? "Placing order…"
+              : method === "upi"
+                ? `Continue to UPI payment • ${formatINR(cart.total)}`
+                : `Place order • ${formatINR(cart.total)}`}
           </button>
         </form>
 
