@@ -66,6 +66,39 @@ export const adminListContacts = createServerFn({ method: "POST" })
     return data ?? [];
   });
 
+export const adminUpdatePaymentStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        payment_status: z.enum(["pending", "awaiting_verification", "paid", "failed", "refunded", "cod_pending"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { error } = await context.supabase
+      .from("orders")
+      .update({ payment_status: data.payment_status, updated_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+const legacyListContacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { data, error } = await context.supabase
+      .from("contact_submissions")
+      .select("id, name, email, phone, subject, message, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
 const productSchema = z.object({
   slug: z.string().trim().min(2).max(80),
   name: z.string().trim().min(2).max(120),
