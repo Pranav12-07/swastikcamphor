@@ -12,6 +12,7 @@ import {
   adminListProducts,
   adminSaveProduct,
   adminUpdateOrderStatus,
+  adminUpdatePaymentStatus,
   adminUpdateStock,
   amIAdmin,
 } from "@/lib/admin.functions";
@@ -30,6 +31,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const STATUSES = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"] as const;
+const PAYMENT_STATUSES = [
+  "pending",
+  "awaiting_verification",
+  "paid",
+  "failed",
+  "refunded",
+  "cod_pending",
+] as const;
 
 function AdminPage() {
   const check = useServerFn(amIAdmin);
