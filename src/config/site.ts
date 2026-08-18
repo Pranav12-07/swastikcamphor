@@ -25,7 +25,7 @@ export const site = {
  * Replace `vpa` with your own UPI ID to receive money in your account.
  */
 export const upi = {
-  vpa: "7416886881@ybl",
+  vpa: "saipranav1207@oksbi",
   payeeName: "Swastik Camphor",
 } as const;
 
