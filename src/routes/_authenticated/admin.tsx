@@ -12,6 +12,7 @@ import {
   adminListProducts,
   adminSaveProduct,
   adminUpdateOrderStatus,
+  adminUpdatePaymentStatus,
   adminUpdateStock,
   amIAdmin,
 } from "@/lib/admin.functions";
@@ -30,6 +31,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const STATUSES = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"] as const;
+const PAYMENT_STATUSES = [
+  "pending",
+  "awaiting_verification",
+  "paid",
+  "failed",
+  "refunded",
+  "cod_pending",
+] as const;
 
 function AdminPage() {
   const check = useServerFn(amIAdmin);
@@ -80,6 +89,7 @@ function OrdersTab() {
   const qc = useQueryClient();
   const list = useServerFn(adminListOrders);
   const update = useServerFn(adminUpdateOrderStatus);
+  const updatePayment = useServerFn(adminUpdatePaymentStatus);
   const orders = useQuery({ queryKey: ["admin-orders"], queryFn: () => list({ data: undefined }) });
   const mutate = useMutation({
     mutationFn: (vars: { id: string; status: (typeof STATUSES)[number] }) => update({ data: vars }),
@@ -88,6 +98,15 @@ function OrdersTab() {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
     },
     onError: () => toast.error("Could not update the order"),
+  });
+  const payMutate = useMutation({
+    mutationFn: (vars: { id: string; payment_status: (typeof PAYMENT_STATUSES)[number] }) =>
+      updatePayment({ data: vars }),
+    onSuccess: () => {
+      toast.success("Payment status updated");
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: () => toast.error("Could not update the payment status"),
   });
 
   if (orders.isLoading) return <p className="text-sm text-muted-foreground">Loading orders…</p>;
@@ -106,7 +125,24 @@ function OrdersTab() {
             {o.address}, {o.city}, {o.state} — {o.pincode}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Payment: {o.payment_status}</span>
+            <span className="text-xs text-muted-foreground">
+              {(o.payment_provider ?? "—").toUpperCase()}
+              {o.payment_id ? ` • UTR ${o.payment_id}` : ""}
+            </span>
+            <select
+              value={o.payment_status}
+              onChange={(e) =>
+                payMutate.mutate({
+                  id: o.id,
+                  payment_status: e.target.value as (typeof PAYMENT_STATUSES)[number],
+                })
+              }
+              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+            >
+              {PAYMENT_STATUSES.map((s) => (
+                <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+              ))}
+            </select>
             <select
               value={o.status}
               onChange={(e) => mutate.mutate({ id: o.id, status: e.target.value as (typeof STATUSES)[number] })}

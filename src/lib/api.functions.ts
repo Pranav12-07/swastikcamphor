@@ -41,6 +41,14 @@ const orderSchema = z.object({
   coupon_code: z.string().trim().max(30).nullable().optional(),
 });
 
+const paymentMethodSchema = z.enum(["upi", "cod"]);
+
+const upiReferenceSchema = z.object({
+  order_number: z.string().trim().min(4).max(40),
+  email: z.string().trim().email().max(255),
+  reference: z.string().trim().min(6).max(40),
+});
+
 export const submitContact = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => contactSchema.parse(input))
   .handler(async ({ data }) => {
@@ -57,7 +65,9 @@ export const submitContact = createServerFn({ method: "POST" })
   });
 
 export const placeOrder = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => orderSchema.parse(input))
+  .inputValidator((input: unknown) =>
+    orderSchema.extend({ payment_method: paymentMethodSchema.default("upi") }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequestHeader } = await import("@tanstack/react-start/server");
@@ -88,9 +98,38 @@ export const placeOrder = createServerFn({ method: "POST" })
       discount: data.discount,
       total: data.total,
       coupon_code: data.coupon_code ?? null,
+      payment_provider: data.payment_method === "cod" ? "cod" : "upi",
+      payment_status: data.payment_method === "cod" ? "cod_pending" : "pending",
     });
     if (error) throw new Error("We could not place your order. Please try again.");
     return { orderNumber };
+  });
+
+/** Customer submits the UPI transaction reference (UTR) after paying via GPay/PhonePe. */
+export const submitUpiReference = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => upiReferenceSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order, error: findError } = await supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("order_number", data.order_number)
+      .eq("email", data.email)
+      .maybeSingle();
+    if (findError) throw new Error("We could not verify that order. Please try again.");
+    if (!order) throw new Error("We could not find that order.");
+
+    const { error } = await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_provider: "upi",
+        payment_id: data.reference,
+        payment_status: "awaiting_verification",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id);
+    if (error) throw new Error("We could not save your payment reference. Please try again.");
+    return { ok: true as const };
   });
 
 export const listThreads = createServerFn({ method: "POST" })

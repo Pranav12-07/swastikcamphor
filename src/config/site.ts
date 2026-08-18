@@ -20,6 +20,15 @@ export const site = {
     "https://www.google.com/maps?q=Plot+185,+Shaikpet,+Hyderabad-500008&ll=17.436849,78.366946&z=15&output=embed&hl=en-IN",
 } as const;
 
+/**
+ * UPI collection details used for Google Pay / PhonePe / any UPI app payments.
+ * Replace `vpa` with your own UPI ID to receive money in your account.
+ */
+export const upi = {
+  vpa: "7416886881@ybl",
+  payeeName: "Swastik Camphor",
+} as const;
+
 /** Single source of truth for every social link on the site. */
 export type SocialPlatform = {
   id: string;
