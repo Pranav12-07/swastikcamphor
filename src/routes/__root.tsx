@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
@@ -153,6 +154,7 @@ function RootComponent() {
           <Footer />
         </div>
         <ChatWidget />
+        <WhatsAppButton />
         <Toaster position="top-center" richColors />
       </CartProvider>
       </AuthProvider>
