@@ -7,10 +7,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { formatINR } from "@/data/products";
 import {
   adminDeleteProduct,
+  adminDeleteReview,
   adminListContacts,
   adminListOrders,
   adminListProducts,
+  adminListReviews,
   adminSaveProduct,
+  adminSetReviewApproval,
   adminUpdateOrderStatus,
   adminUpdatePaymentStatus,
   adminUpdateStock,
@@ -43,7 +46,7 @@ const PAYMENT_STATUSES = [
 function AdminPage() {
   const check = useServerFn(amIAdmin);
   const gate = useQuery({ queryKey: ["am-i-admin"], queryFn: () => check({ data: undefined }) });
-  const [tab, setTab] = useState<"orders" | "products" | "messages">("orders");
+  const [tab, setTab] = useState<"orders" | "products" | "reviews" | "messages">("orders");
 
   if (gate.isLoading) {
     return <p className="p-16 text-center text-sm text-muted-foreground">Checking access…</p>;
@@ -67,7 +70,7 @@ function AdminPage() {
       <PageHeader eyebrow="Admin" title="Dashboard" subtitle="Orders, catalogue, stock and customer messages." />
       <section className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8">
         <div className="mb-6 flex flex-wrap gap-2">
-          {(["orders", "products", "messages"] as const).map((t) => (
+          {(["orders", "products", "reviews", "messages"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -79,9 +82,81 @@ function AdminPage() {
             </button>
           ))}
         </div>
-        {tab === "orders" ? <OrdersTab /> : tab === "products" ? <ProductsTab /> : <MessagesTab />}
+        {tab === "orders" ? (
+          <OrdersTab />
+        ) : tab === "products" ? (
+          <ProductsTab />
+        ) : tab === "reviews" ? (
+          <ReviewsTab />
+        ) : (
+          <MessagesTab />
+        )}
       </section>
     </>
+  );
+}
+
+function ReviewsTab() {
+  const qc = useQueryClient();
+  const list = useServerFn(adminListReviews);
+  const approve = useServerFn(adminSetReviewApproval);
+  const remove = useServerFn(adminDeleteReview);
+  const reviews = useQuery({ queryKey: ["admin-reviews"], queryFn: () => list({ data: undefined }) });
+
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+  const setApproval = useMutation({
+    mutationFn: (v: { id: string; approved: boolean }) => approve({ data: v }),
+    onSuccess: () => {
+      toast.success("Review updated");
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const del = useMutation({
+    mutationFn: (id: string) => remove({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Review deleted");
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (reviews.isLoading) return <p className="text-sm text-muted-foreground">Loading reviews…</p>;
+  const rows = reviews.data ?? [];
+  if (!rows.length) return <p className="text-sm text-muted-foreground">No reviews yet.</p>;
+
+  return (
+    <ul className="space-y-3">
+      {rows.map((r) => (
+        <li key={r.id} className="rounded-2xl border border-gold/25 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">
+                {r.name} · {"★".repeat(r.rating)}
+                <span className="ml-2 text-xs text-muted-foreground">{r.product_slug}</span>
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setApproval.mutate({ id: r.id, approved: !r.approved })}
+                className="rounded-full bg-primary px-4 py-1.5 text-xs text-primary-foreground"
+              >
+                {r.approved ? "Unpublish" : "Approve"}
+              </button>
+              <button
+                type="button"
+                onClick={() => del.mutate(r.id)}
+                className="rounded-full border border-destructive/50 px-4 py-1.5 text-xs text-destructive"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
