@@ -74,7 +74,7 @@ export function Header() {
           {isAdmin && (
             <Link
               to="/admin"
-              className="hidden rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15 sm:inline-flex"
+              className="inline-flex rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
             >
               Admin
             </Link>
