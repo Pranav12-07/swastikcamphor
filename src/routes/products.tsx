@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
+import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { formatINR, products } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
@@ -84,6 +85,7 @@ function Products() {
                   Go to shop
                 </Link>
               </div>
+              <ProductReviews slug={product.slug} productName={product.name} />
             </div>
           </article>
         ))}

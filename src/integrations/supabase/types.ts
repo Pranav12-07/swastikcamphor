@@ -184,6 +184,39 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reviews: {
+        Row: {
+          approved: boolean
+          comment: string
+          created_at: string
+          id: string
+          name: string
+          product_slug: string
+          rating: number
+          user_id: string | null
+        }
+        Insert: {
+          approved?: boolean
+          comment: string
+          created_at?: string
+          id?: string
+          name: string
+          product_slug: string
+          rating: number
+          user_id?: string | null
+        }
+        Update: {
+          approved?: boolean
+          comment?: string
+          created_at?: string
+          id?: string
+          name?: string
+          product_slug?: string
+          rating?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
