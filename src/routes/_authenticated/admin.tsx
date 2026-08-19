@@ -8,6 +8,7 @@ import { formatINR } from "@/data/products";
 import {
   adminDeleteProduct,
   adminDeleteReview,
+  adminDashboardStats,
   adminListContacts,
   adminListOrders,
   adminListProducts,
@@ -46,7 +47,7 @@ const PAYMENT_STATUSES = [
 function AdminPage() {
   const check = useServerFn(amIAdmin);
   const gate = useQuery({ queryKey: ["am-i-admin"], queryFn: () => check({ data: undefined }) });
-  const [tab, setTab] = useState<"orders" | "products" | "reviews" | "messages">("orders");
+  const [tab, setTab] = useState<"overview" | "orders" | "products" | "reviews" | "messages">("overview");
 
   if (gate.isLoading) {
     return <p className="p-16 text-center text-sm text-muted-foreground">Checking access…</p>;
@@ -70,7 +71,7 @@ function AdminPage() {
       <PageHeader eyebrow="Admin" title="Dashboard" subtitle="Orders, catalogue, stock and customer messages." />
       <section className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8">
         <div className="mb-6 flex flex-wrap gap-2">
-          {(["orders", "products", "reviews", "messages"] as const).map((t) => (
+          {(["overview", "orders", "products", "reviews", "messages"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -82,7 +83,9 @@ function AdminPage() {
             </button>
           ))}
         </div>
-        {tab === "orders" ? (
+        {tab === "overview" ? (
+          <OverviewTab />
+        ) : tab === "orders" ? (
           <OrdersTab />
         ) : tab === "products" ? (
           <ProductsTab />
@@ -93,6 +96,56 @@ function AdminPage() {
         )}
       </section>
     </>
+  );
+}
+
+function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="card-premium p-5">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-primary">{value}</p>
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+function OverviewTab() {
+  const load = useServerFn(adminDashboardStats);
+  const stats = useQuery({ queryKey: ["admin-stats"], queryFn: () => load({ data: undefined }) });
+
+  if (stats.isLoading) return <p className="text-sm text-muted-foreground">Loading dashboard…</p>;
+  if (stats.error) return <p className="text-sm text-destructive">{(stats.error as Error).message}</p>;
+  const s = stats.data!;
+
+  return (
+    <div className="grid gap-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Revenue (paid)" value={formatINR(s.revenuePaid)} hint={`${formatINR(s.revenueAll)} incl. unpaid`} />
+        <StatCard label="Orders" value={String(s.totalOrders)} hint={`${s.ordersToday} in last 24h`} />
+        <StatCard label="Needs action" value={String(s.pendingOrders + s.awaitingPayment)} hint={`${s.pendingOrders} pending • ${s.awaitingPayment} payment checks`} />
+        <StatCard label="Live products" value={String(s.activeProducts)} hint={`${s.pendingReviews} reviews to moderate`} />
+      </div>
+      <div className="card-premium p-6">
+        <h2 className="text-lg font-semibold">Low stock alerts</h2>
+        {s.lowStock.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">All products are well stocked.</p>
+        ) : (
+          <ul className="mt-3 grid gap-2">
+            {s.lowStock.map((p) => (
+              <li key={p.id} className="flex items-center justify-between rounded-xl border border-gold/40 px-4 py-2.5 text-sm">
+                <span>{p.name}</span>
+                <span className={p.stock === 0 ? "font-semibold text-destructive" : "font-semibold text-primary"}>
+                  {p.stock === 0 ? "Out of stock" : `${p.stock} left`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {s.totalMessages} customer message{s.totalMessages === 1 ? "" : "s"} received.
+      </p>
+    </div>
   );
 }
 

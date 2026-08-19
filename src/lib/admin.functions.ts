@@ -33,6 +33,35 @@ export const adminListOrders = createServerFn({ method: "POST" })
     return data ?? [];
   });
 
+export const adminDashboardStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const [orders, products, reviews, messages] = await Promise.all([
+      context.supabase.from("orders").select("total, status, payment_status, created_at").limit(1000),
+      context.supabase.from("products").select("id, name, stock_quantity, is_active").limit(500),
+      context.supabase.from("product_reviews").select("id, approved").limit(1000),
+      context.supabase.from("contact_submissions").select("id, created_at").limit(1000),
+    ]);
+    const rows = orders.data ?? [];
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const paid = rows.filter((o) => o.payment_status === "paid");
+    return {
+      totalOrders: rows.length,
+      ordersToday: rows.filter((o) => new Date(o.created_at).getTime() > dayAgo).length,
+      pendingOrders: rows.filter((o) => o.status === "pending").length,
+      awaitingPayment: rows.filter((o) => o.payment_status === "awaiting_verification").length,
+      revenuePaid: paid.reduce((s, o) => s + Number(o.total ?? 0), 0),
+      revenueAll: rows.reduce((s, o) => s + Number(o.total ?? 0), 0),
+      activeProducts: (products.data ?? []).filter((p) => p.is_active).length,
+      lowStock: (products.data ?? [])
+        .filter((p) => (p.stock_quantity ?? 0) <= 10)
+        .map((p) => ({ id: p.id, name: p.name, stock: p.stock_quantity ?? 0 })),
+      pendingReviews: (reviews.data ?? []).filter((r) => !r.approved).length,
+      totalMessages: (messages.data ?? []).length,
+    };
+  });
+
 export const adminUpdateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
