@@ -89,11 +89,13 @@ export const adminUpdatePaymentStatus = createServerFn({ method: "POST" })
 const productSchema = z.object({
   slug: z.string().trim().min(2).max(80),
   name: z.string().trim().min(2).max(120),
+  short_description: z.string().trim().max(300).nullable().default(null),
   description: z.string().trim().max(2000).nullable().default(null),
   price: z.number().min(0).max(1000000),
   compare_at_price: z.number().min(0).max(1000000).nullable().default(null),
   image_url: z.string().trim().max(500).nullable().default(null),
   category: z.string().trim().max(80).nullable().default(null),
+  sizes: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
   stock_quantity: z.number().int().min(0).max(1000000),
   is_active: z.boolean(),
   is_featured: z.boolean(),
@@ -121,7 +123,7 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
     const { id, ...fields } = data;
     const query = id
       ? context.supabase.from("products").update(fields).eq("id", id)
-      : context.supabase.from("products").insert(fields);
+      : context.supabase.from("products").upsert(fields, { onConflict: "slug" });
     const { error } = await query;
     if (error) throw new Error(error.message);
     return { ok: true as const };

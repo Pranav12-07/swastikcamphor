@@ -162,11 +162,13 @@ function OrdersTab() {
 const emptyProduct = {
   slug: "",
   name: "",
+  short_description: "",
   description: "",
   price: 0,
   compare_at_price: null as number | null,
   image_url: "",
   category: "",
+  sizes: "",
   stock_quantity: 0,
   is_active: true,
   is_featured: false,
@@ -185,7 +187,19 @@ function ProductsTab() {
 
   async function onSave() {
     try {
-      await save({ data: { ...draft, description: draft.description || null, image_url: draft.image_url || null, category: draft.category || null } });
+      await save({
+        data: {
+          ...draft,
+          short_description: draft.short_description || null,
+          description: draft.description || null,
+          image_url: draft.image_url || null,
+          category: draft.category || null,
+          sizes: draft.sizes
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        },
+      });
       setDraft({ ...emptyProduct });
       toast.success("Product saved");
       refresh();
@@ -201,8 +215,10 @@ function ProductsTab() {
         {([
           ["slug", "Slug"],
           ["name", "Name"],
+          ["short_description", "Short description"],
           ["category", "Category"],
           ["image_url", "Image URL"],
+          ["sizes", "Sizes (comma separated)"],
         ] as const).map(([key, label]) => (
           <div key={key}>
             <label className="mb-1 block text-sm text-muted-foreground" htmlFor={key}>{label}</label>
@@ -222,6 +238,18 @@ function ProductsTab() {
               type="number"
               value={draft.price}
               onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-muted-foreground" htmlFor="mrp">MRP (₹)</label>
+            <input
+              id="mrp"
+              type="number"
+              value={draft.compare_at_price ?? ""}
+              onChange={(e) =>
+                setDraft({ ...draft, compare_at_price: e.target.value === "" ? null : Number(e.target.value) })
+              }
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
