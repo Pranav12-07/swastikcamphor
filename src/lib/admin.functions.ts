@@ -1,91 +1,550 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-async function assertAdmin(supabase: SupabaseClient<never>, userId: string) {
-  const { data, error } = await (supabase as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
-  }).rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (error || data !== true) throw new Error("Forbidden");
-}
+// ---------- schemas (erased at runtime boundaries are fine: plain consts are allowed) ----------
+const uuid = z.string().uuid();
 
-export const amIAdmin = createServerFn({ method: "POST" })
+export const adminMe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    return { isAdmin: data === true };
+    const { getRoles, areasFor, isSuper } = await import("@/lib/admin-guard.server");
+    const roles = await getRoles(context.supabase as never, context.userId);
+    const areas = areasFor(roles);
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("full_name, phone, avatar_url, email")
+      .eq("id", context.userId)
+      .maybeSingle();
+    return {
+      userId: context.userId,
+      roles,
+      areas,
+      isSuper: isSuper(roles),
+      isStaff: areas.length > 0,
+      profile: profile ?? null,
+    };
   });
 
-export const adminListOrders = createServerFn({ method: "POST" })
+// ---------------------------------- dashboard ----------------------------------
+export const adminDashboardStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { data, error } = await context.supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "dashboard");
+    const [orders, products, reviews, messages, customers] = await Promise.all([
+      context.supabase.from("orders").select("id, order_number, customer_name, total, status, payment_status, created_at").order("created_at", { ascending: false }).limit(1000),
+      context.supabase.from("products").select("id, name, slug, stock_quantity, low_stock_threshold, is_active, image_url").limit(500),
+      context.supabase.from("product_reviews").select("id, name, product_slug, rating, comment, approved, created_at").order("created_at", { ascending: false }).limit(200),
+      context.supabase.from("contact_submissions").select("id, created_at").limit(1000),
+      context.supabase.from("profiles").select("id, full_name, email, created_at").order("created_at", { ascending: false }).limit(500),
+    ]);
+    const rows = (orders.data ?? []) as Array<{ id: string; order_number: string; customer_name: string; total: number; status: string; payment_status: string; created_at: string }>;
+    const prods = (products.data ?? []) as Array<{ id: string; name: string; slug: string; stock_quantity: number; low_stock_threshold: number; is_active: boolean; image_url: string | null }>;
+    const now = Date.now();
+    const since = (days: number) => now - days * 86400000;
+    const paidRows = rows.filter((o) => o.payment_status === "paid");
+    const sum = (list: typeof rows) => list.reduce((s, o) => s + Number(o.total ?? 0), 0);
+    const inRange = (from: number) => rows.filter((o) => new Date(o.created_at).getTime() >= from);
+
+    const byDay = new Map<string, { revenue: number; orders: number }>();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now - i * 86400000).toISOString().slice(0, 10);
+      byDay.set(d, { revenue: 0, orders: 0 });
+    }
+    for (const o of rows) {
+      const d = o.created_at.slice(0, 10);
+      const cur = byDay.get(d);
+      if (cur) {
+        cur.revenue += Number(o.total ?? 0);
+        cur.orders += 1;
+      }
+    }
+
+    const statusCount = (s: string) => rows.filter((o) => o.status === s).length;
+    return {
+      totalProducts: prods.length,
+      activeProducts: prods.filter((p) => p.is_active).length,
+      totalOrders: rows.length,
+      pendingOrders: statusCount("pending"),
+      processingOrders: statusCount("processing") + statusCount("confirmed"),
+      deliveredOrders: statusCount("delivered"),
+      totalCustomers: (customers.data ?? []).length,
+      revenuePaid: sum(paidRows),
+      revenueAll: sum(rows),
+      revenueToday: sum(inRange(new Date().setHours(0, 0, 0, 0))),
+      revenueWeek: sum(inRange(since(7))),
+      revenueMonth: sum(inRange(since(30))),
+      revenueYear: sum(inRange(since(365))),
+      ordersToday: inRange(new Date().setHours(0, 0, 0, 0)).length,
+      awaitingPayment: rows.filter((o) => o.payment_status === "awaiting_verification").length,
+      lowStock: prods.filter((p) => (p.stock_quantity ?? 0) > 0 && (p.stock_quantity ?? 0) <= (p.low_stock_threshold ?? 10)).map((p) => ({ id: p.id, name: p.name, stock: p.stock_quantity })),
+      outOfStock: prods.filter((p) => (p.stock_quantity ?? 0) <= 0).map((p) => ({ id: p.id, name: p.name, stock: 0 })),
+      pendingReviews: ((reviews.data ?? []) as Array<{ approved: boolean }>).filter((r) => !r.approved).length,
+      totalMessages: (messages.data ?? []).length,
+      recentOrders: rows.slice(0, 8),
+      recentCustomers: (customers.data ?? []).slice(0, 5),
+      recentReviews: (reviews.data ?? []).slice(0, 5),
+      series: [...byDay.entries()].map(([date, v]) => ({ date, ...v })),
+    };
+  });
+
+// ---------------------------------- products ----------------------------------
+const productSchema = z.object({
+  slug: z.string().trim().min(2).max(80),
+  name: z.string().trim().min(2).max(120),
+  sku: z.string().trim().max(60).nullable().default(null),
+  category: z.string().trim().max(80).nullable().default(null),
+  subcategory: z.string().trim().max(80).nullable().default(null),
+  short_description: z.string().trim().max(300).nullable().default(null),
+  description: z.string().trim().max(4000).nullable().default(null),
+  price: z.number().min(0).max(1000000),
+  compare_at_price: z.number().min(0).max(1000000).nullable().default(null),
+  cost_price: z.number().min(0).max(1000000).nullable().default(null),
+  tax_rate: z.number().min(0).max(100).default(0),
+  weight_grams: z.number().min(0).max(1000000).nullable().default(null),
+  stock_quantity: z.number().int().min(0).max(1000000),
+  low_stock_threshold: z.number().int().min(0).max(10000).default(10),
+  status: z.enum(["active", "draft", "disabled"]).default("active"),
+  image_url: z.string().trim().max(500).nullable().default(null),
+  images: z.array(z.string().trim().max(500)).max(10).default([]),
+  sizes: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  features: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
+  is_active: z.boolean().default(true),
+  is_featured: z.boolean().default(false),
+  is_bestseller: z.boolean().default(false),
+  is_new_arrival: z.boolean().default(false),
+  seo_title: z.string().trim().max(150).nullable().default(null),
+  seo_description: z.string().trim().max(300).nullable().default(null),
+  seo_keywords: z.string().trim().max(300).nullable().default(null),
+});
+
+export const adminListProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { data, error } = await context.supabase.from("products").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
 
-export const adminDashboardStats = createServerFn({ method: "POST" })
+export const adminGetProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const [orders, products, reviews, messages] = await Promise.all([
-      context.supabase.from("orders").select("total, status, payment_status, created_at").limit(1000),
-      context.supabase.from("products").select("id, name, stock_quantity, is_active").limit(500),
-      context.supabase.from("product_reviews").select("id, approved").limit(1000),
-      context.supabase.from("contact_submissions").select("id, created_at").limit(1000),
-    ]);
-    const rows = orders.data ?? [];
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const paid = rows.filter((o) => o.payment_status === "paid");
-    return {
-      totalOrders: rows.length,
-      ordersToday: rows.filter((o) => new Date(o.created_at).getTime() > dayAgo).length,
-      pendingOrders: rows.filter((o) => o.status === "pending").length,
-      awaitingPayment: rows.filter((o) => o.payment_status === "awaiting_verification").length,
-      revenuePaid: paid.reduce((s, o) => s + Number(o.total ?? 0), 0),
-      revenueAll: rows.reduce((s, o) => s + Number(o.total ?? 0), 0),
-      activeProducts: (products.data ?? []).filter((p) => p.is_active).length,
-      lowStock: (products.data ?? [])
-        .filter((p) => (p.stock_quantity ?? 0) <= 10)
-        .map((p) => ({ id: p.id, name: p.name, stock: p.stock_quantity ?? 0 })),
-      pendingReviews: (reviews.data ?? []).filter((r) => !r.approved).length,
-      totalMessages: (messages.data ?? []).length,
-    };
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { data: row, error } = await context.supabase.from("products").select("*").eq("id", data.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Product not found");
+    return row;
   });
 
-export const adminUpdateOrderStatus = createServerFn({ method: "POST" })
+export const adminSaveProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => productSchema.extend({ id: uuid.optional() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { id, ...fields } = data;
+    const payload = { ...fields, is_active: fields.status === "active" ? fields.is_active : false };
+    const query = id
+      ? context.supabase.from("products").update(payload).eq("id", id).select("id").maybeSingle()
+      : context.supabase.from("products").upsert(payload, { onConflict: "slug" }).select("id").maybeSingle();
+    const { data: saved, error } = await query;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "product.updated" : "product.created", entity: "product", entityId: (saved?.id as string) ?? id, details: { name: data.name, price: data.price } });
+    return { ok: true as const, id: (saved?.id as string) ?? id };
+  });
+
+export const adminDuplicateProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { data: row, error } = await context.supabase.from("products").select("*").eq("id", data.id).maybeSingle();
+    if (error || !row) throw new Error("Product not found");
+    const copy = { ...(row as Record<string, unknown>) };
+    delete copy["id"];
+    delete copy["created_at"];
+    delete copy["updated_at"];
+    copy["slug"] = `${String(copy["slug"])}-copy-${Math.random().toString(36).slice(2, 6)}`;
+    copy["name"] = `${String(copy["name"])} (Copy)`;
+    copy["status"] = "draft";
+    copy["is_active"] = false;
+    const { error: insErr } = await context.supabase.from("products").insert(copy);
+    if (insErr) throw new Error(insErr.message);
+    await logAudit({ actorId: context.userId, action: "product.duplicated", entity: "product", entityId: data.id });
+    return { ok: true as const };
+  });
+
+export const adminDeleteProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, isSuper, getRoles, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const roles = await getRoles(context.supabase as never, context.userId);
+    if (!isSuper(roles)) throw new Error("Only a super admin can delete products");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("products").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "product.deleted", entity: "product", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- inventory ----------------------------------
+export const adminAdjustStock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: uuid, mode: z.enum(["add", "remove", "set"]), amount: z.number().int().min(0).max(1000000), reason: z.string().trim().max(120).default("manual adjustment") }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { data: row, error } = await context.supabase.from("products").select("id, stock_quantity").eq("id", data.id).maybeSingle();
+    if (error || !row) throw new Error("Product not found");
+    const current = Number((row as { stock_quantity: number }).stock_quantity ?? 0);
+    const next = data.mode === "set" ? data.amount : data.mode === "add" ? current + data.amount : Math.max(0, current - data.amount);
+    const { error: upErr } = await context.supabase.from("products").update({ stock_quantity: next }).eq("id", data.id);
+    if (upErr) throw new Error(upErr.message);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("inventory_transactions").insert({ product_id: data.id, change: next - current, resulting_stock: next, reason: data.reason, actor_id: context.userId });
+    await logAudit({ actorId: context.userId, action: "stock.adjusted", entity: "product", entityId: data.id, details: { from: current, to: next, reason: data.reason } });
+    return { ok: true as const, stock: next };
+  });
+
+export const adminStockHistory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ productId: uuid.optional() }).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    let q = context.supabase.from("inventory_transactions").select("*").order("created_at", { ascending: false }).limit(200);
+    if (data.productId) q = q.eq("product_id", data.productId);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+// ---------------------------------- categories ----------------------------------
+const categorySchema = z.object({
+  id: uuid.optional(),
+  slug: z.string().trim().min(2).max(80),
+  name: z.string().trim().min(2).max(80),
+  description: z.string().trim().max(500).nullable().default(null),
+  image_url: z.string().trim().max(500).nullable().default(null),
+  sort_order: z.number().int().min(0).max(999).default(0),
+  is_active: z.boolean().default(true),
+});
+
+export const adminListCategories = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("categories").select("*").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSaveCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => categorySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { id, ...fields } = data;
+    const q = id ? context.supabase.from("categories").update(fields).eq("id", id) : context.supabase.from("categories").insert(fields);
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "category.updated" : "category.created", entity: "category", entityId: id, details: { name: data.name } });
+    return { ok: true as const };
+  });
+
+export const adminDeleteCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const { error } = await context.supabase.from("categories").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "category.deleted", entity: "category", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- orders ----------------------------------
+const ORDER_STATUSES = ["pending", "confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "returned", "refunded"] as const;
+
+export const adminListOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "orders");
+    const { data, error } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(500);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminGetOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "orders");
+    const [order, events] = await Promise.all([
+      context.supabase.from("orders").select("*").eq("id", data.id).maybeSingle(),
+      context.supabase.from("order_events").select("*").eq("order_id", data.id).order("created_at", { ascending: true }),
+    ]);
+    if (!order.data) throw new Error("Order not found");
+    return { order: order.data, events: events.data ?? [] };
+  });
+
+export const adminUpdateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        id: z.string().uuid(),
-        status: z.enum(["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"]),
+        id: uuid,
+        status: z.enum(ORDER_STATUSES).optional(),
+        payment_status: z.enum(["pending", "awaiting_verification", "paid", "failed", "cancelled", "refunded", "cod_pending"]).optional(),
+        tracking_number: z.string().trim().max(80).nullable().optional(),
+        courier: z.string().trim().max(80).nullable().optional(),
+        admin_notes: z.string().trim().max(1000).nullable().optional(),
+        note: z.string().trim().max(300).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase
-      .from("orders")
-      .update({ status: data.status })
-      .eq("id", data.id);
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "orders");
+    const { id, note, ...fields } = data;
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    for (const [k, v] of Object.entries(fields)) if (v !== undefined) patch[k] = v;
+    const { error } = await context.supabase.from("orders").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
+    if (data.status || data.payment_status) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("order_events").insert({
+        order_id: id,
+        status: data.status ?? `payment: ${data.payment_status}`,
+        note: note ?? null,
+        actor_id: context.userId,
+      });
+    }
+    await logAudit({ actorId: context.userId, action: "order.updated", entity: "order", entityId: id, details: patch });
     return { ok: true as const };
   });
 
+// kept for backwards compatibility
+export const adminUpdateOrderStatus = adminUpdateOrder;
+export const adminUpdatePaymentStatus = adminUpdateOrder;
+
+// ---------------------------------- customers ----------------------------------
+export const adminListCustomers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const [profiles, orders] = await Promise.all([
+      context.supabase.from("profiles").select("id, full_name, email, phone, is_disabled, created_at").order("created_at", { ascending: false }).limit(500),
+      context.supabase.from("orders").select("user_id, email, total, created_at").limit(2000),
+    ]);
+    const rows = (orders.data ?? []) as Array<{ user_id: string | null; email: string; total: number; created_at: string }>;
+    return ((profiles.data ?? []) as Array<{ id: string; email: string | null }>).map((p) => {
+      const mine = rows.filter((o) => o.user_id === p.id || (p.email && o.email === p.email));
+      return {
+        ...p,
+        orderCount: mine.length,
+        totalSpent: mine.reduce((s, o) => s + Number(o.total ?? 0), 0),
+        lastOrder: mine.map((o) => o.created_at).sort().at(-1) ?? null,
+      };
+    });
+  });
+
+export const adminGetCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const { data: profile } = await context.supabase.from("profiles").select("*").eq("id", data.id).maybeSingle();
+    if (!profile) throw new Error("Customer not found");
+    const { data: orders } = await context.supabase.from("orders").select("*").eq("user_id", data.id).order("created_at", { ascending: false });
+    return { profile, orders: orders ?? [] };
+  });
+
+export const adminSetCustomerDisabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid, disabled: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, isSuper, getRoles, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const roles = await getRoles(context.supabase as never, context.userId);
+    if (!isSuper(roles)) throw new Error("Only a super admin can change account status");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("profiles").update({ is_disabled: data.disabled }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.auth.admin.updateUserById(data.id, { ban_duration: data.disabled ? "876000h" : "none" });
+    await logAudit({ actorId: context.userId, action: data.disabled ? "customer.disabled" : "customer.enabled", entity: "customer", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- coupons ----------------------------------
+const couponSchema = z.object({
+  id: uuid.optional(),
+  code: z.string().trim().min(3).max(30).transform((s) => s.toUpperCase()),
+  discount_type: z.enum(["percentage", "fixed"]),
+  discount_value: z.number().min(0).max(100000),
+  min_order_amount: z.number().min(0).max(1000000).default(0),
+  max_discount: z.number().min(0).max(1000000).nullable().default(null),
+  starts_at: z.string().nullable().default(null),
+  expires_at: z.string().nullable().default(null),
+  usage_limit: z.number().int().min(0).max(1000000).nullable().default(null),
+  per_customer_limit: z.number().int().min(0).max(1000).nullable().default(null),
+  is_active: z.boolean().default(true),
+});
+
+export const adminListCoupons = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("coupons").select("*").order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSaveCoupon = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => couponSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { id, ...fields } = data;
+    const q = id ? context.supabase.from("coupons").update(fields).eq("id", id) : context.supabase.from("coupons").insert(fields);
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "coupon.updated" : "coupon.created", entity: "coupon", entityId: id, details: { code: data.code } });
+    return { ok: true as const };
+  });
+
+export const adminDeleteCoupon = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { error } = await context.supabase.from("coupons").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "coupon.deleted", entity: "coupon", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- banners ----------------------------------
+const bannerSchema = z.object({
+  id: uuid.optional(),
+  title: z.string().trim().min(2).max(120),
+  subtitle: z.string().trim().max(200).nullable().default(null),
+  image_url: z.string().trim().max(500).nullable().default(null),
+  button_text: z.string().trim().max(40).nullable().default(null),
+  link_url: z.string().trim().max(300).nullable().default(null),
+  placement: z.enum(["hero", "promo"]).default("hero"),
+  sort_order: z.number().int().min(0).max(999).default(0),
+  starts_at: z.string().nullable().default(null),
+  ends_at: z.string().nullable().default(null),
+  is_active: z.boolean().default(true),
+});
+
+export const adminListBanners = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("banners").select("*").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSaveBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => bannerSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { id, ...fields } = data;
+    const q = id ? context.supabase.from("banners").update(fields).eq("id", id) : context.supabase.from("banners").insert(fields);
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "banner.updated" : "banner.created", entity: "banner", entityId: id });
+    return { ok: true as const };
+  });
+
+export const adminDeleteBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { error } = await context.supabase.from("banners").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "banner.deleted", entity: "banner", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- reviews ----------------------------------
+export const adminListReviews = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "reviews");
+    const { data, error } = await context.supabase
+      .from("product_reviews")
+      .select("id, product_slug, name, rating, comment, approved, created_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSetReviewApproval = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid, approved: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "reviews");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("product_reviews").update({ approved: data.approved }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: data.approved ? "review.approved" : "review.hidden", entity: "review", entityId: data.id });
+    return { ok: true as const };
+  });
+
+export const adminDeleteReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "reviews");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("product_reviews").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "review.deleted", entity: "review", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- messages ----------------------------------
 export const adminListContacts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
     const { data, error } = await context.supabase
       .from("contact_submissions")
       .select("id, name, email, phone, subject, message, created_at")
@@ -95,127 +554,136 @@ export const adminListContacts = createServerFn({ method: "POST" })
     return data ?? [];
   });
 
-export const adminUpdatePaymentStatus = createServerFn({ method: "POST" })
+// ---------------------------------- settings ----------------------------------
+export const adminGetSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "dashboard");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("store_settings").select("*");
+    if (error) throw new Error(error.message);
+    const out: Record<string, Record<string, unknown>> = {};
+    for (const row of (data ?? []) as Array<{ key: string; value: Record<string, unknown> }>) out[row.key] = row.value;
+    return out;
+  });
+
+export const adminSaveSetting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ key: z.string().trim().min(2).max(40), value: z.record(z.string(), z.unknown()) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "settings");
+    const { error } = await context.supabase.from("store_settings").upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "settings.updated", entity: "settings", entityId: data.key, details: data.value });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- profile ----------------------------------
+export const adminSaveProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z
-      .object({
-        id: z.string().uuid(),
-        payment_status: z.enum(["pending", "awaiting_verification", "paid", "failed", "refunded", "cod_pending"]),
-      })
-      .parse(input),
+    z.object({ full_name: z.string().trim().min(2).max(100), phone: z.string().trim().max(20).nullable().default(null), avatar_url: z.string().trim().max(500).nullable().default(null) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase
-      .from("orders")
-      .update({ payment_status: data.payment_status, updated_at: new Date().toISOString() })
-      .eq("id", data.id);
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "dashboard");
+    const { error } = await context.supabase.from("profiles").update(data).eq("id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
 
-const productSchema = z.object({
-  slug: z.string().trim().min(2).max(80),
-  name: z.string().trim().min(2).max(120),
-  short_description: z.string().trim().max(300).nullable().default(null),
-  description: z.string().trim().max(2000).nullable().default(null),
-  price: z.number().min(0).max(1000000),
-  compare_at_price: z.number().min(0).max(1000000).nullable().default(null),
-  image_url: z.string().trim().max(500).nullable().default(null),
-  category: z.string().trim().max(80).nullable().default(null),
-  sizes: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
-  stock_quantity: z.number().int().min(0).max(1000000),
-  is_active: z.boolean(),
-  is_featured: z.boolean(),
-});
-
-export const adminListProducts = createServerFn({ method: "POST" })
+// ---------------------------------- staff / roles ----------------------------------
+export const adminListStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { data, error } = await context.supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "admins");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, role, created_at")
+      .in("role", ["admin", "super_admin", "product_manager", "order_manager", "support_staff"]);
+    if (error) throw new Error(error.message);
+    const ids = [...new Set(((data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id))];
+    const { data: profiles } = ids.length
+      ? await supabaseAdmin.from("profiles").select("id, full_name, email").in("id", ids)
+      : { data: [] as Array<{ id: string; full_name: string | null; email: string | null }> };
+    const map = new Map((profiles ?? []).map((p) => [p.id, p]));
+    return ((data ?? []) as Array<{ id: string; user_id: string; role: string; created_at: string }>).map((r) => ({
+      ...r,
+      full_name: map.get(r.user_id)?.full_name ?? null,
+      email: map.get(r.user_id)?.email ?? null,
+    }));
+  });
+
+export const adminGrantRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ email: z.string().trim().email().max(255), role: z.enum(["super_admin", "product_manager", "order_manager", "support_staff"]) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "admins");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin.from("profiles").select("id").eq("email", data.email).maybeSingle();
+    if (!profile) throw new Error("No account found with that email. Ask them to sign up first.");
+    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: profile.id, role: data.role });
+    if (error && !error.message.includes("duplicate")) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "role.granted", entity: "user", entityId: profile.id, details: { email: data.email, role: data.role } });
+    return { ok: true as const };
+  });
+
+export const adminRevokeRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "admins");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin.from("user_roles").select("user_id, role").eq("id", data.id).maybeSingle();
+    if (row && row.user_id === context.userId) throw new Error("You cannot remove your own access");
+    const { error } = await supabaseAdmin.from("user_roles").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "role.revoked", entity: "user", entityId: row?.user_id, details: { role: row?.role } });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- notifications & audit ----------------------------------
+export const adminListNotifications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "dashboard");
+    const { data, error } = await context.supabase.from("admin_notifications").select("*").order("created_at", { ascending: false }).limit(100);
     if (error) throw new Error(error.message);
     return data ?? [];
   });
 
-export const adminSaveProduct = createServerFn({ method: "POST" })
+export const adminMarkNotifications = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    productSchema.extend({ id: z.string().uuid().optional() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ id: uuid.optional(), all: z.boolean().default(false) }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { id, ...fields } = data;
-    const query = id
-      ? context.supabase.from("products").update(fields).eq("id", id)
-      : context.supabase.from("products").upsert(fields, { onConflict: "slug" });
-    const { error } = await query;
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "dashboard");
+    let q = context.supabase.from("admin_notifications").update({ is_read: true });
+    q = data.all ? q.eq("is_read", false) : q.eq("id", data.id ?? "");
+    const { error } = await q;
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
 
-export const adminUpdateStock = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), stock_quantity: z.number().int().min(0).max(1000000) }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase
-      .from("products")
-      .update({ stock_quantity: data.stock_quantity })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
-  });
-
-export const adminDeleteProduct = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase.from("products").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
-  });
-export const adminListReviews = createServerFn({ method: "POST" })
+export const adminListAudit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { data, error } = await context.supabase
-      .from("product_reviews")
-      .select("id, product_slug, name, rating, comment, approved, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "admins");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("audit_log").select("*").order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error(error.message);
-    return data ?? [];
-  });
-
-export const adminSetReviewApproval = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), approved: z.boolean() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase
-      .from("product_reviews")
-      .update({ approved: data.approved })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
-  });
-
-export const adminDeleteReview = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
-    const { error } = await context.supabase.from("product_reviews").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
+    const ids = [...new Set(((data ?? []) as Array<{ actor_id: string | null }>).map((r) => r.actor_id).filter(Boolean) as string[])];
+    const { data: profiles } = ids.length ? await supabaseAdmin.from("profiles").select("id, email, full_name").in("id", ids) : { data: [] as Array<{ id: string; email: string | null; full_name: string | null }> };
+    const map = new Map((profiles ?? []).map((p) => [p.id, p]));
+    return ((data ?? []) as Array<{ actor_id: string | null }>).map((r) => ({ ...r, actor_email: (r.actor_id && map.get(r.actor_id)?.email) || "system" }));
   });
