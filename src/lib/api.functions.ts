@@ -102,6 +102,26 @@ export const placeOrder = createServerFn({ method: "POST" })
       payment_status: data.payment_method === "cod" ? "cod_pending" : "pending",
     });
     if (error) throw new Error("We could not place your order. Please try again.");
+
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("new-order-notification", "", {
+        templateData: {
+          orderNumber,
+          customerName: data.customer_name,
+          email: data.email,
+          phone: data.phone,
+          address: `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`,
+          paymentMethod: data.payment_method,
+          total: data.total,
+          items: data.items,
+        },
+        idempotencyKey: `new-order-notification-${orderNumber}`,
+      });
+    } catch (emailError) {
+      console.error("Order notification email failed", emailError);
+    }
+
     return { orderNumber };
   });
 
