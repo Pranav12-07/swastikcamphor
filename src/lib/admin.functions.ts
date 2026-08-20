@@ -5,6 +5,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // ---------- schemas (erased at runtime boundaries are fine: plain consts are allowed) ----------
 const uuid = z.string().uuid();
 
+type SettingValue = Record<string, string | number | boolean | null>;
+
 export const adminMe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -174,7 +176,7 @@ export const adminDuplicateProduct = createServerFn({ method: "POST" })
     copy["name"] = `${String(copy["name"])} (Copy)`;
     copy["status"] = "draft";
     copy["is_active"] = false;
-    const { error: insErr } = await context.supabase.from("products").insert(copy);
+    const { error: insErr } = await context.supabase.from("products").insert(copy as never);
     if (insErr) throw new Error(insErr.message);
     await logAudit({ actorId: context.userId, action: "product.duplicated", entity: "product", entityId: data.id });
     return { ok: true as const };
@@ -325,7 +327,7 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
     const { id, note, ...fields } = data;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const [k, v] of Object.entries(fields)) if (v !== undefined) patch[k] = v;
-    const { error } = await context.supabase.from("orders").update(patch).eq("id", id);
+    const { error } = await context.supabase.from("orders").update(patch as never).eq("id", id);
     if (error) throw new Error(error.message);
     if (data.status || data.payment_status) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -563,20 +565,20 @@ export const adminGetSettings = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin.from("store_settings").select("*");
     if (error) throw new Error(error.message);
-    const out: Record<string, Record<string, unknown>> = {};
-    for (const row of (data ?? []) as Array<{ key: string; value: Record<string, unknown> }>) out[row.key] = row.value;
+    const out: Record<string, SettingValue> = {};
+    for (const row of (data ?? []) as Array<{ key: string; value: SettingValue }>) out[row.key] = row.value;
     return out;
   });
 
 export const adminSaveSetting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ key: z.string().trim().min(2).max(40), value: z.record(z.string(), z.unknown()) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ key: z.string().trim().min(2).max(40), value: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])) }).parse(input))
   .handler(async ({ data, context }) => {
     const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "settings");
-    const { error } = await context.supabase.from("store_settings").upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    const { error } = await context.supabase.from("store_settings").upsert({ key: data.key, value: data.value as never, updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) throw new Error(error.message);
-    await logAudit({ actorId: context.userId, action: "settings.updated", entity: "settings", entityId: data.key, details: data.value });
+    await logAudit({ actorId: context.userId, action: "settings.updated", entity: "settings", entityId: data.key, details: data.value as Record<string, unknown> });
     return { ok: true as const };
   });
 

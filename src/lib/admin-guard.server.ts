@@ -46,9 +46,9 @@ export async function assertPerm(supabase: AnySupabase, userId: string, area: Ar
 export async function logAudit(entry: {
   actorId: string;
   action: string;
-  entity?: string;
-  entityId?: string;
-  details?: Record<string, unknown>;
+  entity?: string | undefined;
+  entityId?: string | undefined;
+  details?: Record<string, unknown> | undefined;
 }) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -57,7 +57,7 @@ export async function logAudit(entry: {
       action: entry.action,
       entity: entry.entity ?? null,
       entity_id: entry.entityId ?? null,
-      details: entry.details ?? {},
+      details: (entry.details ?? {}) as never,
     });
   } catch (err) {
     console.error("audit log failed", err);

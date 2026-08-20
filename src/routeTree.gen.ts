@@ -24,6 +24,9 @@ import { Route as ReturnRefundPolicyRouteImport } from './routes/return-refund-p
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
@@ -103,6 +106,21 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -140,8 +158,11 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -160,8 +181,11 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/admin': typeof AdminIndexRoute
   '/chat': typeof ChatIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -182,8 +206,11 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -204,8 +231,11 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin/dashboard'
+    | '/admin/login'
     | '/api/chat'
     | '/chat/$threadId'
+    | '/admin/'
     | '/chat/'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -224,8 +254,11 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin/dashboard'
+    | '/admin/login'
     | '/api/chat'
     | '/chat/$threadId'
+    | '/admin'
     | '/chat'
     | '/lovable/email/transactional/preview'
   id:
@@ -245,8 +278,11 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/_authenticated/account'
+    | '/admin/dashboard'
+    | '/admin/login'
     | '/api/chat'
     | '/chat/$threadId'
+    | '/admin/'
     | '/chat/'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -266,8 +302,11 @@ export interface RootRouteChildren {
   ReturnRefundPolicyRoute: typeof ReturnRefundPolicyRoute
   ShopRoute: typeof ShopRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   ApiChatRoute: typeof ApiChatRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -379,6 +418,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -436,8 +496,11 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnRefundPolicyRoute: ReturnRefundPolicyRoute,
   ShopRoute: ShopRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminLoginRoute: AdminLoginRoute,
   ApiChatRoute: ApiChatRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
