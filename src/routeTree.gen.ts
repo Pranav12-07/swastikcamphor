@@ -26,9 +26,11 @@ import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-condi
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
@@ -123,6 +125,11 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   path: '/admin/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/admin/customers',
+  path: '/admin/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -136,6 +143,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/admin/payments',
+  path: '/admin/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -201,9 +213,11 @@ export interface FileRoutesByFullPath {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -231,9 +245,11 @@ export interface FileRoutesByTo {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin': typeof AdminIndexRoute
@@ -263,9 +279,11 @@ export interface FileRoutesById {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -295,9 +313,11 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/account'
     | '/admin/categories'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/payments'
     | '/api/chat'
     | '/chat/$threadId'
     | '/admin/'
@@ -325,9 +345,11 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/account'
     | '/admin/categories'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/payments'
     | '/api/chat'
     | '/chat/$threadId'
     | '/admin'
@@ -356,9 +378,11 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/_authenticated/account'
     | '/admin/categories'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/payments'
     | '/api/chat'
     | '/chat/$threadId'
     | '/admin/'
@@ -387,9 +411,11 @@ export interface RootRouteChildren {
   ShopRoute: typeof ShopRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
   ApiChatRoute: typeof ApiChatRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -523,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/admin/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -542,6 +575,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -637,9 +677,11 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRoute: ShopRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
   ApiChatRoute: ApiChatRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
   AdminIndexRoute: AdminIndexRoute,
