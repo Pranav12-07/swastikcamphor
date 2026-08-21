@@ -30,6 +30,8 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
+import { Route as AdminProductsAddRouteImport } from './routes/admin/products/add'
 import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products/edit/$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -137,6 +139,16 @@ const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
   path: '/chat/$threadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/admin/products/',
+  path: '/admin/products/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductsAddRoute = AdminProductsAddRouteImport.update({
+  id: '/admin/products/add',
+  path: '/admin/products/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProductsEditIdRoute = AdminProductsEditIdRouteImport.update({
   id: '/admin/products/edit/$id',
   path: '/admin/products/edit/$id',
@@ -170,6 +182,8 @@ export interface FileRoutesByFullPath {
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/admin/products/add': typeof AdminProductsAddRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -194,6 +208,8 @@ export interface FileRoutesByTo {
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin': typeof AdminIndexRoute
   '/chat': typeof ChatIndexRoute
+  '/admin/products/add': typeof AdminProductsAddRoute
+  '/admin/products': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -220,6 +236,8 @@ export interface FileRoutesById {
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/admin/products/add': typeof AdminProductsAddRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -246,6 +264,8 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/admin/'
     | '/chat/'
+    | '/admin/products/add'
+    | '/admin/products/'
     | '/admin/products/edit/$id'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -270,6 +290,8 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/admin'
     | '/chat'
+    | '/admin/products/add'
+    | '/admin/products'
     | '/admin/products/edit/$id'
     | '/lovable/email/transactional/preview'
   id:
@@ -295,6 +317,8 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/admin/'
     | '/chat/'
+    | '/admin/products/add'
+    | '/admin/products/'
     | '/admin/products/edit/$id'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -320,6 +344,8 @@ export interface RootRouteChildren {
   ChatThreadIdRoute: typeof ChatThreadIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
+  AdminProductsAddRoute: typeof AdminProductsAddRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
   AdminProductsEditIdRoute: typeof AdminProductsEditIdRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -473,6 +499,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/admin/products'
+      fullPath: '/admin/products/'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/products/add': {
+      id: '/admin/products/add'
+      path: '/admin/products/add'
+      fullPath: '/admin/products/add'
+      preLoaderRoute: typeof AdminProductsAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/products/edit/$id': {
       id: '/admin/products/edit/$id'
       path: '/admin/products/edit/$id'
@@ -522,6 +562,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChatThreadIdRoute: ChatThreadIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
+  AdminProductsAddRoute: AdminProductsAddRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
   AdminProductsEditIdRoute: AdminProductsEditIdRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
