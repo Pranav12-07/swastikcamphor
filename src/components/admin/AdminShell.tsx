@@ -10,7 +10,9 @@ import {
 import { adminMe } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/swastik-logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
+
+const logo = logoAsset.url;
 
 type Area = "dashboard" | "products" | "orders" | "customers" | "reviews" | "marketing" | "settings" | "admins";
 

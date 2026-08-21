@@ -4,7 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { adminMe } from "@/lib/admin.functions";
 import { useServerFn } from "@tanstack/react-start";
-import logo from "@/assets/swastik-logo.png";
+import logoAsset from "@/assets/swastik-logo.png.asset.json";
+
+const logo = logoAsset.url;
 import { Loader2, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/login")({
