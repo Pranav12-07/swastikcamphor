@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { FREE_SHIPPING_ABOVE, formatINR } from "@/data/products";
+import { formatINR } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 
@@ -115,7 +115,7 @@ function CartPage() {
               </dl>
 
               <p className="mt-3 text-xs text-muted-foreground">
-                Free shipping on orders above {formatINR(FREE_SHIPPING_ABOVE)}.
+                Free shipping on orders above {formatINR(freeShippingAbove)}.
               </p>
 
               {cart.coupon ? (
