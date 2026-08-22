@@ -22,7 +22,7 @@ export type BlogPost = {
 import tablets from "@/assets/product-tablets.jpg";
 import bhimseni from "@/assets/product-bhimseni.jpg";
 import cones from "@/assets/product-cones.jpg";
-import gift from "@/assets/product-gift.jpg";
+import gift from "@/assets/product-giftpack.jpg";
 import about from "@/assets/about.jpg";
 import hero from "@/assets/hero.jpg";
 
@@ -57,8 +57,8 @@ export const blogPosts: BlogPost[] = [
           "The key word is pure. Camphor cut with paraffin or fillers produces soot, blackens your aarti plate and gives off an acrid smell. 100% pure camphor sublimates cleanly — nothing to scrape off, nothing to wipe away.",
         ],
         links: [
-          { to: "/products/pure-camphor-tablets", label: "Shop pure camphor tablets" },
-          { to: "/products/bhimseni-camphor", label: "Shop Bhimseni camphor" },
+          { to: "/shop", label: "Shop pure camphor tablets" },
+          { to: "/shop", label: "Shop Bhimseni camphor" },
         ],
       },
       {
@@ -103,7 +103,7 @@ export const blogPosts: BlogPost[] = [
           "Bhimseni camphor (also called Nagi or edible-grade camphor) is derived from the camphor tree rather than petrochemicals. It forms irregular, slightly translucent crystals and carries a softer, cooling aroma.",
           "Synthetic camphor is manufactured from turpentine, pressed into uniform white tablets, and is intended for burning only.",
         ],
-        links: [{ to: "/products/bhimseni-camphor", label: "Buy Bhimseni camphor online" }],
+        links: [{ to: "/shop", label: "Buy Bhimseni camphor online" }],
       },
       {
         heading: "Three quick purity tests",
@@ -163,7 +163,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "One tablet gives a full aarti's worth of flame. Stacking several tablets creates a taller, less predictable flame.",
         ],
-        links: [{ to: "/products/pure-camphor-tablets", label: "Shop camphor tablets" }],
+        links: [{ to: "/shop", label: "Shop camphor tablets" }],
       },
       {
         heading: "4. Store it airtight",
@@ -200,7 +200,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "A camphor cone lit for a minute leaves a clean, cooling fragrance that lingers for hours — far gentler than a synthetic spray.",
         ],
-        links: [{ to: "/products/camphor-cones", label: "Shop camphor cones" }],
+        links: [{ to: "/shop", label: "Shop camphor cones" }],
       },
       {
         heading: "Wardrobe and storage protection",
@@ -213,7 +213,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "Camphor has long been used in Indian households in balms and steam inhalation for a blocked nose. Use only pure, clearly labelled camphor and follow guidance from a qualified practitioner.",
         ],
-        links: [{ to: "/products/pooja-gift-pack", label: "See the pooja gift pack" }],
+        links: [{ to: "/products", label: "See the pooja gift pack" }],
       },
     ],
   },
@@ -279,14 +279,14 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "A home Diwali pooja typically uses 8–12 tablets across the evening; a Navratri nine-day observance runs comfortably on a 250 g pack.",
         ],
-        links: [{ to: "/products/pure-camphor-tablets", label: "Stock up on camphor tablets" }],
+        links: [{ to: "/shop", label: "Stock up on camphor tablets" }],
       },
       {
         heading: "Why a pooja gift pack works",
         paragraphs: [
           "A curated pack of camphor, cones and Bhimseni crystals is useful, traditional and appropriate for every household — an easy gift for housewarmings, weddings and festival hampers.",
         ],
-        links: [{ to: "/products/pooja-gift-pack", label: "View the pooja gift pack" }],
+        links: [{ to: "/products", label: "View the pooja gift pack" }],
       },
       {
         heading: "Order early for festival delivery",
