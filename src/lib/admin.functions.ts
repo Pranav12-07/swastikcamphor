@@ -109,7 +109,8 @@ const productSchema = z.object({
   low_stock_threshold: z.number().int().min(0).max(10000).default(10),
   status: z.enum(["active", "draft", "disabled"]).default("active"),
   image_url: z.string().trim().max(500).nullable().default(null),
-  images: z.array(z.string().trim().max(500)).max(10).default([]),
+  images: z.array(z.string().trim().max(500)).max(20).default([]),
+  gallery: z.array(z.object({ url: z.string().trim().min(1).max(500), is_primary: z.boolean().default(false) })).max(20).default([]),
   sizes: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
   features: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
   is_active: z.boolean().default(true),
@@ -139,7 +140,7 @@ export const adminGetProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertPerm } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "products");
-    const { data: row, error } = await context.supabase.from("products").select("*").eq("id", data.id).maybeSingle();
+    const { data: row, error } = await context.supabase.from("products").select("*, product_images(image_url, display_order, is_primary)").eq("id", data.id).maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Product not found");
     return row;
@@ -151,13 +152,27 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "products");
-    const { id, ...fields } = data;
+    const { id, gallery, ...fields } = data;
     const payload = { ...fields, is_active: fields.status === "active" ? fields.is_active : false };
     const query = id
       ? context.supabase.from("products").update(payload).eq("id", id).select("id").maybeSingle()
       : context.supabase.from("products").upsert(payload, { onConflict: "slug" }).select("id").maybeSingle();
     const { data: saved, error } = await query;
     if (error) throw new Error(error.message);
+    const productId = (saved?.id as string) ?? id;
+    if (productId) {
+      await context.supabase.from("product_images").delete().eq("product_id", productId);
+      if (gallery.length) {
+        const rows = gallery.map((g, index) => ({
+          product_id: productId,
+          image_url: g.url,
+          display_order: index,
+          is_primary: gallery.some((x) => x.is_primary) ? g.is_primary : index === 0,
+        }));
+        const { error: imgError } = await context.supabase.from("product_images").insert(rows);
+        if (imgError) throw new Error(imgError.message);
+      }
+    }
     await logAudit({ actorId: context.userId, action: id ? "product.updated" : "product.created", entity: "product", entityId: (saved?.id as string) ?? id, details: { name: data.name, price: data.price } });
     const { notifyAdmin } = await import("@/lib/notify.server");
     await notifyAdmin({
@@ -176,7 +191,7 @@ export const adminDuplicateProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "products");
-    const { data: row, error } = await context.supabase.from("products").select("*").eq("id", data.id).maybeSingle();
+    const { data: row, error } = await context.supabase.from("products").select("*, product_images(image_url, display_order, is_primary)").eq("id", data.id).maybeSingle();
     if (error || !row) throw new Error("Product not found");
     const copy = { ...(row as Record<string, unknown>) };
     delete copy["id"];

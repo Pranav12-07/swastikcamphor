@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/admin/ui";
-import { MainImageUpload, GalleryUpload } from "@/components/admin/ImageUploader";
+import { ProductImagesManager, type GalleryImage } from "@/components/admin/ImageUploader";
 import { adminSaveProduct, adminListCategories } from "@/lib/admin.functions";
 
 export type ProductRow = Record<string, unknown>;
@@ -36,7 +36,18 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
   const arr = (k: string) => ((initial?.[k] as string[] | null) ?? []).join(", ");
 
   const [busy, setBusy] = useState(false);
-  const [gallery, setGallery] = useState<string[]>(((initial?.["images"] as string[] | null) ?? []).filter(Boolean));
+  const [gallery, setGallery] = useState<GalleryImage[]>(() => {
+    const rows = (initial?.["product_images"] as Array<Record<string, unknown>> | null) ?? [];
+    if (rows.length) {
+      return [...rows]
+        .sort((a, b) => Number(a["display_order"] ?? 0) - Number(b["display_order"] ?? 0))
+        .map((r) => ({ url: String(r["image_url"]), is_primary: Boolean(r["is_primary"]) }));
+    }
+    const main = (initial?.["image_url"] as string | null) ?? "";
+    const extra = ((initial?.["images"] as string[] | null) ?? []).filter(Boolean);
+    const list = [...(main ? [main] : []), ...extra.filter((u) => u !== main)];
+    return list.map((url, i) => ({ url, is_primary: i === 0 }));
+  });
   const [form, setForm] = useState({
     name: g("name"),
     slug: g("slug"),
@@ -96,8 +107,9 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         stock_quantity: Number(form.stock_quantity || 0),
         low_stock_threshold: Number(form.low_stock_threshold || 10),
         status: (asDraft ? "draft" : form.status) as "active" | "draft" | "disabled",
-        image_url: form.image_url || null,
-        images: gallery,
+        image_url: (gallery.find((g) => g.is_primary) ?? gallery[0])?.url ?? form.image_url ?? null,
+        images: gallery.map((g) => g.url),
+        gallery,
         sizes: csv(form.sizes),
         features: csv(form.features),
         is_active: asDraft ? false : form.is_active,
@@ -169,8 +181,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
       <Card>
         <h2 className="font-semibold">Product images</h2>
         <div className="mt-3 space-y-5">
-          <MainImageUpload value={form.image_url} onChange={(url) => set("image_url", url)} />
-          <GalleryUpload value={gallery} onChange={setGallery} />
+          <ProductImagesManager value={gallery} onChange={setGallery} />
         </div>
       </Card>
 
