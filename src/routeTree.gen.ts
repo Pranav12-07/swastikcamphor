@@ -25,6 +25,7 @@ import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
 import { Route as AdminCouponsRouteImport } from './routes/admin/coupons'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
@@ -32,6 +33,7 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminHomepageRouteImport } from './routes/admin/homepage'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -123,6 +125,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/admin/analytics',
+  path: '/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/admin/categories',
   path: '/admin/categories',
@@ -156,6 +163,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/admin/notifications',
+  path: '/admin/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
@@ -230,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -237,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/api/chat': typeof ApiChatRoute
@@ -265,6 +279,7 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -272,6 +287,7 @@ export interface FileRoutesByTo {
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/api/chat': typeof ApiChatRoute
@@ -302,6 +318,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -309,6 +326,7 @@ export interface FileRoutesById {
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/api/chat': typeof ApiChatRoute
@@ -339,6 +357,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin/analytics'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -346,6 +365,7 @@ export interface FileRouteTypes {
     | '/admin/homepage'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/notifications'
     | '/admin/payments'
     | '/admin/reviews'
     | '/api/chat'
@@ -374,6 +394,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/account'
+    | '/admin/analytics'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -381,6 +402,7 @@ export interface FileRouteTypes {
     | '/admin/homepage'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/notifications'
     | '/admin/payments'
     | '/admin/reviews'
     | '/api/chat'
@@ -410,6 +432,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms-and-conditions'
     | '/_authenticated/account'
+    | '/admin/analytics'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -417,6 +440,7 @@ export interface FileRouteTypes {
     | '/admin/homepage'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/notifications'
     | '/admin/payments'
     | '/admin/reviews'
     | '/api/chat'
@@ -446,6 +470,7 @@ export interface RootRouteChildren {
   ReturnRefundPolicyRoute: typeof ReturnRefundPolicyRoute
   ShopRoute: typeof ShopRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
@@ -453,6 +478,7 @@ export interface RootRouteChildren {
   AdminHomepageRoute: typeof AdminHomepageRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -581,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/admin/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/categories': {
       id: '/admin/categories'
       path: '/admin/categories'
@@ -628,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/admin/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/payments': {
@@ -736,6 +776,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnRefundPolicyRoute: ReturnRefundPolicyRoute,
   ShopRoute: ShopRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
@@ -743,6 +784,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminHomepageRoute: AdminHomepageRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   ApiChatRoute: ApiChatRoute,
