@@ -819,6 +819,39 @@ export type Database = {
           },
         ]
       }
+      phone_otps: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+        }
+        Insert: {
+          attempts?: number
+          channel?: string
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           approved: boolean
@@ -959,32 +992,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auth_method: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           is_disabled: boolean
+          last_login_at: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
+          auth_method?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           is_disabled?: boolean
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
+          auth_method?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_disabled?: boolean
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
         }
