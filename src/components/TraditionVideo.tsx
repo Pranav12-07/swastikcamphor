@@ -89,7 +89,7 @@ export function TraditionVideo() {
 
   const onEnded = () => setIndex((i) => (i + 1) % scenes.length);
 
-  const current = scenes[index];
+  const current = scenes[index] ?? scenes[0]!;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
