@@ -49,6 +49,7 @@ import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
+import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as AuthenticatedOrdersOrderNumberRouteImport } from './routes/_authenticated/orders.$orderNumber'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
@@ -257,6 +258,11 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
   path: '/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsSlugRoute = ProductsSlugRouteImport.update({
+  id: '/products/$slug',
+  path: '/products/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedOrdersOrderNumberRoute =
   AuthenticatedOrdersOrderNumberRouteImport.update({
     id: '/orders/$orderNumber',
@@ -337,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
   '/chat': typeof ChatIndexRoute
@@ -437,6 +445,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
@@ -488,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/blogs/$slug'
     | '/chat/$threadId'
+    | '/products/$slug'
     | '/admin/'
     | '/blogs/'
     | '/chat/'
@@ -537,6 +547,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/blogs/$slug'
     | '/chat/$threadId'
+    | '/products/$slug'
     | '/admin'
     | '/blogs'
     | '/chat'
@@ -587,6 +598,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/blogs/$slug'
     | '/chat/$threadId'
+    | '/products/$slug'
     | '/admin/'
     | '/blogs/'
     | '/chat/'
@@ -636,6 +648,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   BlogsSlugRoute: typeof BlogsSlugRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
+  ProductsSlugRoute: typeof ProductsSlugRoute
   AdminIndexRoute: typeof AdminIndexRoute
   BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -931,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/$slug': {
+      id: '/products/$slug'
+      path: '/products/$slug'
+      fullPath: '/products/$slug'
+      preLoaderRoute: typeof ProductsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/orders/$orderNumber': {
       id: '/_authenticated/orders/$orderNumber'
       path: '/orders/$orderNumber'
@@ -1040,6 +1060,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   BlogsSlugRoute: BlogsSlugRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
+  ProductsSlugRoute: ProductsSlugRoute,
   AdminIndexRoute: AdminIndexRoute,
   BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
