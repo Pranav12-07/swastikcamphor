@@ -108,29 +108,34 @@ export const placeOrder = createServerFn({ method: "POST" })
       userId = userData?.user?.id ?? null;
     }
 
-    const orderNumber = `SC${Date.now().toString(36).toUpperCase()}`;
-    const paymentStatus = data.payment_method === "cod" ? "cod_pending" : "pending";
-    const { error } = await supabaseAdmin.from("orders").insert({
-      order_number: orderNumber,
-      user_id: userId,
-      customer_name: data.customer_name,
-      email: data.email,
-      phone: data.phone,
-      address: data.address,
-      city: data.city,
-      state: data.state,
-      pincode: data.pincode,
-      items: data.items,
-      subtotal: data.subtotal,
-      shipping: data.shipping,
-      discount: data.discount,
-      total: data.total,
-      coupon_code: data.coupon_code ?? null,
-      status: "pending",
-      payment_provider: data.payment_method === "cod" ? "cod" : "upi",
-      payment_status: paymentStatus,
+    // Server-side pricing + atomic stock reservation.
+    const { data: placed, error } = await supabaseAdmin.rpc("place_order", {
+      _user_id: userId,
+      _customer: {
+        customer_name: data.customer_name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+      },
+      _items: data.items.map((i) => ({ slug: i.slug, size: i.size, qty: i.qty })),
+      _coupon: data.coupon_code ?? "",
+      _payment_method: data.payment_method,
     });
-    if (error) throw new Error("We could not place your order. Please try again.");
+    if (error) throw new Error(error.message || "We could not place your order. Please try again.");
+
+    const result = placed as {
+      order_number: string;
+      subtotal: number;
+      discount: number;
+      shipping: number;
+      total: number;
+    };
+    const orderNumber = result.order_number;
+    const paymentStatus = data.payment_method === "cod" ? "cod_pending" : "pending";
+
 
     const fullAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
     const placedAt = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
