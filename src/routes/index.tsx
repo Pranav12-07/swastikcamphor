@@ -139,7 +139,8 @@ function Index() {
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Our range</p>
             <h2 className="mt-2 text-3xl md:text-4xl">Camphor for every ritual</h2>
-            <div className="gold-rule mt-4 w-20" />
+            <div className="gold-rule rule-animate mt-4 w-20" />
+
           </div>
           <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
             View all products →
