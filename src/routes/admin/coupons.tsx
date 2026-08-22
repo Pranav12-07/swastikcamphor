@@ -86,7 +86,22 @@ function CouponsPage() {
                         <div className="flex justify-end gap-1">
                           <button
                             onClick={async () => {
-                              try { await save({ data: { ...(c as never), id: c["id"] as string, is_active: !c["is_active"] } }); await qc.invalidateQueries({ queryKey: ["admin-coupons"] }); }
+                              try {
+                                await save({ data: {
+                                  id: c["id"] as string,
+                                  code: c["code"] as string,
+                                  discount_type: c["discount_type"] as "percentage",
+                                  discount_value: Number(c["discount_value"] ?? 0),
+                                  min_order_amount: Number(c["min_order_amount"] ?? 0),
+                                  max_discount: c["max_discount"] == null ? null : Number(c["max_discount"]),
+                                  starts_at: (c["starts_at"] as string | null) ?? null,
+                                  expires_at: (c["expires_at"] as string | null) ?? null,
+                                  usage_limit: c["usage_limit"] == null ? null : Number(c["usage_limit"]),
+                                  per_customer_limit: c["per_customer_limit"] == null ? null : Number(c["per_customer_limit"]),
+                                  is_active: !c["is_active"],
+                                } });
+                                await qc.invalidateQueries({ queryKey: ["admin-coupons"] });
+                              }
                               catch { toast.error("Could not update that coupon."); }
                             }}
                             className="rounded border border-input px-2 py-1 text-xs"
