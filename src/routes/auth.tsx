@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { requestWhatsappOtp, verifyWhatsappOtp, recordEmailLogin } from "@/lib/otp.functions";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 
 const searchSchema = z.object({
   /** Same-origin path to return to after signing in (e.g. /checkout). */
@@ -19,11 +20,11 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
-      { title: "Login with Mobile Number — Swastik Camphor" },
+      { title: "Email OTP Login — Swastik Camphor" },
       {
         name: "description",
         content:
-          "Log in to Swastik Camphor with a 6-digit verification code sent to your mobile number — no password needed — to check out and track orders.",
+          "Sign in to Swastik Camphor with a secure 6-digit verification code sent to your email, with no password or login link.",
       },
       { property: "og:title", content: "Login — Swastik Camphor" },
       { property: "og:description", content: "Access your Swastik Camphor account and order history." },
@@ -39,7 +40,7 @@ type Channel = "phone" | "email";
 type PhoneMode = "sms" | "whatsapp";
 
 const emailSchema = z.string().trim().email();
-const RESEND_SECONDS = 60;
+const RESEND_SECONDS = 30;
 
 /** Indian mobile number normalised to E.164 (+91XXXXXXXXXX). */
 function toE164(raw: string): string | null {
@@ -116,7 +117,7 @@ function AuthPage() {
   const checkWhatsapp = useServerFn(verifyWhatsappOtp);
   const noteLogin = useServerFn(recordEmailLogin);
 
-  const [channel, setChannel] = useState<Channel>("phone");
+  const [channel, setChannel] = useState<Channel>("email");
   const [phoneMode, setPhoneMode] = useState<PhoneMode>("sms");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -200,6 +201,7 @@ function AuthPage() {
         options: { shouldCreateUser: true },
       });
       if (otpError) {
+        if (import.meta.env.DEV) console.error("Email OTP request failed:", otpError.message);
         throw new Error(
           /rate|too many|limit/i.test(otpError.message)
             ? "Too many attempts. Please wait before trying again."
@@ -230,7 +232,8 @@ function AuthPage() {
       let userId: string | undefined;
 
       if (channel === "phone") {
-        const e164 = toE164(phone)!;
+        const e164 = toE164(phone);
+        if (!e164) throw new Error("Please enter a valid 10-digit Indian mobile number.");
 
         if (phoneMode === "whatsapp") {
           const result = await checkWhatsapp({
@@ -262,7 +265,10 @@ function AuthPage() {
           token,
           type: "email",
         });
-        if (verifyError) throw new Error(verificationMessage(verifyError.message));
+        if (verifyError) {
+          if (import.meta.env.DEV) console.error("Email OTP verification failed:", verifyError.message);
+          throw new Error(verificationMessage(verifyError.message));
+        }
         userId = verified.user?.id;
       }
 
@@ -272,7 +278,7 @@ function AuthPage() {
             data: {
               userId,
               ...(fullName.trim() ? { full_name: fullName.trim() } : {}),
-              ...(toE164(phone) ? { phone: toE164(phone)! } : {}),
+              ...(toE164(phone) ? { phone: toE164(phone) ?? undefined } : {}),
             },
           });
         } catch {
@@ -290,9 +296,10 @@ function AuthPage() {
   }
 
   function verificationMessage(raw: string): string {
-    if (/expired/i.test(raw)) return "This verification code has expired. Please request a new code.";
+    if (/already|used|invalid.*session/i.test(raw)) return "This OTP has already been used. Please request a new OTP.";
+    if (/expired/i.test(raw)) return "This OTP has expired. Please request a new OTP.";
     if (/rate|too many|limit/i.test(raw)) return "Too many attempts. Please wait before trying again.";
-    return "Incorrect verification code. Please try again.";
+    return "Incorrect OTP. Please check the code and try again.";
   }
 
   const inputClass =
@@ -304,11 +311,13 @@ function AuthPage() {
     <>
       <PageHeader
         eyebrow="Account"
-        title={channel === "phone" ? "Login with Mobile Number" : "Login with Email"}
+        title={sent && channel === "email" ? "Check your email" : "Sign in to your account"}
         subtitle={
           redirect === "/checkout"
-            ? "Verify your mobile number to complete your order — your cart is safe and waiting."
-            : "Enter your mobile number to receive a verification code."
+            ? `Verify your ${channel === "email" ? "email" : "mobile number"} to complete your order — your cart is safe and waiting.`
+            : channel === "email"
+              ? "Enter your email address to receive a secure 6-digit verification code."
+              : "Enter your mobile number to receive a verification code."
         }
       />
       <section className="mx-auto w-full max-w-md px-4 pb-20 md:px-8">
@@ -357,12 +366,13 @@ function AuthPage() {
               ) : (
                 <div>
                   <label className="mb-1 block text-sm text-muted-foreground" htmlFor="email">
-                    Email address
+                     Email Address
                   </label>
                   <input
                     id="email"
                     type="email"
                     autoComplete="email"
+                     placeholder="Enter your Gmail address"
                     value={email}
                     onChange={(ev) => setEmail(ev.target.value)}
                     required
@@ -377,22 +387,23 @@ function AuthPage() {
             <div>
               <p className="mb-1 text-sm font-medium text-foreground">Enter verification code</p>
               <p className="mb-3 text-sm text-muted-foreground">
-                OTP sent to <span className="text-foreground">{destination}</span>. Enter the 6-digit
-                verification code.
+                 We sent a 6-digit verification code to <span className="font-medium text-foreground">{destination}</span>.
               </p>
               <CodeBoxes value={code} onChange={setCode} disabled={busy} />
               <div className="mt-3 flex items-center justify-between text-xs">
-                <button type="button" onClick={reset} className="text-muted-foreground underline">
+                 <Button type="button" variant="link" size="sm" onClick={reset} className="h-auto px-0 text-muted-foreground">
                   Change {channel === "phone" ? "mobile number" : "email"}
-                </button>
-                <button
+                 </Button>
+                 <Button
                   type="button"
+                   variant="link"
+                   size="sm"
                   disabled={cooldown > 0 || busy}
                   onClick={() => sendCode()}
-                  className="text-muted-foreground underline disabled:no-underline disabled:opacity-60"
+                   className="h-auto px-0 text-muted-foreground"
                 >
                   {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
-                </button>
+                 </Button>
               </div>
             </div>
           )}
@@ -403,28 +414,30 @@ function AuthPage() {
             </p>
           )}
 
-          <button
+           <Button
             type="submit"
             disabled={busy}
-            className="w-full rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+             size="lg"
+             className="w-full rounded-full"
           >
             {busy ? "Please wait…" : sent ? "Verify OTP" : "Send OTP"}
-          </button>
+           </Button>
         </form>
 
         {!sent && (
           <div className="mt-6 border-t border-border pt-5 text-center">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Or</p>
-            <button
+             <Button
               type="button"
+               variant="link"
               onClick={() => {
                 setChannel(channel === "phone" ? "email" : "phone");
                 reset();
               }}
-              className="mt-2 text-sm text-muted-foreground underline"
+               className="mt-2 h-auto text-sm text-muted-foreground"
             >
-              {channel === "phone" ? "Continue with email instead" : "Back to mobile number login"}
-            </button>
+               {channel === "phone" ? "Continue with Email" : "Continue with Phone"}
+             </Button>
           </div>
         )}
 
