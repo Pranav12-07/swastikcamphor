@@ -83,7 +83,7 @@ export function TraditionVideo() {
         <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Swastik Camphor</p>
         <h2 className="mt-3 font-display text-3xl md:text-4xl">Tradition in Every Moment</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-          Morning pooja, daily aarti, family prayers, festivals and the pure tablet itself — one film,
+          Morning pooja, family aarti and the pure tablet itself — one film,
           every moment camphor belongs to.
         </p>
       </div>
