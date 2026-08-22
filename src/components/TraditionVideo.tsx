@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import scenePooja from "@/assets/tradition-pooja-v6.mp4.asset.json";
 import sceneFamily from "@/assets/tradition-family-v6.mp4.asset.json";
+import sceneFlame from "@/assets/tradition-flame-v6.mp4.asset.json";
+import sceneFestival from "@/assets/tradition-festival-v6.mp4.asset.json";
 import sceneProduct from "@/assets/tradition-product-v5.mp4.asset.json";
 import logo from "@/assets/swastik-logo-trimmed.png.asset.json";
 import poster from "@/assets/tradition-poster.jpg";
