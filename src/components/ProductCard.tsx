@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { formatINR, type Product } from "@/data/products";
 import { useCart } from "@/lib/cart";
@@ -48,7 +49,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </button>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-xl">{product.name}</h3>
+        <h3 className="font-display text-xl">
+          <Link to="/products/$slug" params={{ slug: product.slug }} className="hover:text-primary">
+            {product.name}
+          </Link>
+        </h3>
         <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{product.short}</p>
         <ul className="mt-3 flex flex-wrap gap-1.5">
           {product.bestFor.map((tag) => (
@@ -73,6 +78,13 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             Add to cart
           </button>
         </div>
+        <Link
+          to="/products/$slug"
+          params={{ slug: product.slug }}
+          className="mt-3 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          View product details
+        </Link>
       </div>
     </article>
   );

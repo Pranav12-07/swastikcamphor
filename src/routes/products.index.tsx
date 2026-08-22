@@ -58,7 +58,11 @@ function Products() {
               />
             </figure>
             <div>
-              <h2 className="text-3xl">{product.name}</h2>
+              <h2 className="text-3xl">
+                <Link to="/products/$slug" params={{ slug: product.slug }} className="hover:text-primary">
+                  {product.name}
+                </Link>
+              </h2>
               <div className="gold-rule mt-3 w-16" />
               <p className="mt-4 leading-relaxed text-muted-foreground">{product.description}</p>
               <ul className="mt-5 space-y-2 text-sm">
@@ -84,6 +88,13 @@ function Products() {
                 >
                   Add to cart
                 </button>
+                <Link
+                  to="/products/$slug"
+                  params={{ slug: product.slug }}
+                  className="rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15"
+                >
+                  View details
+                </Link>
                 <Link
                   to="/shop"
                   className="rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15"
