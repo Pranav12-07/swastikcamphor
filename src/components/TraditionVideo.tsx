@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import promo from "@/assets/tradition-promo.mp4.asset.json";
+import promo from "@/assets/tradition-promo-v2.mp4.asset.json";
+import logo from "@/assets/swastik-logo-trimmed.png.asset.json";
 import poster from "@/assets/tradition-poster.jpg";
 
 const captions = [
@@ -15,6 +16,7 @@ export function TraditionVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
   const [caption, setCaption] = useState(0);
+  const [ended, setEnded] = useState(false);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -36,13 +38,20 @@ export function TraditionVideo() {
 
   useEffect(() => {
     if (!visible) return;
-    const id = window.setInterval(() => setCaption((c) => (c + 1) % captions.length), 2500);
+    const id = window.setInterval(() => setCaption((c) => (c + 1) % captions.length), 2400);
     return () => window.clearInterval(id);
   }, [visible]);
 
   useEffect(() => {
     if (visible) videoRef.current?.play().catch(() => {});
   }, [visible]);
+
+  // Show the branded end card for the last ~1.6s of every loop.
+  const onTimeUpdate = () => {
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    setEnded(v.duration - v.currentTime < 1.6);
+  };
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
@@ -56,7 +65,7 @@ export function TraditionVideo() {
 
       <div
         ref={wrapRef}
-        className="reveal reveal-zoom relative mt-9 overflow-hidden rounded-3xl border border-gold/25 shadow-[var(--shadow-premium,0_30px_80px_-40px_rgba(0,0,0,0.5))]"
+        className="reveal reveal-zoom relative mt-9 overflow-hidden rounded-3xl border border-gold/25"
       >
         <div className="aspect-video w-full bg-black">
           {visible ? (
@@ -70,7 +79,8 @@ export function TraditionVideo() {
               loop
               playsInline
               preload="metadata"
-              aria-label="Swastik Camphor promotional film showing camphor used in pooja, family prayer and festive rituals"
+              onTimeUpdate={onTimeUpdate}
+              aria-label="Swastik Camphor film: a camphor flame lit during morning pooja at a traditional Indian home temple"
             />
           ) : (
             <img
@@ -86,9 +96,29 @@ export function TraditionVideo() {
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(180deg, transparent 40%, oklch(0.2 0.06 28 / 0.85))" }}
+          style={{ background: "linear-gradient(180deg, oklch(0.2 0.06 28 / 0.35) 0%, transparent 35%, oklch(0.2 0.06 28 / 0.88) 100%)" }}
           aria-hidden="true"
         />
+
+        {/* Brand watermark — always visible on the film */}
+        <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-background/85 px-3 py-1.5 backdrop-blur-sm md:left-7 md:top-7">
+          <img src={logo.url} alt="Swastik Camphor logo" className="h-6 w-auto md:h-8" />
+          <span className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground">Estd 1968</span>
+        </div>
+
+        {/* Branded end card */}
+        <div
+          className={`pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm transition-opacity duration-700 ${
+            ended ? "opacity-100" : "opacity-0"
+          }`}
+          aria-hidden="true"
+        >
+          <img src={logo.url} alt="" className="h-14 w-auto md:h-20" />
+          <p className="font-display text-2xl md:text-3xl">Swastik Camphor</p>
+          <p className="text-[11px] uppercase tracking-[0.34em] text-muted-foreground">
+            Purity • Tradition • Trust
+          </p>
+        </div>
 
         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-6 text-center md:p-10">
           <p
@@ -96,9 +126,6 @@ export function TraditionVideo() {
             className="animate-rise-in font-display text-xl text-gold-soft drop-shadow md:text-3xl"
           >
             {captions[caption]}
-          </p>
-          <p className="text-[11px] uppercase tracking-[0.34em] text-gold-soft/80">
-            Purity • Tradition • Trust
           </p>
           <Link
             to="/shop"
