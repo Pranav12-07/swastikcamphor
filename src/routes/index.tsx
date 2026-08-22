@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/catalog";
 import { marketplaces, site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
+import { useBanners } from "@/hooks/use-banners";
 
 export const Route = createFileRoute("/")({
   head: () => ({
