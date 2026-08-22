@@ -4,8 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
+import { AddressBook } from "@/components/account/AddressBook";
+import { NotificationList } from "@/components/account/NotificationList";
 import { getMyOrders, getMyProfile, updateMyProfile } from "@/lib/account.functions";
 import { formatINR } from "@/data/products";
+
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
