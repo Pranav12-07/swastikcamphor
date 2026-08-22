@@ -18,7 +18,6 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as ProductsRouteImport } from './routes/products'
 import { Route as ReturnRefundPolicyRouteImport } from './routes/return-refund-policy'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
@@ -49,6 +48,7 @@ import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
 import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
+import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as AuthenticatedOrdersOrderNumberRouteImport } from './routes/_authenticated/orders.$orderNumber'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
@@ -100,11 +100,6 @@ const FaqRoute = FaqRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsRoute = ProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReturnRefundPolicyRoute = ReturnRefundPolicyRouteImport.update({
@@ -257,6 +252,11 @@ const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
   path: '/chat/$threadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsIndexRoute = ProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedOrdersOrderNumberRoute =
   AuthenticatedOrdersOrderNumberRouteImport.update({
     id: '/orders/$orderNumber',
@@ -310,7 +310,6 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/products': typeof ProductsRoute
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -341,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -359,7 +359,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/products': typeof ProductsRoute
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -390,6 +389,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
   '/chat': typeof ChatIndexRoute
+  '/products': typeof ProductsIndexRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -410,7 +410,6 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/products': typeof ProductsRoute
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -441,6 +440,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/_authenticated/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -461,7 +461,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/privacy-policy'
-    | '/products'
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
@@ -492,6 +491,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/chat/'
+    | '/products/'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -510,7 +510,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/privacy-policy'
-    | '/products'
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
@@ -541,6 +540,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/blogs'
     | '/chat'
+    | '/products'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -560,7 +560,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/privacy-policy'
-    | '/products'
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
@@ -591,6 +590,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/chat/'
+    | '/products/'
     | '/_authenticated/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -611,7 +611,6 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
-  ProductsRoute: typeof ProductsRoute
   ReturnRefundPolicyRoute: typeof ReturnRefundPolicyRoute
   ShopRoute: typeof ShopRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
@@ -640,6 +639,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
+  ProductsIndexRoute: typeof ProductsIndexRoute
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
   AdminProductsAddRoute: typeof AdminProductsAddRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
@@ -712,13 +712,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products': {
-      id: '/products'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof ProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/return-refund-policy': {
@@ -931,6 +924,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/': {
+      id: '/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof ProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/orders/$orderNumber': {
       id: '/_authenticated/orders/$orderNumber'
       path: '/orders/$orderNumber'
@@ -1015,7 +1015,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
-  ProductsRoute: ProductsRoute,
   ReturnRefundPolicyRoute: ReturnRefundPolicyRoute,
   ShopRoute: ShopRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
@@ -1044,6 +1043,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
+  ProductsIndexRoute: ProductsIndexRoute,
   AdminOrdersIdRoute: AdminOrdersIdRoute,
   AdminProductsAddRoute: AdminProductsAddRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
