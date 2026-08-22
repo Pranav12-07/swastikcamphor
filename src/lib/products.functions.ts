@@ -24,7 +24,7 @@ export const getPublicProduct = createServerFn({ method: "GET" })
     const supabase = await publicSupabase();
     const { data: row } = await supabase
       .from("products")
-      .select(PRODUCT_SELECT)
+      .select(`${PRODUCT_SELECT},product_images(image_url,display_order,is_primary)`)
       .eq("is_active", true)
       .eq("slug", data.slug)
       .maybeSingle();

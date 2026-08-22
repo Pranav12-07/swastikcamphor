@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { formatINR } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
+import { ProductGallery } from "@/components/products/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { getPublicProduct } from "@/lib/products.functions";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
@@ -23,7 +24,9 @@ export const Route = createFileRoute("/products/$slug")({
     const description =
       product.seo_description ||
       `Shop ${product.name} from Swastik Camphor. ${product.short || product.description}`.slice(0, 158);
-    const image = product.image.startsWith("http") ? product.image : `${SITE_URL}${product.image}`;
+    const abs = (u: string) => (u.startsWith("http") ? u : `${SITE_URL}${u}`);
+    const gallery = (product.gallery?.length ? product.gallery : [product.image]).map(abs);
+    const image = gallery[0]!;
 
     return {
       meta: seoMeta({ title, description, path, image, type: "product" }),
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/products/$slug")({
             "@type": "Product",
             name: product.name,
             description: product.description || product.short,
-            image: [image],
+            image: gallery,
             sku: product.sku,
             brand: { "@type": "Brand", name: site.name },
             ...(reviewStats
@@ -106,15 +109,7 @@ function ProductDetail() {
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        <figure className="overflow-hidden rounded-3xl">
-          <img
-            src={product.image}
-            alt={`${product.name} — pure camphor for pooja and aarti`}
-            className="h-full w-full object-cover"
-            width={1200}
-            height={900}
-          />
-        </figure>
+        <ProductGallery images={product.gallery?.length ? product.gallery : [product.image]} name={product.name} />
 
         <div>
           <h1 className="font-display text-3xl md:text-4xl">{product.name}</h1>
