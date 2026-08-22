@@ -7,6 +7,7 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { VerificationCodeEmail } from '@/lib/email-templates/verification-code'
 
 // Configuration
 const SITE_NAME = "Swastik Camphor Connect"
@@ -49,12 +50,14 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             magiclink: {
-              subject: 'Your login link',
+              subject: 'Your Swastik Camphor verification code',
               render: (data) =>
-                React.createElement(MagicLinkEmail, {
-                  siteName: SITE_NAME,
-                  confirmationUrl: data.url,
-                }),
+                data.token
+                  ? React.createElement(VerificationCodeEmail, { token: data.token })
+                  : React.createElement(MagicLinkEmail, {
+                      siteName: SITE_NAME,
+                      confirmationUrl: data.url,
+                    }),
             },
             recovery: {
               subject: 'Reset your password',
@@ -78,7 +81,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             reauthentication: {
               subject: 'Your verification code',
               render: (data) =>
-                React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
+                React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },
           },
         })
