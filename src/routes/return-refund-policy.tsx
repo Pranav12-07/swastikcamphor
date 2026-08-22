@@ -1,10 +1,14 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { site } from "@/config/site";
 
 export const Route = createFileRoute("/return-refund-policy")({
   head: () => ({
+    links: canonicalLink("/return-refund-policy"),
     meta: [
+      { property: "og:url", content: canonical("/return-refund-policy") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Return & Refund Policy — Swastik Camphor" },
       { name: "description", content: "Returns, replacements and refunds for Swastik Camphor orders." },
       { property: "og:title", content: "Return & Refund Policy — Swastik Camphor" },

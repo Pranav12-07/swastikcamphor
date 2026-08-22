@@ -104,8 +104,10 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         is_featured: form.is_featured,
         is_bestseller: form.is_bestseller,
         is_new_arrival: form.is_new_arrival,
-        seo_title: form.seo_title || null,
-        seo_description: form.seo_description || null,
+        seo_title: form.seo_title || `${form.name} | Buy Online | Swastik Camphor`,
+        seo_description:
+          form.seo_description ||
+          `Shop ${form.name} from the official Swastik Camphor website. See product details, pricing and availability, and order online with pan-India delivery.`.slice(0, 300),
         seo_keywords: form.seo_keywords || null,
         seo_h1: form.seo_h1 || null,
         seo_subtitle: form.seo_subtitle || null,

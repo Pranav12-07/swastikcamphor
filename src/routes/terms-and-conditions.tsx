@@ -1,10 +1,14 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { site } from "@/config/site";
 
 export const Route = createFileRoute("/terms-and-conditions")({
   head: () => ({
+    links: canonicalLink("/terms-and-conditions"),
     meta: [
+      { property: "og:url", content: canonical("/terms-and-conditions") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Terms & Conditions — Swastik Camphor" },
       { name: "description", content: "The terms that apply when you browse or buy from Swastik Camphor." },
       { property: "og:title", content: "Terms & Conditions — Swastik Camphor" },

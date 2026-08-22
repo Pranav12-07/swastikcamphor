@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useState } from "react";
@@ -12,7 +13,10 @@ import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
+    links: canonicalLink("/contact"),
     meta: [
+      { property: "og:url", content: canonical("/contact") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Contact Swastik Camphor — Hyderabad | Call, Email or Visit" },
       {
         name: "description",

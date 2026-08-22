@@ -1,0 +1,71 @@
+import { products as fallbackProducts } from "@/data/products";
+
+export type PublicProduct = {
+  slug: string;
+  name: string;
+  short: string;
+  description: string;
+  image: string;
+  price: number;
+  mrp: number;
+  sizes: string[];
+  benefits: string[];
+  category: string | null;
+  stock: number;
+  sku: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  image_alt: string | null;
+};
+
+export const PRODUCT_SELECT =
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured";
+
+type Row = Record<string, unknown>;
+
+const staticImage = (slug: string) => fallbackProducts.find((p) => p.slug === slug)?.image;
+
+function usableImage(url: unknown): url is string {
+  return typeof url === "string" && (url.startsWith("http") || url.startsWith("/"));
+}
+
+export function mapProductRow(row: Row): PublicProduct {
+  const slug = String(row["slug"]);
+  const price = Number(row["price"] ?? 0);
+  return {
+    slug,
+    name: String(row["name"] ?? ""),
+    short: (row["short_description"] as string | null) ?? "",
+    description: (row["description"] as string | null) ?? (row["short_description"] as string | null) ?? "",
+    image: usableImage(row["image_url"])
+      ? (row["image_url"] as string)
+      : (staticImage(slug) ?? fallbackProducts[0]!.image),
+    price,
+    mrp: Number(row["compare_at_price"] ?? price),
+    sizes: (row["sizes"] as string[] | null)?.length ? (row["sizes"] as string[]) : ["Standard"],
+    benefits: (row["features"] as string[] | null) ?? [],
+    category: (row["category"] as string | null) ?? null,
+    stock: Number(row["stock_quantity"] ?? 0),
+    sku: (row["sku"] as string | null) ?? slug.toUpperCase(),
+    seo_title: (row["seo_title"] as string | null) ?? null,
+    seo_description: (row["seo_description"] as string | null) ?? null,
+    image_alt: null,
+  };
+}
+
+export async function publicSupabase() {
+  const { createClient } = await import("@supabase/supabase-js");
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  const url = process.env["SUPABASE_URL"]!;
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
+  });
+}

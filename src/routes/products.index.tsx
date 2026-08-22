@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
@@ -7,9 +8,12 @@ import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
 
-export const Route = createFileRoute("/products")({
+export const Route = createFileRoute("/products/")({
   head: () => ({
+    links: canonicalLink("/products"),
     meta: [
+      { property: "og:url", content: canonical("/products") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Our Products — Camphor Tablets, Bhimseni, Cones & Gift Packs" },
       {
         name: "description",
@@ -48,13 +52,17 @@ function Products() {
             <figure className="overflow-hidden rounded-3xl">
               <img
                 src={product.image}
-                alt={product.name}
+                alt={`${product.name} — pure camphor for pooja and aarti`}
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
               />
             </figure>
             <div>
-              <h2 className="text-3xl">{product.name}</h2>
+              <h2 className="text-3xl">
+                <Link to="/products/$slug" params={{ slug: product.slug }} className="hover:text-primary">
+                  {product.name}
+                </Link>
+              </h2>
               <div className="gold-rule mt-3 w-16" />
               <p className="mt-4 leading-relaxed text-muted-foreground">{product.description}</p>
               <ul className="mt-5 space-y-2 text-sm">
@@ -80,6 +88,13 @@ function Products() {
                 >
                   Add to cart
                 </button>
+                <Link
+                  to="/products/$slug"
+                  params={{ slug: product.slug }}
+                  className="rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15"
+                >
+                  View details
+                </Link>
                 <Link
                   to="/shop"
                   className="rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15"

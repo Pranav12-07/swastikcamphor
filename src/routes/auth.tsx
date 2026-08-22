@@ -18,6 +18,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Sign In or Create Account — Swastik Camphor" },
       {
         name: "description",

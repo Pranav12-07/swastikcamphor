@@ -22,6 +22,7 @@ import { CatalogProvider } from "@/lib/catalog";
 import { AuthProvider } from "@/lib/auth";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -101,8 +102,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "100% pure, natural camphor for pooja, aarti, aromatherapy and everyday freshness.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Swastik Camphor" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(organizationJsonLd) },
+      { type: "application/ld+json", children: JSON.stringify(websiteJsonLd) },
+    ],
+
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

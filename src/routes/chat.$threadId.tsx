@@ -9,6 +9,7 @@ import { getSessionId } from "@/lib/session";
 export const Route = createFileRoute("/chat/$threadId")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Swastik Assistant — Conversation" },
       { name: "description", content: "Chat with the Swastik Camphor assistant about products, pooja and orders." },
       { property: "og:title", content: "Swastik Assistant" },

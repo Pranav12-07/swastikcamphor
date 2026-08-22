@@ -9,6 +9,7 @@ import { trackOrder, type OrderEvent, type TrackedOrder } from "@/lib/orders.fun
 export const Route = createFileRoute("/track-order")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Track Your Order — Swastik Camphor" },
       {
         name: "description",
