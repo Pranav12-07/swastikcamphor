@@ -115,7 +115,7 @@ function CartPage() {
               </dl>
 
               <p className="mt-3 text-xs text-muted-foreground">
-                Free shipping on orders above {formatINR(freeShippingAbove)}.
+                Free shipping on orders above {formatINR(cart.freeShippingAbove)}.
               </p>
 
               {cart.coupon ? (
