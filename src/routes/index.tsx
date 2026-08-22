@@ -3,7 +3,7 @@ import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
-import { products } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 import { marketplaces, site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
 
@@ -34,6 +34,7 @@ const values = [
 ];
 
 function Index() {
+  const { products } = useCatalog();
   useReveal();
 
   return (

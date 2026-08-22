@@ -2,7 +2,8 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
-import { formatINR, products } from "@/data/products";
+import { formatINR } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
 
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/products")({
 });
 
 function Products() {
+  const { products } = useCatalog();
   useReveal();
   const { add } = useCart();
 

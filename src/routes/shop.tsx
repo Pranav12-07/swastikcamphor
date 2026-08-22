@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ProductCard } from "@/components/ProductCard";
-import { products } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/shop")({
@@ -25,6 +25,7 @@ const filters = ["All", "Daily Pooja", "Temple Use", "Aromatherapy", "Gift Packs
 
 function Shop() {
   useReveal();
+  const { products } = useCatalog();
   const [active, setActive] = useState("All");
   const [sort, setSort] = useState<"popular" | "low" | "high">("popular");
 
@@ -33,7 +34,7 @@ function Shop() {
     if (sort === "low") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "high") return [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [active, sort]);
+  }, [products, active, sort]);
 
   return (
     <>

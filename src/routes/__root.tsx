@@ -18,6 +18,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AmbientAudio } from "@/components/AmbientAudio";
 import { CartProvider } from "@/lib/cart";
+import { CatalogProvider } from "@/lib/catalog";
 import { AuthProvider } from "@/lib/auth";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
@@ -144,6 +145,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+      <CatalogProvider>
       <CartProvider>
         {showIntro && <CamphorIntro />}
         <div className="flex min-h-screen flex-col">
@@ -159,6 +161,7 @@ function RootComponent() {
         <AmbientAudio />
         <Toaster position="top-center" richColors />
       </CartProvider>
+      </CatalogProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

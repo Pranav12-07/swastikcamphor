@@ -3,7 +3,8 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { FREE_SHIPPING_ABOVE, formatINR, products } from "@/data/products";
+import { FREE_SHIPPING_ABOVE, formatINR } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/cart")({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
+  const { products } = useCatalog();
   const cart = useCart();
   const [code, setCode] = useState("");
 
