@@ -119,6 +119,8 @@ const productSchema = z.object({
   seo_title: z.string().trim().max(150).nullable().default(null),
   seo_description: z.string().trim().max(300).nullable().default(null),
   seo_keywords: z.string().trim().max(300).nullable().default(null),
+  seo_h1: z.string().trim().max(200).nullable().default(null),
+  seo_subtitle: z.string().trim().max(300).nullable().default(null),
 });
 
 export const adminListProducts = createServerFn({ method: "POST" })
