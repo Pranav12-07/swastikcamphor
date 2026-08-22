@@ -16,6 +16,7 @@ export type PublicProduct = {
   seo_title: string | null;
   seo_description: string | null;
   image_alt: string | null;
+  gallery: string[];
 };
 
 export const PRODUCT_SELECT =
@@ -27,6 +28,20 @@ const staticImage = (slug: string) => fallbackProducts.find((p) => p.slug === sl
 
 function usableImage(url: unknown): url is string {
   return typeof url === "string" && (url.startsWith("http") || url.startsWith("/"));
+}
+
+function galleryFrom(row: Row, fallback: string): string[] {
+  const rows = (row["product_images"] as Array<Record<string, unknown>> | null) ?? [];
+  const ordered = [...rows]
+    .sort((a, b) => {
+      const pa = a["is_primary"] ? 0 : 1;
+      const pb = b["is_primary"] ? 0 : 1;
+      return pa - pb || Number(a["display_order"] ?? 0) - Number(b["display_order"] ?? 0);
+    })
+    .map((r) => String(r["image_url"]))
+    .filter((u) => usableImage(u));
+  const unique = Array.from(new Set(ordered));
+  return unique.length ? unique : [fallback];
 }
 
 export function mapProductRow(row: Row): PublicProduct {
@@ -50,6 +65,7 @@ export function mapProductRow(row: Row): PublicProduct {
     seo_title: (row["seo_title"] as string | null) ?? null,
     seo_description: (row["seo_description"] as string | null) ?? null,
     image_alt: null,
+    gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
   };
 }
 
