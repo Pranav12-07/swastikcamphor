@@ -41,9 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     let active = true;
     supabase
-      .rpc("has_role", { _user_id: uid, _role: "admin" })
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle()
       .then(({ data }) => {
-        if (active) setIsAdmin(data === true);
+        if (active) setIsAdmin(!!data);
       });
     return () => {
       active = false;
