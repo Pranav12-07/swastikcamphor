@@ -3,6 +3,8 @@ import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
+import { TraditionVideo } from "@/components/TraditionVideo";
+
 import { useCatalog } from "@/lib/catalog";
 import { marketplaces, site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
@@ -133,6 +135,10 @@ function Index() {
           ))}
         </div>
       </section>
+
+      <TraditionVideo />
+
+
 
       <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
         <div className="reveal flex flex-wrap items-end justify-between gap-4">
