@@ -47,14 +47,14 @@ export function Header() {
             width={188}
             height={92}
           />
-          <span className="hidden min-w-0 sm:block">
-            <span className="block truncate font-display text-base leading-tight text-foreground lg:text-lg">
-              {site.name}
+            <span className="block truncate" style={{ fontFamily: '"Playfair Display", serif' }}>
+              <span className="block truncate text-base leading-tight text-foreground lg:text-lg">
+                {site.name}
+              </span>
+              <span className="block truncate text-[0.62rem] uppercase tracking-[0.2em] text-muted-foreground lg:text-[0.68rem]">
+                ESTD 1968
+              </span>
             </span>
-            <span className="block truncate text-[0.62rem] uppercase tracking-[0.2em] text-muted-foreground lg:text-[0.68rem]">
-              ESTD 1968 • {site.tagline}
-            </span>
-          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
