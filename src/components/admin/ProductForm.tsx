@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/admin/ui";
+import { MainImageUpload, GalleryUpload } from "@/components/admin/ImageUploader";
 import { adminSaveProduct, adminListCategories } from "@/lib/admin.functions";
 
 export type ProductRow = Record<string, unknown>;
@@ -35,6 +36,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
   const arr = (k: string) => ((initial?.[k] as string[] | null) ?? []).join(", ");
 
   const [busy, setBusy] = useState(false);
+  const [gallery, setGallery] = useState<string[]>(((initial?.["images"] as string[] | null) ?? []).filter(Boolean));
   const [form, setForm] = useState({
     name: g("name"),
     slug: g("slug"),
@@ -52,7 +54,6 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     low_stock_threshold: String(n("low_stock_threshold", 10)),
     status: g("status", "active"),
     image_url: g("image_url"),
-    images: ((initial?.["images"] as string[] | null) ?? []).join(", "),
     sizes: arr("sizes"),
     features: arr("features"),
     is_active: b("is_active", true),
@@ -94,7 +95,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         low_stock_threshold: Number(form.low_stock_threshold || 10),
         status: (asDraft ? "draft" : form.status) as "active" | "draft" | "disabled",
         image_url: form.image_url || null,
-        images: csv(form.images),
+        images: gallery,
         sizes: csv(form.sizes),
         features: csv(form.features),
         is_active: asDraft ? false : form.is_active,
@@ -160,13 +161,13 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
       </Card>
 
       <Card>
-        <h2 className="font-semibold">Images</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Main image URL" hint="e.g. /products/camphor-tablets.jpg"><input className={input} value={form.image_url} onChange={(e) => set("image_url", e.target.value)} maxLength={500} /></Field>
-          <Field label="Additional image URLs" hint="Comma separated"><input className={input} value={form.images} onChange={(e) => set("images", e.target.value)} /></Field>
+        <h2 className="font-semibold">Product images</h2>
+        <div className="mt-3 space-y-5">
+          <MainImageUpload value={form.image_url} onChange={(url) => set("image_url", url)} />
+          <GalleryUpload value={gallery} onChange={setGallery} />
         </div>
-        {form.image_url && <img src={form.image_url} alt="Product preview" className="mt-3 h-28 w-28 rounded-md border border-border object-cover" />}
       </Card>
+
 
       <Card>
         <h2 className="font-semibold">Visibility</h2>

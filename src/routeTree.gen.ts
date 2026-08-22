@@ -50,6 +50,7 @@ import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
 import { Route as AdminProductsAddRouteImport } from './routes/admin/products/add'
 import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products/edit/$id'
+import { Route as ApiPublicProductImageSplatRouteImport } from './routes/api/public/product-image/$'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -256,6 +257,12 @@ const AdminProductsEditIdRoute = AdminProductsEditIdRouteImport.update({
   path: '/admin/products/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicProductImageSplatRoute =
+  ApiPublicProductImageSplatRouteImport.update({
+    id: '/api/public/product-image/$',
+    path: '/api/public/product-image/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
@@ -347,6 +355,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
@@ -392,6 +401,7 @@ export interface FileRoutesById {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/product-image/$'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/products'
     | '/admin/products/edit/$id'
+    | '/api/public/product-image/$'
     | '/lovable/email/transactional/preview'
   id:
     | '__root__'
@@ -524,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/product-image/$'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
@@ -568,6 +581,7 @@ export interface RootRouteChildren {
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminProductsIndexRoute: typeof AdminProductsIndexRoute
   AdminProductsEditIdRoute: typeof AdminProductsEditIdRoute
+  ApiPublicProductImageSplatRoute: typeof ApiPublicProductImageSplatRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -860,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/product-image/$': {
+      id: '/api/public/product-image/$'
+      path: '/api/public/product-image/$'
+      fullPath: '/api/public/product-image/$'
+      preLoaderRoute: typeof ApiPublicProductImageSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -922,6 +943,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminProductsIndexRoute: AdminProductsIndexRoute,
   AdminProductsEditIdRoute: AdminProductsEditIdRoute,
+  ApiPublicProductImageSplatRoute: ApiPublicProductImageSplatRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

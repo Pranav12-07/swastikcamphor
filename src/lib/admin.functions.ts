@@ -689,3 +689,31 @@ export const adminListAudit = createServerFn({ method: "POST" })
     const map = new Map((profiles ?? []).map((p) => [p.id, p]));
     return ((data ?? []) as Array<{ actor_id: string | null }>).map((r) => ({ ...r, actor_email: (r.actor_id && map.get(r.actor_id)?.email) || "system" }));
   });
+
+// ---------------------------------- product image uploads ----------------------------------
+export const adminUploadProductImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        filename: z.string().trim().min(1).max(160),
+        contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+        data: z.string().min(16).max(9_000_000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "products");
+    const bytes = Buffer.from(data.data, "base64");
+    if (bytes.byteLength > 6_000_000) throw new Error("Image is too large (max 6 MB)");
+    const ext = data.contentType === "image/png" ? "png" : data.contentType === "image/jpeg" ? "jpg" : "webp";
+    const safe = data.filename.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "image";
+    const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}.${ext}`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.storage
+      .from("product-images")
+      .upload(path, bytes, { contentType: data.contentType, cacheControl: "31536000", upsert: false });
+    if (error) throw new Error(error.message);
+    return { url: `/api/public/product-image/${path}` };
+  });
