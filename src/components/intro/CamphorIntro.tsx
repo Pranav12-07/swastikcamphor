@@ -52,17 +52,17 @@ export function CamphorIntro() {
     };
 
     if (mode === "short") {
-      push(() => setLeaving(true), 350);
-      push(() => setPhase("done"), 900);
+      push(() => setLeaving(true), 120);
+      push(() => setPhase("done"), 420);
     } else {
+      const reel = Math.min(REEL, scenes.length);
       push(() => setPhase("scenes"), BRAND_MS);
-      scenes.forEach((_, i) => {
-        if (i === 0) return;
+      for (let i = 1; i < reel; i++) {
         push(() => setIndex(i), BRAND_MS + i * SCENE_MS);
-      });
-      const end = BRAND_MS + scenes.length * SCENE_MS;
+      }
+      const end = BRAND_MS + reel * SCENE_MS;
       push(() => setPhase("outro"), end);
-      push(() => setLeaving(true), end + OUTRO_MS - 500);
+      push(() => setLeaving(true), end + 60);
       push(() => setPhase("done"), end + OUTRO_MS);
     }
 
