@@ -46,7 +46,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         name: row.name,
         short: row.short_description ?? "",
         description: row.description ?? row.short_description ?? "",
-        image: isUsableImage(row.image_url) ? row.image_url : (staticImage(row.slug) ?? fallbackProducts[0].image),
+        image: isUsableImage(row.image_url) ? row.image_url : (staticImage(row.slug) ?? fallbackProducts[0]!.image),
         price: Number(row.price),
         mrp: Number(row.compare_at_price ?? row.price),
         sizes: row.sizes?.length ? row.sizes : ["Standard"],
