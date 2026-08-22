@@ -38,21 +38,21 @@ export function Header() {
         scrolled ? "surface-glass shadow-[var(--shadow-soft)]" : "bg-background/80 backdrop-blur-sm",
       )}
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:flex sm:justify-between md:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3 md:px-8">
+        <Link to="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-3" onClick={() => setOpen(false)}>
           <img
             src={logoAsset.url}
-            alt="Swastik Camphor logo"
-            className="h-11 w-auto shrink-0 object-contain"
-            width={110}
-            height={44}
+            alt="Swastik Camphor — pure camphor manufacturer since 1968"
+            className="h-9 w-auto shrink-0 object-contain sm:h-11"
+            width={188}
+            height={92}
           />
-          <span className="min-w-0">
-            <span className="block truncate font-display text-lg leading-tight text-foreground">
+          <span className="hidden min-w-0 sm:block">
+            <span className="block truncate font-display text-base leading-tight text-foreground lg:text-lg">
               {site.name}
             </span>
-            <span className="block truncate text-[0.68rem] uppercase tracking-[0.22em] text-muted-foreground">
-              {site.tagline}
+            <span className="block truncate text-[0.62rem] uppercase tracking-[0.2em] text-muted-foreground lg:text-[0.68rem]">
+              ESTD 1968 • {site.tagline}
             </span>
           </span>
         </Link>
