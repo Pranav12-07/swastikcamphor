@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -25,8 +26,19 @@ interface Props {
   email?: string
   phone?: string
   address?: string
+  city?: string
+  state?: string
+  pincode?: string
   paymentMethod?: string
+  paymentStatus?: string
+  transactionId?: string
+  placedAt?: string
+  subtotal?: number
+  shipping?: number
+  discount?: number
+  tax?: number
   total?: number
+  adminUrl?: string
   items?: OrderItem[]
 }
 
@@ -38,8 +50,19 @@ const Email = ({
   email = '',
   phone = '',
   address = '',
+  city = '',
+  state = '',
+  pincode = '',
   paymentMethod = 'upi',
+  paymentStatus = 'paid',
+  transactionId = '',
+  placedAt = '',
+  subtotal = 0,
+  shipping = 0,
+  discount = 0,
+  tax = 0,
   total = 0,
+  adminUrl = '',
   items = [],
 }: Props) => (
   <Html lang="en" dir="ltr">
@@ -47,11 +70,14 @@ const Email = ({
     <Preview>{`New order ${orderNumber} — ${inr(total)}`}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>New order received</Heading>
-        <Text style={muted}>Order {orderNumber}</Text>
+        <Heading style={h1}>🛒 New order received</Heading>
+        <Text style={muted}>
+          Order #{orderNumber}
+          {placedAt ? ` • ${placedAt} IST` : ''}
+        </Text>
         <Hr style={hr} />
         <Section>
-          <Text style={label}>Customer</Text>
+          <Text style={label}>Customer information</Text>
           <Text style={value}>
             {customerName}
             <br />
@@ -59,23 +85,39 @@ const Email = ({
             <br />
             {phone}
           </Text>
-          <Text style={label}>Delivery address</Text>
-          <Text style={value}>{address}</Text>
+          <Text style={label}>Delivery information</Text>
+          <Text style={value}>
+            {address}
+            <br />
+            {[city, state, pincode].filter(Boolean).join(', ')}
+          </Text>
           <Text style={label}>Payment</Text>
           <Text style={value}>
-            {paymentMethod === 'cod' ? 'Cash on delivery' : 'UPI (awaiting reference)'}
+            {paymentMethod === 'cod' ? 'Cash on delivery' : 'UPI / PhonePe'} — {paymentStatus.toUpperCase()}
           </Text>
+          {transactionId ? <Text style={value}>Transaction ID: {transactionId}</Text> : null}
         </Section>
         <Hr style={hr} />
         <Section>
-          <Text style={label}>Items</Text>
+          <Text style={label}>Order items</Text>
           {items.map((it, i) => (
             <Text key={i} style={value}>
               {it.name} ({it.size}) x {it.qty} — {inr((it.price ?? 0) * (it.qty ?? 0))}
             </Text>
           ))}
+          <Text style={value}>Subtotal: {inr(subtotal)}</Text>
+          {discount ? <Text style={value}>Discount: -{inr(discount)}</Text> : null}
+          {tax ? <Text style={value}>GST / tax: {inr(tax)}</Text> : null}
+          <Text style={value}>Shipping: {shipping ? inr(shipping) : 'Free'}</Text>
           <Text style={totalStyle}>Total: {inr(total)}</Text>
         </Section>
+        {adminUrl ? (
+          <Section style={{ marginTop: '18px' }}>
+            <Button href={adminUrl} style={button}>
+              Open in admin
+            </Button>
+          </Section>
+        ) : null}
       </Container>
     </Body>
   </Html>
@@ -84,7 +126,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `New order ${data['orderNumber'] ?? ''} — ${inr(data['total'])}`,
+    `🛒 New Order Received - #${data['orderNumber'] ?? ''} - ${inr(data['total'])}`,
   displayName: 'New order notification',
   to: 'info@swastikcamphor.in',
   previewData: {
@@ -92,9 +134,20 @@ export const template = {
     customerName: 'Ramesh Kumar',
     email: 'ramesh@example.com',
     phone: '+91 90000 00000',
-    address: 'Plot 185, Shaikpet, Hyderabad 500008',
+    address: 'Plot 185, Shaikpet',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    pincode: '500008',
     paymentMethod: 'upi',
-    total: 448,
+    paymentStatus: 'paid',
+    transactionId: 'T2408221530123456',
+    placedAt: '22 Aug 2026, 3:30 pm',
+    subtotal: 398,
+    shipping: 49,
+    discount: 0,
+    tax: 0,
+    total: 447,
+    adminUrl: 'https://swastikcamphor.lovable.app/admin/orders',
     items: [{ name: 'Camphor Tablets', size: '100g', qty: 2, price: 149 }],
   },
 } satisfies TemplateEntry
@@ -107,3 +160,11 @@ const hr = { borderColor: '#e8dcc2' }
 const label = { fontSize: '12px', textTransform: 'uppercase' as const, color: '#9a7b3f', margin: '14px 0 2px' }
 const value = { fontSize: '14px', color: '#222', margin: '0 0 4px' }
 const totalStyle = { fontSize: '17px', color: '#6b1220', marginTop: '12px' }
+const button = {
+  backgroundColor: '#6b1220',
+  color: '#ffffff',
+  padding: '12px 22px',
+  borderRadius: '999px',
+  fontSize: '14px',
+  textDecoration: 'none',
+}
