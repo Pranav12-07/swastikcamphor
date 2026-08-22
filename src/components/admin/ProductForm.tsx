@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/admin/ui";
+import { MainImageUpload, GalleryUpload } from "@/components/admin/ImageUploader";
 import { adminSaveProduct, adminListCategories } from "@/lib/admin.functions";
 
 export type ProductRow = Record<string, unknown>;
@@ -35,6 +36,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
   const arr = (k: string) => ((initial?.[k] as string[] | null) ?? []).join(", ");
 
   const [busy, setBusy] = useState(false);
+  const [gallery, setGallery] = useState<string[]>(((initial?.["images"] as string[] | null) ?? []).filter(Boolean));
   const [form, setForm] = useState({
     name: g("name"),
     slug: g("slug"),
