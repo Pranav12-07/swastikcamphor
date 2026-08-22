@@ -212,14 +212,14 @@ const ApiChatRoute = ApiChatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogsIndexRoute = BlogsIndexRouteImport.update({
-  id: '/blogs/',
-  path: '/blogs/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogsRoute,
 } as any)
 const BlogsSlugRoute = BlogsSlugRouteImport.update({
-  id: '/blogs/$slug',
-  path: '/blogs/$slug',
-  getParentRoute: () => rootRouteImport,
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogsRoute,
 } as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/chat/',
@@ -558,10 +558,8 @@ export interface RootRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
   ApiChatRoute: typeof ApiChatRoute
-  BlogsSlugRoute: typeof BlogsSlugRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
   AdminProductsAddRoute: typeof AdminProductsAddRoute
@@ -799,17 +797,17 @@ declare module '@tanstack/react-router' {
     }
     '/blogs/': {
       id: '/blogs/'
-      path: '/blogs'
+      path: '/'
       fullPath: '/blogs/'
       preLoaderRoute: typeof BlogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BlogsRoute
     }
     '/blogs/$slug': {
       id: '/blogs/$slug'
-      path: '/blogs/$slug'
+      path: '/$slug'
       fullPath: '/blogs/$slug'
       preLoaderRoute: typeof BlogsSlugRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof BlogsRoute
     }
     '/chat/': {
       id: '/chat/'
@@ -912,10 +910,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
   ApiChatRoute: ApiChatRoute,
-  BlogsSlugRoute: BlogsSlugRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
   AdminIndexRoute: AdminIndexRoute,
-  BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   AdminOrdersIdRoute: AdminOrdersIdRoute,
   AdminProductsAddRoute: AdminProductsAddRoute,
