@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { getBlog } from "@/lib/blog.functions";
 import { useReveal } from "@/hooks/use-reveal";
+import { SITE_URL, breadcrumbJsonLd, canonical } from "@/lib/seo";
 
 export const Route = createFileRoute("/blogs/$slug")({
   loader: async ({ params }) => {
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/blogs/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: canonical(`/blogs/${post.slug}`) },
         { name: "twitter:card", content: "summary_large_image" },
         ...(post.cover_image?.startsWith("https://")
           ? [
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/blogs/$slug")({
             ]
           : []),
       ],
-      links: [{ rel: "canonical", href: `https://swastikcamphor.in/blogs/${post.slug}` }],
+      links: [{ rel: "canonical", href: `${SITE_URL}/blogs/${post.slug}` }],
       scripts: [
         {
           type: "application/ld+json",
@@ -43,7 +45,18 @@ export const Route = createFileRoute("/blogs/$slug")({
             keywords: post.seo_keywords,
             author: { "@type": "Organization", name: "Swastik Camphor" },
             publisher: { "@type": "Organization", name: "Swastik Camphor" },
+            mainEntityOfPage: canonical(`/blogs/${post.slug}`),
           }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Blog", path: "/blogs" },
+              { name: post.title, path: `/blogs/${post.slug}` },
+            ]),
+          ),
         },
       ],
     };
