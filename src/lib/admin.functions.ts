@@ -157,6 +157,14 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
     const { data: saved, error } = await query;
     if (error) throw new Error(error.message);
     await logAudit({ actorId: context.userId, action: id ? "product.updated" : "product.created", entity: "product", entityId: (saved?.id as string) ?? id, details: { name: data.name, price: data.price } });
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({
+      type: id ? "product.updated" : "product.created",
+      title: `${id ? "Product updated" : "New product added"}: ${data.name}`,
+      body: `Price ₹${data.price} • stock ${data.stock_quantity} • ${data.status}`,
+      link: "/admin/products",
+      details: { slug: data.slug, price: data.price, stock: data.stock_quantity, status: data.status },
+    });
     return { ok: true as const, id: (saved?.id as string) ?? id };
   });
 
@@ -194,6 +202,8 @@ export const adminDeleteProduct = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("products").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await logAudit({ actorId: context.userId, action: "product.deleted", entity: "product", entityId: data.id });
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({ type: "product.deleted", title: "Product deleted", link: "/admin/products", details: { product_id: data.id } });
     return { ok: true as const };
   });
 
@@ -703,8 +713,9 @@ export const adminUploadProductImage = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertPerm } = await import("@/lib/admin-guard.server");
-    await assertPerm(context.supabase as never, context.userId, "products");
+    const { getRoles, areasFor } = await import("@/lib/admin-guard.server");
+    const roles = await getRoles(context.supabase as never, context.userId);
+    if (areasFor(roles).length === 0) throw new Error("Forbidden");
     const bytes = Buffer.from(data.data, "base64");
     if (bytes.byteLength > 6_000_000) throw new Error("Image is too large (max 6 MB)");
     const ext = data.contentType === "image/png" ? "png" : data.contentType === "image/jpeg" ? "jpg" : "webp";
