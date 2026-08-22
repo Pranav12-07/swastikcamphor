@@ -54,6 +54,40 @@ function Checkout() {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [method, setMethod] = useState<"upi" | "cod">("upi");
   const [placed, setPlaced] = useState<{ email: string; total: number } | null>(null);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<string>("new");
+  const [saveAddress, setSaveAddress] = useState(true);
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    listMyAddresses()
+      .then((rows) => {
+        if (cancelled) return;
+        setAddresses(rows);
+        const preferred = rows.find((r) => r.is_default) ?? rows[0];
+        if (preferred) setSelectedAddress(preferred.id);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  const chosen = addresses.find((a) => a.id === selectedAddress) ?? null;
+  const prefill: Record<string, string> = chosen
+    ? {
+        customer_name: chosen.full_name,
+        email: session?.user?.email ?? "",
+        phone: chosen.phone,
+        address: [chosen.line1, chosen.line2].filter(Boolean).join(", "),
+        city: chosen.city,
+        state: chosen.state,
+        pincode: chosen.pincode,
+      }
+    : { email: session?.user?.email ?? "" };
+
+
 
   // Login is required before placing an order — the cart is preserved throughout.
   if (!authLoading && !session && !orderNumber) {
