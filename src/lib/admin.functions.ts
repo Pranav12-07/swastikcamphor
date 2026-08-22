@@ -225,6 +225,14 @@ export const adminAdjustStock = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("inventory_transactions").insert({ product_id: data.id, change: next - current, resulting_stock: next, reason: data.reason, actor_id: context.userId });
     await logAudit({ actorId: context.userId, action: "stock.adjusted", entity: "product", entityId: data.id, details: { from: current, to: next, reason: data.reason } });
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({
+      type: "inventory.adjusted",
+      title: `Stock updated: ${current} → ${next}`,
+      body: data.reason,
+      link: "/admin/inventory",
+      details: { product_id: data.id, from: current, to: next },
+    });
     return { ok: true as const, stock: next };
   });
 
@@ -349,6 +357,24 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
       });
     }
     await logAudit({ actorId: context.userId, action: "order.updated", entity: "order", entityId: id, details: patch });
+    const { data: order } = await context.supabase.from("orders").select("order_number, customer_name, email, total, status, payment_status").eq("id", id).maybeSingle();
+    const o = (order ?? {}) as { order_number?: string; customer_name?: string; email?: string; total?: number; status?: string; payment_status?: string };
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({
+      type: data.payment_status ? "order.payment_updated" : "order.status_changed",
+      title: `Order ${o.order_number ?? id} → ${data.status ?? data.payment_status ?? "updated"}`,
+      body: note ?? "",
+      link: "/admin/orders",
+      details: {
+        order_id: o.order_number ?? id,
+        customer: o.customer_name ?? "",
+        email: o.email ?? "",
+        total: o.total ?? "",
+        status: o.status ?? "",
+        payment_status: o.payment_status ?? "",
+        tracking: data.tracking_number ?? "",
+      },
+    });
     return { ok: true as const };
   });
 
