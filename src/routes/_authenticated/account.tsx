@@ -125,6 +125,9 @@ function AccountPage() {
             </ul>
           )}
         </div>
+        <NotificationList />
+        </div>
+
       </section>
     </>
   );
