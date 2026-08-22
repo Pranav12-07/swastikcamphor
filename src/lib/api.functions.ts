@@ -108,34 +108,51 @@ export const placeOrder = createServerFn({ method: "POST" })
       userId = userData?.user?.id ?? null;
     }
 
-    const orderNumber = `SC${Date.now().toString(36).toUpperCase()}`;
-    const paymentStatus = data.payment_method === "cod" ? "cod_pending" : "pending";
-    const { error } = await supabaseAdmin.from("orders").insert({
-      order_number: orderNumber,
-      user_id: userId,
-      customer_name: data.customer_name,
-      email: data.email,
-      phone: data.phone,
-      address: data.address,
-      city: data.city,
-      state: data.state,
-      pincode: data.pincode,
-      items: data.items,
-      subtotal: data.subtotal,
-      shipping: data.shipping,
-      discount: data.discount,
-      total: data.total,
-      coupon_code: data.coupon_code ?? null,
-      status: "pending",
-      payment_provider: data.payment_method === "cod" ? "cod" : "upi",
-      payment_status: paymentStatus,
+    // Server-side pricing + atomic stock reservation.
+    const { data: placed, error } = await supabaseAdmin.rpc("place_order", {
+      _user_id: userId as unknown as string,
+      _customer: {
+        customer_name: data.customer_name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+      },
+      _items: data.items.map((i) => ({ slug: i.slug, size: i.size, qty: i.qty })),
+      _coupon: data.coupon_code ?? "",
+      _payment_method: data.payment_method,
     });
-    if (error) throw new Error("We could not place your order. Please try again.");
+    if (error) throw new Error(error.message || "We could not place your order. Please try again.");
+
+    const result = placed as unknown as {
+      order_number: string;
+      order_id: string;
+      subtotal: number;
+      discount: number;
+      shipping: number;
+      total: number;
+    };
+    const orderNumber = result.order_number;
+    const paymentStatus = data.payment_method === "cod" ? "cod_pending" : "pending";
+
+    const { data: lines } = await supabaseAdmin
+      .from("order_items")
+      .select("product_slug, name, size, unit_price, qty")
+      .eq("order_id", result.order_id);
+    const items = (lines ?? []).map((l) => ({
+      slug: l.product_slug,
+      name: l.name,
+      size: l.size ?? "",
+      qty: l.qty,
+      price: Number(l.unit_price),
+    }));
 
     const fullAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
     const placedAt = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-    // Admin notification email + in-app notification, then customer confirmation.
+    // Admin notification email, then customer confirmation.
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("new-order-notification", "", {
@@ -147,31 +164,19 @@ export const placeOrder = createServerFn({ method: "POST" })
           address: fullAddress,
           paymentMethod: data.payment_method,
           paymentStatus,
-          subtotal: data.subtotal,
-          shipping: data.shipping,
-          discount: data.discount,
+          subtotal: result.subtotal,
+          shipping: result.shipping,
+          discount: result.discount,
           couponCode: data.coupon_code ?? "",
           placedAt,
-          total: data.total,
-          items: data.items,
+          total: result.total,
+          items,
         },
         idempotencyKey: `new-order-notification-${orderNumber}`,
         replyTo: data.email,
       });
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
-    }
-
-    try {
-      const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
-      await admin.from("admin_notifications").insert({
-        type: "order.created",
-        title: `New order ${orderNumber} — ₹${data.total}`,
-        body: `${data.customer_name} • ${data.phone} • ${data.items.length} item(s)`,
-        link: "/admin/orders",
-      });
-    } catch (notifyError) {
-      console.error("order notification insert failed", notifyError);
     }
 
     try {
@@ -183,13 +188,13 @@ export const placeOrder = createServerFn({ method: "POST" })
           address: fullAddress,
           paymentMethod: data.payment_method,
           paymentStatus,
-          subtotal: data.subtotal,
-          shipping: data.shipping,
-          discount: data.discount,
+          subtotal: result.subtotal,
+          shipping: result.shipping,
+          discount: result.discount,
           tax: 0,
-          total: data.total,
+          total: result.total,
           placedAt,
-          items: data.items,
+          items,
         },
         idempotencyKey: `order-confirmation-${orderNumber}`,
       });
@@ -197,7 +202,14 @@ export const placeOrder = createServerFn({ method: "POST" })
       console.error("Customer confirmation email failed", emailError);
     }
 
-    return { orderNumber };
+    return {
+      orderNumber,
+      subtotal: result.subtotal,
+      shipping: result.shipping,
+      discount: result.discount,
+      total: result.total,
+    };
+
   });
 
 /** Customer submits the UPI transaction reference (UTR) after paying via GPay/PhonePe. */
@@ -224,7 +236,44 @@ export const submitUpiReference = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
     if (error) throw new Error("We could not save your payment reference. Please try again.");
+
+    // Record the payment attempt; upi_ref is unique so a reused UTR is rejected.
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id, order_id")
+      .eq("upi_ref", data.reference)
+      .maybeSingle();
+    if (existing && existing.order_id !== order.id) {
+      throw new Error("That transaction reference has already been used for another order.");
+    }
+    const { data: pending } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("order_id", order.id)
+      .is("upi_ref", null)
+      .limit(1)
+      .maybeSingle();
+    if (pending) {
+      await supabaseAdmin
+        .from("payments")
+        .update({ upi_ref: data.reference, method: "upi", status: "awaiting_verification" })
+        .eq("id", pending.id);
+    } else if (!existing) {
+      const { data: ord } = await supabaseAdmin
+        .from("orders")
+        .select("total")
+        .eq("id", order.id)
+        .maybeSingle();
+      await supabaseAdmin.from("payments").insert({
+        order_id: order.id,
+        method: "upi",
+        amount: Number(ord?.total ?? 0),
+        upi_ref: data.reference,
+        status: "awaiting_verification",
+      });
+    }
     return { ok: true as const };
+
   });
 
 export const listThreads = createServerFn({ method: "POST" })
