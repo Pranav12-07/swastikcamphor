@@ -95,7 +95,7 @@ function MessagesAdmin() {
                   <a href={`mailto:${String(row["email"])}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
                     <Mail className="h-4 w-4" /> {String(row["email"])}
                   </a>
-                  {row["phone"] && (
+                  {Boolean(row["phone"]) && (
                     <a href={`tel:${String(row["phone"])}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
                       <Phone className="h-4 w-4" /> {String(row["phone"])}
                     </a>
