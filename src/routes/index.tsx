@@ -124,11 +124,12 @@ function Index() {
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {values.map((v, i) => (
-            <div key={v.title} className="card-premium reveal p-6" style={{ transitionDelay: `${i * 90}ms` }}>
-              <v.icon className="h-6 w-6 text-accent" aria-hidden="true" />
+            <div key={v.title} className="card-premium reveal reveal-zoom p-6" style={{ transitionDelay: `${i * 110}ms` }}>
+              <v.icon className="h-6 w-6 text-accent transition-transform duration-500 group-hover:scale-110" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg">{v.title}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{v.text}</p>
             </div>
+
           ))}
         </div>
       </section>
