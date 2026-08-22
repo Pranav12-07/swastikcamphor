@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/swastik-logo.png.asset.json";
+import logoAsset from "@/assets/swastik-logo-trimmed.png.asset.json";
 import { mainNav, site } from "@/config/site";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
@@ -38,21 +38,21 @@ export function Header() {
         scrolled ? "surface-glass shadow-[var(--shadow-soft)]" : "bg-background/80 backdrop-blur-sm",
       )}
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:flex sm:justify-between md:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3 md:px-8">
+        <Link to="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-3" onClick={() => setOpen(false)}>
           <img
             src={logoAsset.url}
-            alt="Swastik Camphor logo"
-            className="h-11 w-auto shrink-0 object-contain"
-            width={110}
-            height={44}
+            alt="Swastik Camphor — pure camphor manufacturer since 1968"
+            className="h-9 w-auto shrink-0 object-contain sm:h-11"
+            width={188}
+            height={92}
           />
-          <span className="min-w-0">
-            <span className="block truncate font-display text-lg leading-tight text-foreground">
+          <span className="hidden min-w-0 sm:block">
+            <span className="block truncate font-display text-base leading-tight text-foreground lg:text-lg">
               {site.name}
             </span>
-            <span className="block truncate text-[0.68rem] uppercase tracking-[0.22em] text-muted-foreground">
-              {site.tagline}
+            <span className="block truncate text-[0.62rem] uppercase tracking-[0.2em] text-muted-foreground lg:text-[0.68rem]">
+              ESTD 1968 • {site.tagline}
             </span>
           </span>
         </Link>
@@ -70,11 +70,11 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (
             <Link
               to="/admin"
-              className="inline-flex rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
+              className="inline-flex rounded-full border border-gold/40 px-2.5 py-2 text-[0.7rem] font-medium transition-colors hover:bg-accent/15 sm:px-3 sm:text-xs"
             >
               Admin
             </Link>
@@ -84,7 +84,7 @@ export function Header() {
               <Link
                 to="/account"
                 aria-label="My account"
-                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
               >
                 <User className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -92,7 +92,7 @@ export function Header() {
                 type="button"
                 onClick={signOut}
                 aria-label="Sign out"
-                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -100,7 +100,7 @@ export function Header() {
           ) : (
             <Link
               to="/auth"
-              className="rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
+              className="rounded-full border border-gold/40 px-2.5 py-2 text-[0.7rem] font-medium transition-colors hover:bg-accent/15 sm:px-3 sm:text-xs"
             >
               Sign in
             </Link>
@@ -108,7 +108,7 @@ export function Header() {
           <Link
             to="/cart"
             aria-label={`Cart with ${count} items`}
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+            className="relative grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
             {count > 0 && (
@@ -122,7 +122,7 @@ export function Header() {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
-            className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 sm:h-10 sm:w-10 lg:hidden"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>

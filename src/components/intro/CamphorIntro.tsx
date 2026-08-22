@@ -18,9 +18,9 @@ const scenes: Scene[] = [
   { glyph: "🕯️", title: "Daily Spiritual Practices", subtitle: "A small flame. A timeless tradition." },
 ];
 
-const BRAND_MS = 900;
-const SCENE_MS = 800;
-const OUTRO_MS = 1100;
+const BRAND_MS = 650;
+const SCENE_MS = 480;
+const OUTRO_MS = 750;
 
 export function CamphorIntro() {
   const [phase, setPhase] = useState<"brand" | "scenes" | "outro" | "done">("brand");
@@ -116,8 +116,8 @@ export function CamphorIntro() {
             <h1 className="mt-6 font-display text-2xl tracking-[0.22em] text-gold-soft md:text-3xl">
               SWASTIK CAMPHOR
             </h1>
-            <p className="mt-3 text-xs uppercase tracking-[0.3em] text-gold-soft/70">
-              Pure Tradition. Everyday Purity.
+            <p className="mt-3 text-sm font-semibold uppercase tracking-[0.4em] text-gold-soft">
+              PURE TRADITION
             </p>
           </div>
         ) : phase === "scenes" ? (

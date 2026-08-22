@@ -17,6 +17,7 @@ export function AmbientAudio() {
     const el = audioRef.current;
     if (!el) return;
     el.volume = 0.18;
+    el.muted = false;
 
     const wantsMuted = window.localStorage.getItem(STORAGE_KEY) === "1";
     if (wantsMuted) return;

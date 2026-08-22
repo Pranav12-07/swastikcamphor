@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 const values = [
   { icon: ShieldCheck, title: "100% Purity", text: "No chemicals, no fillers — only pure camphor." },
   { icon: Flame, title: "Clean Burn", text: "Bright, steady flame that leaves no black residue." },
-  { icon: Leaf, title: "Eco Friendly", text: "Ethically sourced with sustainable packaging." },
+  { icon: Leaf, title: "Long Lasting", text: "Consistent burning performance." },
   { icon: Truck, title: "Pan-India Delivery", text: "Dispatched in 1-2 days, delivered across India." },
 ];
 
@@ -55,7 +55,7 @@ function Index() {
         />
         <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft">
-            Since generations • Hyderabad
+            ESTD 1968 • Hyderabad
           </p>
           <h1
             className="animate-rise-in mt-4 max-w-3xl text-4xl leading-[1.1] text-gold-soft md:text-6xl"
@@ -65,7 +65,7 @@ function Index() {
               banner.title
             ) : (
               <>
-                Purity in every <span className="text-gradient-gold">camphor</span> tablet
+                Purity in every <strong className="font-bold text-gradient-gold">PURE CAMPHOR</strong> tablet
               </>
             )}
           </h1>
