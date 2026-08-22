@@ -237,22 +237,81 @@ function Checkout() {
       <PageHeader eyebrow="Checkout" title="Delivery details" subtitle="We confirm every order personally before dispatch." />
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:px-8 lg:grid-cols-[1.4fr_1fr]">
         <form onSubmit={onSubmit} noValidate className="card-premium grid gap-4 p-6 sm:grid-cols-2">
+          {addresses.length > 0 && (
+            <fieldset className="sm:col-span-2">
+              <legend className="text-sm font-medium">Deliver to</legend>
+              <div className="mt-2 grid gap-2">
+                {addresses.map((a) => (
+                  <label
+                    key={a.id}
+                    className={`flex cursor-pointer items-start gap-2 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                      selectedAddress === a.id ? "border-primary bg-primary/5" : "border-gold/40"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="saved_address"
+                      className="mt-1 accent-primary"
+                      checked={selectedAddress === a.id}
+                      onChange={() => setSelectedAddress(a.id)}
+                    />
+                    <span>
+                      <span className="font-medium">
+                        {a.label} — {a.full_name}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {[a.line1, a.line2, a.city, a.state, a.pincode].filter(Boolean).join(", ")} • {a.phone}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                <label
+                  className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                    selectedAddress === "new" ? "border-primary bg-primary/5" : "border-gold/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="saved_address"
+                    className="accent-primary"
+                    checked={selectedAddress === "new"}
+                    onChange={() => setSelectedAddress("new")}
+                  />
+                  Use a new address
+                </label>
+              </div>
+            </fieldset>
+          )}
           {fields.map((f) => (
             <div key={f.name} className={f.name === "address" ? "sm:col-span-2" : ""}>
               <label htmlFor={f.name} className="text-sm font-medium">
                 {f.label}
               </label>
               <input
+                key={`${f.name}-${selectedAddress}`}
                 id={f.name}
                 name={f.name}
                 type={f.type}
                 autoComplete={f.autoComplete}
+                defaultValue={prefill[f.name] ?? ""}
                 aria-invalid={Boolean(errors[f.name])}
                 className="mt-1.5 w-full rounded-xl border border-gold/40 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
               {errors[f.name] && <p className="mt-1 text-xs text-destructive">{errors[f.name]}</p>}
             </div>
           ))}
+          {session && !chosen && (
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={saveAddress}
+                onChange={(e) => setSaveAddress(e.target.checked)}
+                className="accent-primary"
+              />
+              Save this address to my account for next time
+            </label>
+          )}
+
           <fieldset className="sm:col-span-2">
             <legend className="text-sm font-medium">Payment method</legend>
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
