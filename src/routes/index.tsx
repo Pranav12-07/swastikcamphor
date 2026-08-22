@@ -59,8 +59,9 @@ function Index() {
         <img
           src={banner?.image_url || hero}
           alt="A camphor flame glowing above pure camphor tablets during aarti"
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
+          className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover"
         />
+
         <div
           className="absolute inset-0 -z-10"
           style={{ background: "linear-gradient(100deg, oklch(0.2 0.06 28 / 0.92), oklch(0.2 0.06 28 / 0.45))" }}
@@ -123,11 +124,12 @@ function Index() {
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {values.map((v, i) => (
-            <div key={v.title} className="card-premium reveal p-6" style={{ transitionDelay: `${i * 90}ms` }}>
-              <v.icon className="h-6 w-6 text-accent" aria-hidden="true" />
+            <div key={v.title} className="card-premium reveal reveal-zoom p-6" style={{ transitionDelay: `${i * 110}ms` }}>
+              <v.icon className="h-6 w-6 text-accent transition-transform duration-500 group-hover:scale-110" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg">{v.title}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{v.text}</p>
             </div>
+
           ))}
         </div>
       </section>
@@ -137,7 +139,8 @@ function Index() {
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Our range</p>
             <h2 className="mt-2 text-3xl md:text-4xl">Camphor for every ritual</h2>
-            <div className="gold-rule mt-4 w-20" />
+            <div className="gold-rule rule-animate mt-4 w-20" />
+
           </div>
           <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
             View all products →
@@ -152,18 +155,19 @@ function Index() {
 
       <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
         <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div className="reveal overflow-hidden rounded-3xl">
+          <div className="reveal reveal-left overflow-hidden rounded-3xl">
             <img
               src={about}
               alt="Traditional temple aarti performed with a camphor flame"
               loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out hover:scale-105"
             />
           </div>
-          <div className="reveal">
+          <div className="reveal reveal-right">
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">About us</p>
             <h2 className="mt-2 text-3xl md:text-4xl">Rooted in tradition, refined by quality</h2>
-            <div className="gold-rule mt-4 w-20" />
+            <div className="gold-rule rule-animate mt-4 w-20" />
+
             <p className="mt-5 leading-relaxed text-muted-foreground">
               At {site.name}, we craft camphor that is 100% pure, natural and free from harmful chemicals.
               Every batch is quality checked so your prayers, meditation and home rituals are accompanied by a

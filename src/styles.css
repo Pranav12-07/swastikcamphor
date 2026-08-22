@@ -269,15 +269,74 @@
   transform: none;
 }
 
+/* directional + scale variants for a calmer, layered entrance */
+.reveal-left {
+  transform: translateX(-32px);
+}
+.reveal-right {
+  transform: translateX(32px);
+}
+.reveal-zoom {
+  transform: scale(0.96);
+}
+
+/* slow cinematic drift on the hero image */
+@keyframes ken-burns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.09) translate3d(0, -1.2%, 0);
+  }
+}
+.animate-ken-burns {
+  animation: ken-burns 26s ease-out both alternate infinite;
+  will-change: transform;
+}
+
+/* gentle sheen sweeping across the gold rule */
+@keyframes rule-sweep {
+  0% {
+    background-position: -140% 50%;
+  }
+  100% {
+    background-position: 240% 50%;
+  }
+}
+.gold-rule.rule-animate {
+  background-size: 220% 100%;
+  animation: rule-sweep 4.5s ease-in-out infinite;
+}
+
+/* soft lift for premium cards */
+.card-premium {
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s ease;
+}
+.card-premium:hover {
+  transform: translateY(-6px);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-zoom {
     opacity: 1;
     transform: none;
     transition: none;
   }
   .animate-float-slow,
   .animate-flicker,
-  .animate-rise-in {
+  .animate-rise-in,
+  .animate-ken-burns,
+  .gold-rule.rule-animate {
     animation: none;
   }
+  .card-premium:hover {
+    transform: none;
+  }
 }
+
