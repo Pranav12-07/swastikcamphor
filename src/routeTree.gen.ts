@@ -26,6 +26,7 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAdminUsersRouteImport } from './routes/admin/admin-users'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
+import { Route as AdminBlogsRouteImport } from './routes/admin/blogs'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
 import { Route as AdminCouponsRouteImport } from './routes/admin/coupons'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
@@ -135,6 +136,11 @@ const AdminAdminUsersRoute = AdminAdminUsersRouteImport.update({
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/admin/analytics',
   path: '/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBlogsRoute = AdminBlogsRouteImport.update({
+  id: '/admin/blogs',
+  path: '/admin/blogs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/blogs': typeof AdminBlogsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/blogs': typeof AdminBlogsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -376,6 +384,7 @@ export interface FileRoutesById {
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/blogs': typeof AdminBlogsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
@@ -422,6 +431,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin/admin-users'
     | '/admin/analytics'
+    | '/admin/blogs'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin/admin-users'
     | '/admin/analytics'
+    | '/admin/blogs'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account'
     | '/admin/admin-users'
     | '/admin/analytics'
+    | '/admin/blogs'
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/customers'
@@ -556,6 +568,7 @@ export interface RootRouteChildren {
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   AdminAdminUsersRoute: typeof AdminAdminUsersRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminBlogsRoute: typeof AdminBlogsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
@@ -704,6 +717,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/analytics'
       fullPath: '/admin/analytics'
       preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/blogs': {
+      id: '/admin/blogs'
+      path: '/admin/blogs'
+      fullPath: '/admin/blogs'
+      preLoaderRoute: typeof AdminBlogsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/categories': {
@@ -918,6 +938,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   AdminAdminUsersRoute: AdminAdminUsersRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminBlogsRoute: AdminBlogsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
