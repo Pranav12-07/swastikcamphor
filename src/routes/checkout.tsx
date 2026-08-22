@@ -132,7 +132,7 @@ function Checkout() {
             </p>
           </div>
           {method === "upi" && (
-            <UpiPayment orderNumber={orderNumber} email={placed.email} amount={placed.total} />
+            <UpiPayment orderNumber={orderNumber} amount={placed.total} />
           )}
           <div className="flex flex-wrap justify-center gap-3">
             <Link

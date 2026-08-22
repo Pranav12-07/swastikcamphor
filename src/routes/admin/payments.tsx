@@ -70,9 +70,9 @@ function PaymentsPage() {
             <EmptyState title="Nothing to verify here" hint="Payments appear as soon as customers submit a UPI reference." />
           ) : (
             <Card className="overflow-x-auto">
-              <table className="w-full min-w-[820px] text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead className="text-left text-xs uppercase text-muted-foreground">
-                  <tr><th className="py-2">Order</th><th>Customer</th><th>Date</th><th>Amount</th><th>Method</th><th>UPI reference</th><th>Status</th><th className="text-right">Actions</th></tr>
+                  <tr><th className="py-2">Order</th><th>Customer</th><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th className="text-right">Actions</th></tr>
                 </thead>
                 <tbody>
                   {rows.map((o) => (
@@ -84,7 +84,6 @@ function PaymentsPage() {
                       <td className="text-muted-foreground">{fmtDate(o["created_at"] as string)}</td>
                       <td className="tabular-nums">{inr(Number(o["total"] ?? 0))}</td>
                       <td className="uppercase text-muted-foreground">{(o["payment_method"] as string) ?? "upi"}</td>
-                      <td className="font-mono text-xs">{(o["payment_reference"] as string) || "—"}</td>
                       <td><StatusBadge status={(o["payment_status"] as string) ?? "pending"} /></td>
                       <td>
                         <div className="flex justify-end gap-1">

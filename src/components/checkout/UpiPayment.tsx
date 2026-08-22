@@ -4,7 +4,6 @@ import QRCode from "qrcode";
 import { toast } from "sonner";
 import { upi } from "@/config/site";
 import { formatINR } from "@/data/products";
-import { submitUpiReference } from "@/lib/api.functions";
 
 function buildUpiUrl(scheme: string, amount: number, orderNumber: string) {
   const params = new URLSearchParams({
@@ -26,17 +25,12 @@ const APPS = [
 
 export function UpiPayment({
   orderNumber,
-  email,
   amount,
 }: {
   orderNumber: string;
-  email: string;
   amount: number;
 }) {
   const [qr, setQr] = useState<string | null>(null);
-  const [reference, setReference] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -52,24 +46,6 @@ export function UpiPayment({
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Could not copy. Please note the UPI ID manually.");
-    }
-  };
-
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (reference.trim().length < 6) {
-      toast.error("Enter the 12-digit UPI transaction / UTR number");
-      return;
-    }
-    setBusy(true);
-    try {
-      await submitUpiReference({ data: { order_number: orderNumber, email, reference: reference.trim() } });
-      setDone(true);
-      toast.success("Payment reference received — we'll verify and confirm shortly.");
-    } catch {
-      toast.error("We could not save your reference. Please WhatsApp us the screenshot.");
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -121,38 +97,13 @@ export function UpiPayment({
         </div>
       </div>
 
-      {done ? (
-        <div className="mt-6 rounded-xl border border-gold/40 bg-card p-4 text-sm">
-          <p className="font-medium">Payment reference received</p>
-          <p className="mt-1 text-muted-foreground">
-            We're verifying your payment for order <span className="font-medium">{orderNumber}</span> and will confirm
-            dispatch shortly.
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={onSubmit} className="mt-6 border-t border-border pt-5">
-          <label htmlFor="upi-ref" className="text-sm font-medium">
-            After paying, enter the UPI transaction / UTR number
-          </label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <input
-              id="upi-ref"
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              inputMode="numeric"
-              placeholder="e.g. 412345678901"
-              className="w-full rounded-xl border border-gold/40 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              className="shrink-0 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-            >
-              {busy ? "Submitting…" : "I have paid"}
-            </button>
-          </div>
-        </form>
-      )}
+      <div className="mt-6 rounded-xl border border-gold/40 bg-card p-4 text-sm">
+        <p className="font-medium">After you pay</p>
+        <p className="mt-1 text-muted-foreground">
+          We receive your UPI payment for order <span className="font-medium">{orderNumber}</span> automatically and
+          will confirm dispatch shortly. No transaction number needed.
+        </p>
+      </div>
     </div>
   );
 }

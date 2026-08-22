@@ -126,7 +126,7 @@ function OrderDetailPage() {
               </select>
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <StatusBadge status={(order["payment_method"] as string) ?? "upi"} />
-                {order["payment_reference"] ? <span>Ref {order["payment_reference"] as string}</span> : <span>No payment reference yet</span>}
+                
               </div>
             </Card>
 
