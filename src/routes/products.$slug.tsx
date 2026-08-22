@@ -24,7 +24,9 @@ export const Route = createFileRoute("/products/$slug")({
     const description =
       product.seo_description ||
       `Shop ${product.name} from Swastik Camphor. ${product.short || product.description}`.slice(0, 158);
-    const image = (product.gallery?.[0] ?? product.image).startsWith("http") ? product.image : `${SITE_URL}${product.image}`;
+    const abs = (u: string) => (u.startsWith("http") ? u : `${SITE_URL}${u}`);
+    const gallery = (product.gallery?.length ? product.gallery : [product.image]).map(abs);
+    const image = gallery[0]!;
 
     return {
       meta: seoMeta({ title, description, path, image, type: "product" }),
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/products/$slug")({
             "@type": "Product",
             name: product.name,
             description: product.description || product.short,
-            image: [image],
+            image: gallery,
             sku: product.sku,
             brand: { "@type": "Brand", name: site.name },
             ...(reviewStats
