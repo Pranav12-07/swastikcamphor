@@ -52,12 +52,14 @@ import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as AuthenticatedOrderSuccessOrderNumberRouteImport } from './routes/_authenticated/order-success.$orderNumber'
 import { Route as AuthenticatedOrdersOrderNumberRouteImport } from './routes/_authenticated/orders.$orderNumber'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
 import { Route as AdminProductsAddRouteImport } from './routes/admin/products/add'
 import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products/edit/$id'
+import { Route as ApiPublicPhonepeCallbackRouteImport } from './routes/api/public/phonepe/callback'
 import { Route as ApiPublicProductImageSplatRouteImport } from './routes/api/public/product-image/$'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -277,6 +279,12 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOrderSuccessOrderNumberRoute =
+  AuthenticatedOrderSuccessOrderNumberRouteImport.update({
+    id: '/order-success/$orderNumber',
+    path: '/order-success/$orderNumber',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersOrderNumberRoute =
   AuthenticatedOrdersOrderNumberRouteImport.update({
     id: '/orders/$orderNumber',
@@ -308,6 +316,12 @@ const AdminProductsEditIdRoute = AdminProductsEditIdRouteImport.update({
   path: '/products/edit/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiPublicPhonepeCallbackRoute =
+  ApiPublicPhonepeCallbackRouteImport.update({
+    id: '/api/public/phonepe/callback',
+    path: '/api/public/phonepe/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicProductImageSplatRoute =
   ApiPublicProductImageSplatRouteImport.update({
     id: '/api/public/product-image/$',
@@ -374,12 +388,14 @@ export interface FileRoutesByFullPath {
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -427,12 +443,14 @@ export interface FileRoutesByTo {
   '/blogs': typeof BlogsIndexRoute
   '/chat': typeof ChatIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -483,12 +501,14 @@ export interface FileRoutesById {
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/_authenticated/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/_authenticated/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -539,12 +559,14 @@ export interface FileRouteTypes {
     | '/blogs/'
     | '/chat/'
     | '/products/'
+    | '/order-success/$orderNumber'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -592,12 +614,14 @@ export interface FileRouteTypes {
     | '/blogs'
     | '/chat'
     | '/products'
+    | '/order-success/$orderNumber'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -647,12 +671,14 @@ export interface FileRouteTypes {
     | '/blogs/'
     | '/chat/'
     | '/products/'
+    | '/_authenticated/order-success/$orderNumber'
     | '/_authenticated/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -682,6 +708,7 @@ export interface RootRouteChildren {
   BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  ApiPublicPhonepeCallbackRoute: typeof ApiPublicPhonepeCallbackRoute
   ApiPublicProductImageSplatRoute: typeof ApiPublicProductImageSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -991,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/order-success/$orderNumber': {
+      id: '/_authenticated/order-success/$orderNumber'
+      path: '/order-success/$orderNumber'
+      fullPath: '/order-success/$orderNumber'
+      preLoaderRoute: typeof AuthenticatedOrderSuccessOrderNumberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/$orderNumber': {
       id: '/_authenticated/orders/$orderNumber'
       path: '/orders/$orderNumber'
@@ -1033,6 +1067,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsEditIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/public/phonepe/callback': {
+      id: '/api/public/phonepe/callback'
+      path: '/api/public/phonepe/callback'
+      fullPath: '/api/public/phonepe/callback'
+      preLoaderRoute: typeof ApiPublicPhonepeCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/product-image/$': {
       id: '/api/public/product-image/$'
       path: '/api/public/product-image/$'
@@ -1067,12 +1108,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
+  AuthenticatedOrderSuccessOrderNumberRoute: typeof AuthenticatedOrderSuccessOrderNumberRoute
   AuthenticatedOrdersOrderNumberRoute: typeof AuthenticatedOrdersOrderNumberRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
+  AuthenticatedOrderSuccessOrderNumberRoute:
+    AuthenticatedOrderSuccessOrderNumberRoute,
   AuthenticatedOrdersOrderNumberRoute: AuthenticatedOrdersOrderNumberRoute,
 }
 
@@ -1160,6 +1204,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  ApiPublicPhonepeCallbackRoute: ApiPublicPhonepeCallbackRoute,
   ApiPublicProductImageSplatRoute: ApiPublicProductImageSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

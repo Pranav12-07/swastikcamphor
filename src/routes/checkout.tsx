@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { placeOrder } from "@/lib/api.functions";
 import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account.functions";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
-import { UpiPayment } from "@/components/checkout/UpiPayment";
+import { PayWithUpi } from "@/components/checkout/PayWithUpi";
 
 
 export const Route = createFileRoute("/checkout")({
@@ -48,6 +48,7 @@ const fields = [
 function Checkout() {
   const { products } = useCatalog();
   const cart = useCart();
+  const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -127,12 +128,12 @@ function Checkout() {
             <p className="mt-2 font-display text-3xl">{orderNumber}</p>
             <p className="mt-4 text-sm text-muted-foreground">
               {method === "upi"
-                ? "Pay securely below with Google Pay, PhonePe or any UPI app to confirm dispatch."
+                ? "Choose your UPI app below. Your order is confirmed only after the payment is verified."
                 : "Our team will call or email you shortly to confirm delivery. Please keep cash ready on delivery."}
             </p>
           </div>
           {method === "upi" && (
-            <UpiPayment orderNumber={orderNumber} amount={placed.total} />
+            <PayWithUpi orderNumber={orderNumber} amount={placed.total} />
           )}
           <div className="flex flex-wrap justify-center gap-3">
             <Link
@@ -217,9 +218,13 @@ function Checkout() {
         }).catch(() => undefined);
       }
       // Totals come back from the server — it is the pricing authority.
+      // The cart is only cleared once the payment is verified (order-success page).
       setPlaced({ email: parsed.data.email, total: result.total });
-      cart.clear();
       setOrderNumber(result.orderNumber);
+      if (method === "cod") {
+        cart.clear();
+        navigate({ to: "/order-success/$orderNumber", params: { orderNumber: result.orderNumber } });
+      }
     } catch (err) {
       toast.error(
         err instanceof Error && err.message && err.message.length < 140

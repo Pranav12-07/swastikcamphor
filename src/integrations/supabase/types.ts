@@ -686,6 +686,7 @@ export type Database = {
           id: string
           items: Json
           order_number: string
+          paid_at: string | null
           payment_id: string | null
           payment_order_id: string | null
           payment_provider: string | null
@@ -717,6 +718,7 @@ export type Database = {
           id?: string
           items?: Json
           order_number: string
+          paid_at?: string | null
           payment_id?: string | null
           payment_order_id?: string | null
           payment_provider?: string | null
@@ -748,6 +750,7 @@ export type Database = {
           id?: string
           items?: Json
           order_number?: string
+          paid_at?: string | null
           payment_id?: string | null
           payment_order_id?: string | null
           payment_provider?: string | null
@@ -770,44 +773,62 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          currency: string
           failure_reason: string | null
+          gateway: string
+          gateway_order_id: string | null
           id: string
           method: string
           order_id: string
+          raw: Json
           screenshot_path: string | null
           status: string
+          transaction_id: string | null
           updated_at: string
           upi_ref: string | null
           verified_at: string | null
           verified_by: string | null
+          webhook_status: string | null
         }
         Insert: {
           amount: number
           created_at?: string
+          currency?: string
           failure_reason?: string | null
+          gateway?: string
+          gateway_order_id?: string | null
           id?: string
           method?: string
           order_id: string
+          raw?: Json
           screenshot_path?: string | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
           upi_ref?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          webhook_status?: string | null
         }
         Update: {
           amount?: number
           created_at?: string
+          currency?: string
           failure_reason?: string | null
+          gateway?: string
+          gateway_order_id?: string | null
           id?: string
           method?: string
           order_id?: string
+          raw?: Json
           screenshot_path?: string | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
           upi_ref?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          webhook_status?: string | null
         }
         Relationships: [
           {
