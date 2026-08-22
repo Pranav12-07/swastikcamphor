@@ -27,6 +27,8 @@ export const Route = createFileRoute("/admin/orders/")({
 function OrdersPage() {
   const list = useServerFn(adminListOrders);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-orders"], queryFn: () => list(undefined as never) });
+  useRealtimeRefresh("orders", ["admin-orders"]);
+
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [payment, setPayment] = useState("all");
