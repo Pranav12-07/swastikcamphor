@@ -24,6 +24,18 @@ const scenes: Scene[] = [
     alt: "An Indian family performing aarti with a camphor tablet burning in the foreground",
   },
   {
+    url: sceneFlame.url,
+    label: "The Aarti Flame",
+    caption: "A clean, steady flame — smokeless and pure.",
+    alt: "Macro view of a camphor tablet burning with a tall flame in a brass aarti thali",
+  },
+  {
+    url: sceneFestival.url,
+    label: "Festivals",
+    caption: "At the heart of every celebration.",
+    alt: "Family celebrating Diwali pooja with Swastik camphor jars and a lit diya",
+  },
+  {
     url: sceneProduct.url,
     label: "The Product",
     caption: "Pure camphor. Purity you can trust.",
