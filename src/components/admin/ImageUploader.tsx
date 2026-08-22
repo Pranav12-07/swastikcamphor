@@ -139,6 +139,130 @@ export function MainImageUpload({ value, onChange }: { value: string; onChange: 
   );
 }
 
+export type GalleryImage = { url: string; is_primary: boolean };
+
+/** Multi-image manager: upload many, preview, delete, reorder (drag or arrows) and pick the main image. */
+export function ProductImagesManager({
+  value,
+  onChange,
+}: {
+  value: GalleryImage[];
+  onChange: (images: GalleryImage[]) => void;
+}) {
+  const uploadOne = useUploader();
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const dragIndex = useRef<number | null>(null);
+
+  const normalise = (list: GalleryImage[]): GalleryImage[] => {
+    if (!list.length) return [];
+    const primary = list.some((i) => i.is_primary) ? list.findIndex((i) => i.is_primary) : 0;
+    return list.map((img, i) => ({ ...img, is_primary: i === primary }));
+  };
+
+  async function handle(files: File[]) {
+    if (!files.length || busy) return;
+    setBusy(true);
+    const batch = files.slice(0, 20);
+    setProgress({ done: 0, total: batch.length });
+    const added: GalleryImage[] = [];
+    for (const file of batch) {
+      try {
+        added.push({ url: await uploadOne(file), is_primary: false });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : `${file.name}: upload failed`);
+      }
+      setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
+    }
+    if (added.length) {
+      onChange(normalise([...value, ...added]));
+      toast.success(`${added.length} image${added.length > 1 ? "s" : ""} uploaded`);
+    }
+    setProgress(null);
+    setBusy(false);
+  }
+
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= value.length || from === to) return;
+    const next = [...value];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item!);
+    onChange(normalise(next));
+  };
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-medium">Product Images</span>
+        <span className="text-xs text-muted-foreground">{value.length} image{value.length === 1 ? "" : "s"}</span>
+      </div>
+      {value.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-3">
+          {value.map((img, index) => (
+            <li
+              key={img.url}
+              draggable
+              onDragStart={() => {
+                dragIndex.current = index;
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIndex.current != null) move(dragIndex.current, index);
+                dragIndex.current = null;
+              }}
+              className={`w-36 cursor-grab rounded-lg border p-2 ${img.is_primary ? "border-primary bg-primary/5" : "border-border"}`}
+            >
+              <div className="relative">
+                <img src={img.url} alt={`Product image ${index + 1}`} className="h-24 w-full rounded-md object-cover" loading="lazy" />
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  onClick={() => onChange(normalise(value.filter((_, i) => i !== index)))}
+                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex gap-1">
+                  <button type="button" aria-label="Move left" onClick={() => move(index, index - 1)} className="rounded border border-input px-1.5 py-0.5 text-xs">
+                    ←
+                  </button>
+                  <button type="button" aria-label="Move right" onClick={() => move(index, index + 1)} className="rounded border border-input px-1.5 py-0.5 text-xs">
+                    →
+                  </button>
+                </div>
+                <span className="text-[11px] text-muted-foreground">#{index + 1}</span>
+              </div>
+              {img.is_primary ? (
+                <p className="mt-1 text-center text-[11px] font-medium text-primary">Main image</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onChange(value.map((it, i) => ({ ...it, is_primary: i === index })))}
+                  className="mt-1 w-full rounded border border-input py-0.5 text-[11px] hover:bg-accent"
+                >
+                  Set as main
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <DropZone label="Upload Images" multiple busy={busy} onFiles={handle} />
+      {progress && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Uploading {progress.done} of {progress.total}…
+        </p>
+      )}
+      <p className="mt-1 text-xs text-muted-foreground">
+        Drag a card to reorder. The image marked “Main image” appears first on the product page.
+      </p>
+    </div>
+  );
+}
+
 export function GalleryUpload({ value, onChange }: { value: string[]; onChange: (urls: string[]) => void }) {
   const uploadOne = useUploader();
   const [busy, setBusy] = useState(false);
