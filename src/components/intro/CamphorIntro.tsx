@@ -93,7 +93,7 @@ export function CamphorIntro() {
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-[100] grid place-items-center overflow-hidden transition-opacity duration-500"
+      className="fixed inset-0 z-[100] grid place-items-center overflow-hidden transition-opacity duration-300"
       style={{
         background: "radial-gradient(circle at 50% 62%, oklch(0.28 0.06 42) 0%, oklch(0.16 0.04 32) 55%, oklch(0.11 0.02 30) 100%)",
         opacity: leaving ? 0 : 1,
@@ -101,7 +101,7 @@ export function CamphorIntro() {
     >
       {/* flame — the constant visual thread */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-700 will-change-transform"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-500 will-change-transform"
         style={{
           width: phase === "outro" ? "120vmax" : "18rem",
           height: phase === "outro" ? "120vmax" : "18rem",
@@ -123,7 +123,7 @@ export function CamphorIntro() {
             </p>
           </div>
         ) : phase === "scenes" ? (
-          <div key={index} className="animate-rise-in">
+          <div key={index} className="animate-rise-in [animation-duration:0.28s]">
             <span className="text-4xl md:text-5xl" aria-hidden="true">
               {scene.glyph}
             </span>
