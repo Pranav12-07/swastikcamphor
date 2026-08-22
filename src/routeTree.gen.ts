@@ -52,6 +52,7 @@ import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as AuthenticatedOrderSuccessOrderNumberRouteImport } from './routes/_authenticated/order-success.$orderNumber'
 import { Route as AuthenticatedOrdersOrderNumberRouteImport } from './routes/_authenticated/orders.$orderNumber'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
@@ -278,6 +279,12 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOrderSuccessOrderNumberRoute =
+  AuthenticatedOrderSuccessOrderNumberRouteImport.update({
+    id: '/order-success/$orderNumber',
+    path: '/order-success/$orderNumber',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersOrderNumberRoute =
   AuthenticatedOrdersOrderNumberRouteImport.update({
     id: '/orders/$orderNumber',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -435,6 +443,7 @@ export interface FileRoutesByTo {
   '/blogs': typeof BlogsIndexRoute
   '/chat': typeof ChatIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -492,6 +501,7 @@ export interface FileRoutesById {
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/_authenticated/order-success/$orderNumber': typeof AuthenticatedOrderSuccessOrderNumberRoute
   '/_authenticated/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
     | '/blogs/'
     | '/chat/'
     | '/products/'
+    | '/order-success/$orderNumber'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -603,6 +614,7 @@ export interface FileRouteTypes {
     | '/blogs'
     | '/chat'
     | '/products'
+    | '/order-success/$orderNumber'
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -659,6 +671,7 @@ export interface FileRouteTypes {
     | '/blogs/'
     | '/chat/'
     | '/products/'
+    | '/_authenticated/order-success/$orderNumber'
     | '/_authenticated/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
@@ -1005,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/order-success/$orderNumber': {
+      id: '/_authenticated/order-success/$orderNumber'
+      path: '/order-success/$orderNumber'
+      fullPath: '/order-success/$orderNumber'
+      preLoaderRoute: typeof AuthenticatedOrderSuccessOrderNumberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/$orderNumber': {
       id: '/_authenticated/orders/$orderNumber'
       path: '/orders/$orderNumber'
@@ -1088,12 +1108,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
+  AuthenticatedOrderSuccessOrderNumberRoute: typeof AuthenticatedOrderSuccessOrderNumberRoute
   AuthenticatedOrdersOrderNumberRoute: typeof AuthenticatedOrdersOrderNumberRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
+  AuthenticatedOrderSuccessOrderNumberRoute:
+    AuthenticatedOrderSuccessOrderNumberRoute,
   AuthenticatedOrdersOrderNumberRoute: AuthenticatedOrdersOrderNumberRoute,
 }
 

@@ -152,7 +152,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     const fullAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
     const placedAt = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-    // Admin notification email, then customer confirmation.
+    // Emails for prepaid orders are sent only after the gateway verifies the
+    // payment (see settleOrderPaid). COD orders are confirmed immediately.
+    if (data.payment_method === "cod") {
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("new-order-notification", "", {
@@ -200,6 +202,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       });
     } catch (emailError) {
       console.error("Customer confirmation email failed", emailError);
+    }
     }
 
     return {
