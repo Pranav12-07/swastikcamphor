@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";

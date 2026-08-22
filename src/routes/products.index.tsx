@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
