@@ -36,20 +36,14 @@ export const Route = createFileRoute("/sitemap.xml")({
             supabase.from("blogs").select("slug,published_at").eq("status", "published"),
           ]);
           for (const row of products.data ?? []) {
-            entries.push({
-              path: `/products/${row.slug}`,
-              lastmod: row.updated_at ? new Date(row.updated_at).toISOString().slice(0, 10) : undefined,
-              changefreq: "weekly",
-              priority: "0.8",
-            });
+            const entry: SitemapEntry = { path: `/products/${row.slug}`, changefreq: "weekly", priority: "0.8" };
+            if (row.updated_at) entry.lastmod = new Date(row.updated_at).toISOString().slice(0, 10);
+            entries.push(entry);
           }
           for (const row of blogs.data ?? []) {
-            entries.push({
-              path: `/blogs/${row.slug}`,
-              lastmod: row.published_at ? new Date(row.published_at).toISOString().slice(0, 10) : undefined,
-              changefreq: "monthly",
-              priority: "0.6",
-            });
+            const entry: SitemapEntry = { path: `/blogs/${row.slug}`, changefreq: "monthly", priority: "0.6" };
+            if (row.published_at) entry.lastmod = new Date(row.published_at).toISOString().slice(0, 10);
+            entries.push(entry);
           }
         } catch {
           // fall back to static entries only
