@@ -19,15 +19,19 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
   server: {
     handlers: {
       POST: ({ request }) => {
+        const apiKey = process.env['LOVABLE_API_KEY']
+        if (!apiKey) {
+          return Response.json({ error: 'Server configuration error' }, { status: 500 })
+        }
         const handler = createAuthEmailHandler({
-          apiKey: process.env['LOVABLE_API_KEY']!,
+          apiKey,
           from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
             // Code-only: never fall back to a link/button email.
             signup: {
-              subject: 'Swastik Camphor - Email Verification',
+              subject: 'Your Swastik Camphor verification code',
               render: (data) =>
                 React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },
@@ -41,7 +45,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             magiclink: {
-              subject: 'Swastik Camphor - Email Verification',
+              subject: 'Your Swastik Camphor verification code',
               render: (data) =>
                 React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },
@@ -65,7 +69,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             reauthentication: {
-              subject: 'Swastik Camphor - Email Verification',
+              subject: 'Your Swastik Camphor verification code',
               render: (data) =>
                 React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },

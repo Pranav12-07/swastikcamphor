@@ -1,20 +1,18 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
 import { createFileRoute } from '@tanstack/react-router'
-import { SignupEmail } from '@/lib/email-templates/signup'
 import { InviteEmail } from '@/lib/email-templates/invite'
-import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
-import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { VerificationCodeEmail } from '@/lib/email-templates/verification-code'
 
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
-  signup: SignupEmail,
+  signup: VerificationCodeEmail,
   invite: InviteEmail,
-  magiclink: MagicLinkEmail,
+  magiclink: VerificationCodeEmail,
   recovery: RecoveryEmail,
   email_change: EmailChangeEmail,
-  reauthentication: ReauthenticationEmail,
+  reauthentication: VerificationCodeEmail,
 }
 
 // Configuration
@@ -30,14 +28,10 @@ const SAMPLE_PROJECT_URL = "https://swastikcamphor.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
-    siteName: SITE_NAME,
-    siteUrl: SAMPLE_PROJECT_URL,
-    recipient: SAMPLE_EMAIL,
-    confirmationUrl: SAMPLE_PROJECT_URL,
+    token: '123456',
   },
   magiclink: {
-    siteName: SITE_NAME,
-    confirmationUrl: SAMPLE_PROJECT_URL,
+    token: '123456',
   },
   recovery: {
     siteName: SITE_NAME,

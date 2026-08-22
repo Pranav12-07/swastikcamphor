@@ -20,7 +20,8 @@ export const VerificationCodeEmail = ({ token }: VerificationCodeEmailProps) => 
         <Section style={codeBox}>
           <Text style={code}>{token}</Text>
         </Section>
-        <Text style={text}>This code expires in 5 minutes.</Text>
+        <Text style={text}>Enter this 6-digit code on the Swastik Camphor website to continue.</Text>
+        <Text style={text}>This code will expire shortly.</Text>
         <Text style={text}>Do not share this code with anyone.</Text>
         <Text style={footer}>
           If you didn&apos;t request this code, you can safely ignore this email.
