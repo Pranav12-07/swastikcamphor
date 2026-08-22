@@ -9,7 +9,10 @@ import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/products/")({
   head: () => ({
+    links: canonicalLink("/products"),
     meta: [
+      { property: "og:url", content: canonical("/products") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Our Products — Camphor Tablets, Bhimseni, Cones & Gift Packs" },
       {
         name: "description",

@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -11,7 +12,10 @@ import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
+    links: canonicalLink("/faq"),
     meta: [
+      { property: "og:url", content: canonical("/faq") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "FAQ — Camphor Purity, Orders & Shipping | Swastik Camphor" },
       {
         name: "description",

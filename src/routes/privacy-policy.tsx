@@ -1,10 +1,14 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { site } from "@/config/site";
 
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({
+    links: canonicalLink("/privacy-policy"),
     meta: [
+      { property: "og:url", content: canonical("/privacy-policy") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Privacy Policy — Swastik Camphor" },
       { name: "description", content: "How Swastik Camphor collects, uses and protects your personal information." },
       { property: "og:title", content: "Privacy Policy — Swastik Camphor" },

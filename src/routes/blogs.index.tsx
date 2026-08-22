@@ -6,7 +6,10 @@ import { useReveal } from "@/hooks/use-reveal";
 export const Route = createFileRoute("/blogs/")({
   loader: () => listBlogs(),
   head: () => ({
+    links: canonicalLink("/blogs"),
     meta: [
+      { property: "og:url", content: canonical("/blogs") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Camphor Blog — Pooja Camphor Guides, Benefits & Buying Tips" },
       {
         name: "description",

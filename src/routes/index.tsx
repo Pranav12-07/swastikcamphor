@@ -13,7 +13,10 @@ import { listBlogs } from "@/lib/blog.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    links: canonicalLink("/"),
     meta: [
+      { property: "og:url", content: canonical("/") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Swastik Camphor — 100% Pure Camphor for Pooja & Wellness" },
       {
         name: "description",

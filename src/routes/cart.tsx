@@ -10,6 +10,7 @@ import { useCart } from "@/lib/cart";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Your Cart — Swastik Camphor" },
       { name: "description", content: "Review your Swastik Camphor selection before checkout." },
       { property: "og:title", content: "Your Cart — Swastik Camphor" },

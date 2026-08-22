@@ -1,3 +1,4 @@
+import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import about from "@/assets/about.jpg";
 import { PageHeader } from "@/components/PageHeader";
@@ -6,7 +7,10 @@ import { site } from "@/config/site";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
+    links: canonicalLink("/about"),
     meta: [
+      { property: "og:url", content: canonical("/about") },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "About Swastik Camphor — Purity, Tradition & Quality" },
       {
         name: "description",

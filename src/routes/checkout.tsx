@@ -13,6 +13,7 @@ import { UpiPayment } from "@/components/checkout/UpiPayment";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Checkout — Swastik Camphor" },
       { name: "description", content: "Complete your Swastik Camphor order with secure delivery details." },
       { property: "og:title", content: "Checkout — Swastik Camphor" },
