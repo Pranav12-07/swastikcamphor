@@ -75,7 +75,22 @@ function HomepagePage() {
                 <p className="text-xs text-muted-foreground">{(b["subtitle"] as string) || "No subtitle"} · {b["placement"] as string}</p>
               </div>
               <StatusBadge status={b["is_active"] ? "active" : "disabled"} />
-              <button onClick={async () => { try { await save({ data: { ...(b as never), id: b["id"] as string, is_active: !b["is_active"] } }); await qc.invalidateQueries({ queryKey: ["admin-banners"] }); } catch { toast.error("Could not update that banner."); } }} className="rounded border border-input px-2 py-1 text-xs">
+              <button onClick={async () => { try {
+                await save({ data: {
+                  id: b["id"] as string,
+                  title: b["title"] as string,
+                  subtitle: (b["subtitle"] as string | null) ?? null,
+                  image_url: (b["image_url"] as string | null) ?? null,
+                  button_text: (b["button_text"] as string | null) ?? null,
+                  link_url: (b["link_url"] as string | null) ?? null,
+                  placement: b["placement"] as "hero",
+                  sort_order: Number(b["sort_order"] ?? 0),
+                  starts_at: (b["starts_at"] as string | null) ?? null,
+                  ends_at: (b["ends_at"] as string | null) ?? null,
+                  is_active: !b["is_active"],
+                } });
+                await qc.invalidateQueries({ queryKey: ["admin-banners"] });
+              } catch { toast.error("Could not update that banner."); } }} className="rounded border border-input px-2 py-1 text-xs">
                 {b["is_active"] ? "Disable" : "Enable"}
               </button>
               <button onClick={async () => { if (!confirm("Delete this banner?")) return; try { await del({ data: { id: b["id"] as string } }); await qc.invalidateQueries({ queryKey: ["admin-banners"] }); toast.success("Banner deleted"); } catch { toast.error("Could not delete that banner."); } }} className="rounded border border-destructive/40 p-1.5 text-destructive">

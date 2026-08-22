@@ -48,9 +48,15 @@ function ProfilePage() {
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("Use at least 8 characters.");
+    if (password.length < 8) {
+      toast.error("Use at least 8 characters.");
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) return toast.error("Password could not be changed.");
+    if (error) {
+      toast.error("Password could not be changed.");
+      return;
+    }
     setPassword("");
     toast.success("Password changed");
   }
@@ -60,9 +66,9 @@ function ProfilePage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <h2 className="font-semibold">Your details</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{me?.email} · {me?.roles.join(", ")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{me?.profile?.email} · {me?.roles.join(", ")}</p>
           <form onSubmit={saveProfile} className="mt-3 space-y-3 text-sm">
-            <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder={me?.fullName ?? "Full name"} required className="w-full rounded-md border border-input bg-background px-3 py-2" />
+            <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder={me?.profile?.full_name ?? "Full name"} required className="w-full rounded-md border border-input bg-background px-3 py-2" />
             <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone" className="w-full rounded-md border border-input bg-background px-3 py-2" />
             <button disabled={busy} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-60">{busy ? "Saving…" : "Save profile"}</button>
           </form>
