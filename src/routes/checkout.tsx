@@ -59,7 +59,7 @@ function Checkout() {
         <PageHeader
           eyebrow="Checkout"
           title="Sign in to place your order"
-          subtitle="Your cart is saved. Sign in with an email OTP or password and we'll bring you straight back here."
+          subtitle="Your cart is saved. Sign in with a phone or email OTP and we'll bring you straight back here."
         />
         <div className="mx-auto max-w-md px-4 py-16 text-center md:px-8">
           <Link
