@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const startSchema = z.object({
   orderNumber: z.string().trim().min(3).max(40),
@@ -29,8 +30,9 @@ export type PaymentStateResponse = {
 
 /** Creates (or reuses) a PhonePe payment for an order and returns the pay URL. */
 export const startPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => startSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { getRequest } = await import("@tanstack/react-start/server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getPhonePeConfig, initiatePayment, checkStatus } = await import("@/lib/phonepe.server");
@@ -47,6 +49,7 @@ export const startPayment = createServerFn({ method: "POST" })
 
     const order = await getOrderByNumber(data.orderNumber);
     if (!order) return { ok: false as const, error: "We could not find that order." };
+    if (order.user_id && order.user_id !== context.userId) return { ok: false as const, error: "We could not find that order." };
     if (order.payment_status === "paid") return { ok: false as const, error: "This order is already paid." };
 
     const origin = new URL(getRequest().url).origin;
@@ -122,8 +125,9 @@ export const startPayment = createServerFn({ method: "POST" })
 
 /** Authoritative payment state — always re-verified with PhonePe while pending. */
 export const getPaymentState = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => statusSchema.parse(input))
-  .handler(async ({ data }): Promise<PaymentStateResponse> => {
+  .handler(async ({ data, context }): Promise<PaymentStateResponse> => {
     const { getRequest } = await import("@tanstack/react-start/server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getPhonePeConfig, checkStatus } = await import("@/lib/phonepe.server");
@@ -131,6 +135,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const order = await getOrderByNumber(data.orderNumber);
     if (!order) throw new Error("Order not found");
+    if (order.user_id && order.user_id !== context.userId) throw new Error("Order not found");
     const origin = new URL(getRequest().url).origin;
 
     const { data: payment } = await supabaseAdmin
