@@ -59,8 +59,9 @@ function Index() {
         <img
           src={banner?.image_url || hero}
           alt="A camphor flame glowing above pure camphor tablets during aarti"
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
+          className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover"
         />
+
         <div
           className="absolute inset-0 -z-10"
           style={{ background: "linear-gradient(100deg, oklch(0.2 0.06 28 / 0.92), oklch(0.2 0.06 28 / 0.45))" }}
