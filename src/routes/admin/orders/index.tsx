@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, EmptyState, ErrorState, StatusBadge, TableSkeleton, fmtDate, inr } from "@/components/admin/ui";
 import { adminListOrders } from "@/lib/admin.functions";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+
 
 export const Route = createFileRoute("/admin/orders/")({
   ssr: false,
@@ -25,6 +27,8 @@ export const Route = createFileRoute("/admin/orders/")({
 function OrdersPage() {
   const list = useServerFn(adminListOrders);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-orders"], queryFn: () => list(undefined as never) });
+  useRealtimeRefresh("orders", ["admin-orders"]);
+
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [payment, setPayment] = useState("all");

@@ -1,6 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useCatalog } from "@/lib/catalog";
 import { useStoreSettings } from "@/lib/store-settings";
+import { useAuth } from "@/lib/auth";
+import { getMyCart, syncMyCart } from "@/lib/cart.functions";
+
 
 export type CartLine = { slug: string; size: string; qty: number };
 
@@ -28,8 +31,11 @@ const COUPON_KEY = "swastik-coupon-v1";
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products, coupons } = useCatalog();
   const { shippingFlat, freeShippingAbove } = useStoreSettings();
+  const { session } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+  const mergedFor = useRef<string | null>(null);
 
   useEffect(() => {
     try {
@@ -39,7 +45,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    setHydrated(true);
   }, []);
+
+  // On sign-in, merge the guest cart with the saved cart (highest quantity wins).
+  const userId = session?.user?.id ?? null;
+  useEffect(() => {
+    if (!hydrated || !userId || mergedFor.current === userId) return;
+    mergedFor.current = userId;
+    let cancelled = false;
+    (async () => {
+      try {
+        const remote = await getMyCart();
+        if (cancelled) return;
+        setLines((local) => {
+          const map = new Map<string, CartLine>();
+          for (const l of [...remote, ...local]) {
+            const key = `${l.slug}__${l.size}`;
+            const found = map.get(key);
+            map.set(key, found ? { ...found, qty: Math.max(found.qty, l.qty) } : { ...l });
+          }
+          const merged = [...map.values()];
+          try {
+            localStorage.setItem(KEY, JSON.stringify(merged));
+          } catch {
+            /* ignore */
+          }
+          return merged;
+        });
+      } catch {
+        /* offline or not signed in yet — keep the local cart */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, userId]);
+
+  // Keep the saved cart in step with the local one.
+  useEffect(() => {
+    if (!hydrated || !userId || mergedFor.current !== userId) return;
+    const timer = setTimeout(() => {
+      void syncMyCart({ data: { lines } }).catch(() => undefined);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [hydrated, userId, lines]);
+
+  useEffect(() => {
+    if (!userId) mergedFor.current = null;
+  }, [userId]);
+
 
   const persist = useCallback((next: CartLine[]) => {
     setLines(next);

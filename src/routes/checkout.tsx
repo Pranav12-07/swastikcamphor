@@ -1,14 +1,16 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { formatINR } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { placeOrder } from "@/lib/api.functions";
+import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account.functions";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { UpiPayment } from "@/components/checkout/UpiPayment";
+
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -52,6 +54,40 @@ function Checkout() {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [method, setMethod] = useState<"upi" | "cod">("upi");
   const [placed, setPlaced] = useState<{ email: string; total: number } | null>(null);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<string>("new");
+  const [saveAddress, setSaveAddress] = useState(true);
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    listMyAddresses()
+      .then((rows) => {
+        if (cancelled) return;
+        setAddresses(rows);
+        const preferred = rows.find((r) => r.is_default) ?? rows[0];
+        if (preferred) setSelectedAddress(preferred.id);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  const chosen = addresses.find((a) => a.id === selectedAddress) ?? null;
+  const prefill: Record<string, string> = chosen
+    ? {
+        customer_name: chosen.full_name,
+        email: session?.user?.email ?? "",
+        phone: chosen.phone,
+        address: [chosen.line1, chosen.line2].filter(Boolean).join(", "),
+        city: chosen.city,
+        state: chosen.state,
+        pincode: chosen.pincode,
+      }
+    : { email: session?.user?.email ?? "" };
+
+
 
   // Login is required before placing an order — the cart is preserved throughout.
   if (!authLoading && !session && !orderNumber) {
@@ -166,14 +202,34 @@ function Checkout() {
           payment_method: method,
         },
       });
-      setPlaced({ email: parsed.data.email, total: cart.total });
+      if (session && saveAddress && !chosen) {
+        await saveMyAddress({
+          data: {
+            label: "Home",
+            full_name: parsed.data.customer_name,
+            phone: parsed.data.phone,
+            line1: parsed.data.address,
+            city: parsed.data.city,
+            state: parsed.data.state,
+            pincode: parsed.data.pincode,
+            is_default: addresses.length === 0,
+          },
+        }).catch(() => undefined);
+      }
+      // Totals come back from the server — it is the pricing authority.
+      setPlaced({ email: parsed.data.email, total: result.total });
       cart.clear();
       setOrderNumber(result.orderNumber);
-    } catch {
-      toast.error("We could not place your order. Please try again or call us.");
+    } catch (err) {
+      toast.error(
+        err instanceof Error && err.message && err.message.length < 140
+          ? err.message
+          : "We could not place your order. Please try again or call us.",
+      );
     } finally {
       setBusy(false);
     }
+
   };
 
   return (
@@ -181,22 +237,81 @@ function Checkout() {
       <PageHeader eyebrow="Checkout" title="Delivery details" subtitle="We confirm every order personally before dispatch." />
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:px-8 lg:grid-cols-[1.4fr_1fr]">
         <form onSubmit={onSubmit} noValidate className="card-premium grid gap-4 p-6 sm:grid-cols-2">
+          {addresses.length > 0 && (
+            <fieldset className="sm:col-span-2">
+              <legend className="text-sm font-medium">Deliver to</legend>
+              <div className="mt-2 grid gap-2">
+                {addresses.map((a) => (
+                  <label
+                    key={a.id}
+                    className={`flex cursor-pointer items-start gap-2 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                      selectedAddress === a.id ? "border-primary bg-primary/5" : "border-gold/40"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="saved_address"
+                      className="mt-1 accent-primary"
+                      checked={selectedAddress === a.id}
+                      onChange={() => setSelectedAddress(a.id)}
+                    />
+                    <span>
+                      <span className="font-medium">
+                        {a.label} — {a.full_name}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {[a.line1, a.line2, a.city, a.state, a.pincode].filter(Boolean).join(", ")} • {a.phone}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                <label
+                  className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                    selectedAddress === "new" ? "border-primary bg-primary/5" : "border-gold/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="saved_address"
+                    className="accent-primary"
+                    checked={selectedAddress === "new"}
+                    onChange={() => setSelectedAddress("new")}
+                  />
+                  Use a new address
+                </label>
+              </div>
+            </fieldset>
+          )}
           {fields.map((f) => (
             <div key={f.name} className={f.name === "address" ? "sm:col-span-2" : ""}>
               <label htmlFor={f.name} className="text-sm font-medium">
                 {f.label}
               </label>
               <input
+                key={`${f.name}-${selectedAddress}`}
                 id={f.name}
                 name={f.name}
                 type={f.type}
                 autoComplete={f.autoComplete}
+                defaultValue={prefill[f.name] ?? ""}
                 aria-invalid={Boolean(errors[f.name])}
                 className="mt-1.5 w-full rounded-xl border border-gold/40 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
               {errors[f.name] && <p className="mt-1 text-xs text-destructive">{errors[f.name]}</p>}
             </div>
           ))}
+          {session && !chosen && (
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={saveAddress}
+                onChange={(e) => setSaveAddress(e.target.checked)}
+                className="accent-primary"
+              />
+              Save this address to my account for next time
+            </label>
+          )}
+
           <fieldset className="sm:col-span-2">
             <legend className="text-sm font-medium">Payment method</legend>
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
