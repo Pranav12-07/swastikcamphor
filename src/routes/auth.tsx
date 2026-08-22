@@ -19,13 +19,13 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
-      { title: "Sign In or Create Account — Swastik Camphor" },
+      { title: "Login with Mobile Number — Swastik Camphor" },
       {
         name: "description",
         content:
-          "Sign in to Swastik Camphor with a one-time code sent to your WhatsApp or email — no password needed — to check out and track orders.",
+          "Log in to Swastik Camphor with a 6-digit verification code sent to your mobile number — no password needed — to check out and track orders.",
       },
-      { property: "og:title", content: "Sign In — Swastik Camphor" },
+      { property: "og:title", content: "Login — Swastik Camphor" },
       { property: "og:description", content: "Access your Swastik Camphor account and order history." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -34,18 +34,77 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type Channel = "whatsapp" | "email";
+type Channel = "phone" | "email";
+/** Which transport actually carried the code for the current phone attempt. */
+type PhoneMode = "sms" | "whatsapp";
 
 const emailSchema = z.string().trim().email();
 const RESEND_SECONDS = 60;
 
-/** Indian mobile number normalised to E.164. */
+/** Indian mobile number normalised to E.164 (+91XXXXXXXXXX). */
 function toE164(raw: string): string | null {
   const digits = raw.replace(/[^\d+]/g, "");
   if (/^\+91[6-9]\d{9}$/.test(digits)) return digits;
   if (/^91[6-9]\d{9}$/.test(digits)) return `+${digits}`;
   if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
   return null;
+}
+
+function prettyPhone(e164: string): string {
+  const local = e164.replace("+91", "");
+  return `+91 ${local.slice(0, 5)} ${local.slice(5)}`;
+}
+
+/** Six separate code boxes that behave like one input. */
+function CodeBoxes({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  disabled: boolean;
+}) {
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
+
+  function setDigit(index: number, digit: string) {
+    const chars = value.padEnd(6, " ").split("");
+    chars[index] = digit || " ";
+    onChange(chars.join("").replace(/\s/g, "").slice(0, 6));
+    if (digit && index < 5) refs.current[index + 1]?.focus();
+  }
+
+  return (
+    <div className="flex justify-between gap-2" role="group" aria-label="6-digit verification code">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <input
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          inputMode="numeric"
+          autoComplete={i === 0 ? "one-time-code" : "off"}
+          disabled={disabled}
+          maxLength={1}
+          aria-label={`Digit ${i + 1}`}
+          value={value[i] ?? ""}
+          onChange={(ev) => setDigit(i, ev.target.value.replace(/\D/g, "").slice(-1))}
+          onKeyDown={(ev) => {
+            if (ev.key === "Backspace" && !value[i] && i > 0) refs.current[i - 1]?.focus();
+          }}
+          onPaste={(ev) => {
+            ev.preventDefault();
+            const pasted = ev.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+            if (pasted) {
+              onChange(pasted);
+              refs.current[Math.min(pasted.length, 5)]?.focus();
+            }
+          }}
+          className="h-14 w-full rounded-xl border border-border bg-background text-center text-xl font-medium tracking-normal outline-none transition-colors focus:border-primary disabled:opacity-60"
+        />
+      ))}
+    </div>
+  );
 }
 
 function AuthPage() {
@@ -55,9 +114,10 @@ function AuthPage() {
 
   const sendWhatsapp = useServerFn(requestWhatsappOtp);
   const checkWhatsapp = useServerFn(verifyWhatsappOtp);
-  const noteEmailLogin = useServerFn(recordEmailLogin);
+  const noteLogin = useServerFn(recordEmailLogin);
 
-  const [channel, setChannel] = useState<Channel>("whatsapp");
+  const [channel, setChannel] = useState<Channel>("phone");
+  const [phoneMode, setPhoneMode] = useState<PhoneMode>("sms");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -87,42 +147,67 @@ function AuthPage() {
     setCooldown(0);
   }
 
+  /** True when the backend has no working SMS sender wired up. */
+  function isProviderOutage(message: string): boolean {
+    return /provider|not enabled|unsupported|disabled|configur/i.test(message);
+  }
+
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      if (channel === "whatsapp") {
+      if (channel === "phone") {
         const e164 = toE164(phone);
-        if (!e164) throw new Error("Please enter a valid Indian mobile number.");
-        const result = await sendWhatsapp({
-          data: { phone: e164, ...(fullName.trim() ? { full_name: fullName.trim() } : {}) },
-        });
-        if (!result.ok) {
-          setError(result.message);
-          toast.error(result.message);
+        if (!e164) throw new Error("Please enter a valid 10-digit Indian mobile number.");
+
+        const { error: smsError } = await supabase.auth.signInWithOtp({ phone: e164 });
+
+        if (!smsError) {
+          setPhoneMode("sms");
+          setSent(true);
+          setCooldown(RESEND_SECONDS);
+          toast.success(`OTP sent to ${prettyPhone(e164)}`);
           return;
         }
-        setSent(true);
-        setCooldown(RESEND_SECONDS);
-        toast.success("OTP sent on WhatsApp.");
-      } else {
-        if (!emailSchema.safeParse(email).success) throw new Error("Please enter a valid email address.");
-        const { error: otpError } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: { shouldCreateUser: true, emailRedirectTo: window.location.origin },
-        });
-        if (otpError) {
-          throw new Error(
-            /rate|too many|limit/i.test(otpError.message)
-              ? "Too many attempts. Please wait before trying again."
-              : "We couldn't send the verification email. Please check your email address and try again.",
-          );
+
+        if (/rate|too many|limit/i.test(smsError.message)) {
+          throw new Error("Too many OTP requests. Please wait a moment before trying again.");
         }
-        setSent(true);
-        setCooldown(RESEND_SECONDS);
-        toast.success("We've sent a verification code to your email.");
+
+        // SMS sender unavailable — try the WhatsApp sender before failing.
+        if (isProviderOutage(smsError.message)) {
+          const wa = await sendWhatsapp({
+            data: { phone: e164, ...(fullName.trim() ? { full_name: fullName.trim() } : {}) },
+          });
+          if (wa.ok) {
+            setPhoneMode("whatsapp");
+            setSent(true);
+            setCooldown(RESEND_SECONDS);
+            toast.success(`OTP sent to ${prettyPhone(e164)}`);
+            return;
+          }
+          throw new Error("Mobile OTP login is temporarily unavailable. Please try again later.");
+        }
+
+        throw new Error("We couldn't send the verification code. Please check the number and try again.");
       }
+
+      if (!emailSchema.safeParse(email).success) throw new Error("Please enter a valid email address.");
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: true, emailRedirectTo: window.location.origin },
+      });
+      if (otpError) {
+        throw new Error(
+          /rate|too many|limit/i.test(otpError.message)
+            ? "Too many attempts. Please wait before trying again."
+            : "We couldn't send the verification email. Please check your email address and try again.",
+        );
+      }
+      setSent(true);
+      setCooldown(RESEND_SECONDS);
+      toast.success("We've sent a verification code to your email.");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Network error. Please check your connection and try again.";
@@ -141,49 +226,56 @@ function AuthPage() {
       const token = code.trim();
       if (!/^\d{6}$/.test(token)) throw new Error("Incorrect verification code. Please try again.");
 
-      if (channel === "whatsapp") {
+      let userId: string | undefined;
+
+      if (channel === "phone") {
         const e164 = toE164(phone)!;
-        const result = await checkWhatsapp({
-          data: { phone: e164, code: token, ...(fullName.trim() ? { full_name: fullName.trim() } : {}) },
-        });
-        if (!result.ok) {
-          setError(result.message);
-          toast.error(result.message);
-          return;
+
+        if (phoneMode === "whatsapp") {
+          const result = await checkWhatsapp({
+            data: { phone: e164, code: token, ...(fullName.trim() ? { full_name: fullName.trim() } : {}) },
+          });
+          if (!result.ok) {
+            setError(result.message);
+            toast.error(result.message);
+            return;
+          }
+          const { data: waSession, error: sessionError } = await supabase.auth.verifyOtp({
+            token_hash: result.tokenHash,
+            type: "email",
+          });
+          if (sessionError) throw sessionError;
+          userId = waSession.user?.id;
+        } else {
+          const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
+            phone: e164,
+            token,
+            type: "sms",
+          });
+          if (verifyError) throw new Error(verificationMessage(verifyError.message));
+          userId = verified.user?.id;
         }
-        const { error: sessionError } = await supabase.auth.verifyOtp({
-          token_hash: result.tokenHash,
-          type: "email",
-        });
-        if (sessionError) throw sessionError;
       } else {
         const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim(),
           token,
           type: "email",
         });
-        if (verifyError) {
-          throw new Error(
-            /expired/i.test(verifyError.message)
-              ? "This verification code has expired. Please request a new code."
-              : /rate|too many|limit/i.test(verifyError.message)
-                ? "Too many attempts. Please wait before trying again."
-                : "Incorrect verification code. Please try again.",
-          );
-        }
-        const userId = verified.user?.id;
-        if (userId) {
-          try {
-            await noteEmailLogin({
-              data: {
-                userId,
-                ...(fullName.trim() ? { full_name: fullName.trim() } : {}),
-                ...(toE164(phone) ? { phone: toE164(phone)! } : {}),
-              },
-            });
-          } catch {
-            /* profile bookkeeping must never block sign-in */
-          }
+        if (verifyError) throw new Error(verificationMessage(verifyError.message));
+        userId = verified.user?.id;
+      }
+
+      if (userId) {
+        try {
+          await noteLogin({
+            data: {
+              userId,
+              ...(fullName.trim() ? { full_name: fullName.trim() } : {}),
+              ...(toE164(phone) ? { phone: toE164(phone)! } : {}),
+            },
+          });
+        } catch {
+          /* profile bookkeeping must never block sign-in */
         }
       }
       toast.success("Signed in.");
@@ -196,49 +288,29 @@ function AuthPage() {
     }
   }
 
+  function verificationMessage(raw: string): string {
+    if (/expired/i.test(raw)) return "This verification code has expired. Please request a new code.";
+    if (/rate|too many|limit/i.test(raw)) return "Too many attempts. Please wait before trying again.";
+    return "Incorrect verification code. Please try again.";
+  }
+
   const inputClass =
     "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-70";
-  const destination = channel === "whatsapp" ? toE164(phone) : email.trim();
+  const e164 = toE164(phone);
+  const destination = channel === "phone" ? (e164 ? prettyPhone(e164) : phone) : email.trim();
 
   return (
     <>
       <PageHeader
         eyebrow="Account"
-        title="Sign in to continue"
+        title={channel === "phone" ? "Login with Mobile Number" : "Login with Email"}
         subtitle={
           redirect === "/checkout"
-            ? "Sign in to complete your order — your cart is safe and waiting."
-            : "No password needed — we'll send a one-time code to your WhatsApp or email."
+            ? "Verify your mobile number to complete your order — your cart is safe and waiting."
+            : "Enter your mobile number to receive a verification code."
         }
       />
       <section className="mx-auto w-full max-w-md px-4 pb-20 md:px-8">
-        {!sent && (
-          <div className="mb-5 grid grid-cols-2 gap-2 text-sm">
-            {(
-              [
-                { key: "whatsapp", label: "Continue with WhatsApp" },
-                { key: "email", label: "Continue with Email" },
-              ] as { key: Channel; label: string }[]
-            ).map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => {
-                  setChannel(c.key);
-                  reset();
-                }}
-                className={`rounded-xl border px-3 py-3 text-left leading-snug transition-colors ${
-                  channel === c.key
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border text-muted-foreground hover:bg-accent/10"
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        )}
-
         <form onSubmit={sent ? verify : sendCode} className="surface-glass space-y-4 rounded-2xl p-6">
           {!sent && (
             <>
@@ -255,15 +327,19 @@ function AuthPage() {
                 />
               </div>
 
-              {channel === "whatsapp" ? (
+              {channel === "phone" ? (
                 <div>
                   <label className="mb-1 block text-sm text-muted-foreground" htmlFor="phone">
                     Mobile number
                   </label>
                   <div className="flex items-stretch gap-2">
-                    <span className="flex items-center rounded-lg border border-border bg-muted/40 px-3 text-sm">
-                      +91
-                    </span>
+                    <select
+                      aria-label="Country code"
+                      defaultValue="+91"
+                      className="rounded-lg border border-border bg-muted/40 px-2 text-sm"
+                    >
+                      <option value="+91">🇮🇳 +91</option>
+                    </select>
                     <input
                       id="phone"
                       type="tel"
@@ -298,23 +374,15 @@ function AuthPage() {
 
           {sent && (
             <div>
-              <label className="mb-1 block text-sm text-muted-foreground" htmlFor="code">
-                Enter the 6-digit OTP sent to your {channel === "whatsapp" ? "WhatsApp" : "email"} —{" "}
-                <span className="text-foreground">{destination}</span>
-              </label>
-              <input
-                id="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(ev) => setCode(ev.target.value.replace(/\D/g, "").slice(0, 6))}
-                required
-                maxLength={6}
-                className="w-full rounded-lg border border-border bg-background px-3 py-3 text-center text-lg tracking-[0.5em]"
-              />
-              <div className="mt-2 flex items-center justify-between text-xs">
+              <p className="mb-1 text-sm font-medium text-foreground">Enter verification code</p>
+              <p className="mb-3 text-sm text-muted-foreground">
+                OTP sent to <span className="text-foreground">{destination}</span>. Enter the 6-digit
+                verification code.
+              </p>
+              <CodeBoxes value={code} onChange={setCode} disabled={busy} />
+              <div className="mt-3 flex items-center justify-between text-xs">
                 <button type="button" onClick={reset} className="text-muted-foreground underline">
-                  Change {channel === "whatsapp" ? "number" : "email"}
+                  Change {channel === "phone" ? "mobile number" : "email"}
                 </button>
                 <button
                   type="button"
@@ -339,21 +407,31 @@ function AuthPage() {
             disabled={busy}
             className="w-full rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {busy
-              ? "Please wait…"
-              : sent
-                ? "Verify OTP"
-                : channel === "whatsapp"
-                  ? "Send OTP on WhatsApp"
-                  : "Send Email OTP"}
+            {busy ? "Please wait…" : sent ? "Verify OTP" : "Send OTP"}
           </button>
-
-          <p className="text-center text-xs text-muted-foreground">
-            <Link to="/" className="underline">
-              Back to home
-            </Link>
-          </p>
         </form>
+
+        {!sent && (
+          <div className="mt-6 border-t border-border pt-5 text-center">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Or</p>
+            <button
+              type="button"
+              onClick={() => {
+                setChannel(channel === "phone" ? "email" : "phone");
+                reset();
+              }}
+              className="mt-2 text-sm text-muted-foreground underline"
+            >
+              {channel === "phone" ? "Continue with email instead" : "Back to mobile number login"}
+            </button>
+          </div>
+        )}
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          <Link to="/" className="underline">
+            Back to home
+          </Link>
+        </p>
       </section>
     </>
   );
