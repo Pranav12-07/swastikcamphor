@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { COUPONS, FREE_SHIPPING_ABOVE, SHIPPING_FLAT, products } from "@/data/products";
+import { FREE_SHIPPING_ABOVE, SHIPPING_FLAT } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 
 export type CartLine = { slug: string; size: string; qty: number };
 
@@ -24,6 +25,7 @@ const KEY = "swastik-cart-v1";
 const COUPON_KEY = "swastik-coupon-v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { products, coupons } = useCatalog();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [coupon, setCoupon] = useState<string | null>(null);
 
@@ -64,7 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [],
+    [products],
   );
 
   const setQty: CartValue["setQty"] = useCallback(
@@ -97,8 +99,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const p = products.find((x) => x.slug === l.slug);
       return sum + (p ? p.price * l.qty : 0);
     }, 0);
-    const rate = coupon ? (COUPONS[coupon] ?? 0) : 0;
-    const discount = Math.round(subtotal * rate);
+    const active = coupon ? coupons.find((c) => c.code === coupon) : undefined;
+    let discount = 0;
+    if (active && subtotal >= active.min_order_amount) {
+      discount =
+        active.discount_type === "fixed"
+          ? Math.min(active.discount_value, subtotal)
+          : Math.round((subtotal * active.discount_value) / 100);
+      if (active.max_discount !== null) discount = Math.min(discount, active.max_discount);
+    }
     const shipping = subtotal === 0 || subtotal - discount >= FREE_SHIPPING_ABOVE ? 0 : SHIPPING_FLAT;
     return {
       lines,
@@ -114,7 +123,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       coupon,
       applyCoupon: (code: string) => {
         const normalized = code.trim().toUpperCase();
-        if (!COUPONS[normalized]) return false;
+        const match = coupons.find((c) => c.code === normalized);
+        if (!match) return false;
         setCoupon(normalized);
         try {
           localStorage.setItem(COUPON_KEY, normalized);
@@ -132,7 +142,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [lines, coupon, add, setQty, remove, clear]);
+  }, [lines, coupon, coupons, products, add, setQty, remove, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
