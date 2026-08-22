@@ -18,9 +18,11 @@ const scenes: Scene[] = [
   { glyph: "🕯️", title: "Daily Spiritual Practices", subtitle: "A small flame. A timeless tradition." },
 ];
 
-const BRAND_MS = 650;
-const SCENE_MS = 480;
-const OUTRO_MS = 750;
+const BRAND_MS = 380;
+const SCENE_MS = 190;
+const OUTRO_MS = 380;
+/** Only a short highlight reel plays — keeps the opening under ~1.5s. */
+const REEL = 4;
 
 export function CamphorIntro() {
   const [phase, setPhase] = useState<"brand" | "scenes" | "outro" | "done">("brand");
@@ -50,17 +52,17 @@ export function CamphorIntro() {
     };
 
     if (mode === "short") {
-      push(() => setLeaving(true), 350);
-      push(() => setPhase("done"), 900);
+      push(() => setLeaving(true), 120);
+      push(() => setPhase("done"), 420);
     } else {
+      const reel = Math.min(REEL, scenes.length);
       push(() => setPhase("scenes"), BRAND_MS);
-      scenes.forEach((_, i) => {
-        if (i === 0) return;
+      for (let i = 1; i < reel; i++) {
         push(() => setIndex(i), BRAND_MS + i * SCENE_MS);
-      });
-      const end = BRAND_MS + scenes.length * SCENE_MS;
+      }
+      const end = BRAND_MS + reel * SCENE_MS;
       push(() => setPhase("outro"), end);
-      push(() => setLeaving(true), end + OUTRO_MS - 500);
+      push(() => setLeaving(true), end + 60);
       push(() => setPhase("done"), end + OUTRO_MS);
     }
 
@@ -91,7 +93,7 @@ export function CamphorIntro() {
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-[100] grid place-items-center overflow-hidden transition-opacity duration-500"
+      className="fixed inset-0 z-[100] grid place-items-center overflow-hidden transition-opacity duration-300"
       style={{
         background: "radial-gradient(circle at 50% 62%, oklch(0.28 0.06 42) 0%, oklch(0.16 0.04 32) 55%, oklch(0.11 0.02 30) 100%)",
         opacity: leaving ? 0 : 1,
@@ -99,7 +101,7 @@ export function CamphorIntro() {
     >
       {/* flame — the constant visual thread */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-700 will-change-transform"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-500 will-change-transform"
         style={{
           width: phase === "outro" ? "120vmax" : "18rem",
           height: phase === "outro" ? "120vmax" : "18rem",
@@ -121,7 +123,7 @@ export function CamphorIntro() {
             </p>
           </div>
         ) : phase === "scenes" ? (
-          <div key={index} className="animate-rise-in">
+          <div key={index} className="animate-rise-in [animation-duration:0.28s]">
             <span className="text-4xl md:text-5xl" aria-hidden="true">
               {scene.glyph}
             </span>
