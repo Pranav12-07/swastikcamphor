@@ -35,13 +35,15 @@ const values = [
 
 function Index() {
   const { products } = useCatalog();
+  const heroBanners = useBanners("hero");
+  const banner = heroBanners[0];
   useReveal();
 
   return (
     <>
       <section className="relative isolate overflow-hidden">
         <img
-          src={hero}
+          src={banner?.image_url || hero}
           alt="A camphor flame glowing above pure camphor tablets during aarti"
           className="absolute inset-0 -z-10 h-full w-full object-cover"
         />
@@ -58,22 +60,37 @@ function Index() {
             className="animate-rise-in mt-4 max-w-3xl text-4xl leading-[1.1] text-gold-soft md:text-6xl"
             style={{ animationDelay: "80ms" }}
           >
-            Purity in every <span className="text-gradient-gold">camphor</span> tablet
+            {banner ? (
+              banner.title
+            ) : (
+              <>
+                Purity in every <span className="text-gradient-gold">camphor</span> tablet
+              </>
+            )}
           </h1>
           <p
             className="animate-rise-in mt-6 max-w-xl text-base leading-relaxed text-gold-soft/85 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {site.name} brings you 100% pure, natural and chemical-free camphor — crafted for pooja, aarti,
-            aromatherapy and a fresher home.
+            {banner?.subtitle ??
+              `${site.name} brings you 100% pure, natural and chemical-free camphor — crafted for pooja, aarti, aromatherapy and a fresher home.`}
           </p>
           <div className="animate-rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
-            <Link
-              to="/shop"
-              className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
-            >
-              Shop Now
-            </Link>
+            {banner?.link_url ? (
+              <a
+                href={banner.link_url}
+                className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
+              >
+                {banner.button_text || "Shop Now"}
+              </a>
+            ) : (
+              <Link
+                to="/shop"
+                className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
+              >
+                Shop Now
+              </Link>
+            )}
             <Link
               to="/products"
               className="rounded-full border border-gold/60 px-7 py-3 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15"
