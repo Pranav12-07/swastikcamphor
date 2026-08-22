@@ -21,16 +21,19 @@ export const Route = createFileRoute("/shop")({
   component: Shop,
 });
 
-const filters = ["All", "Daily Pooja", "Temple Use", "Aromatherapy", "Gift Packs", "Household Use"];
-
 function Shop() {
   useReveal();
-  const { products } = useCatalog();
+  const { products, categories } = useCatalog();
   const [active, setActive] = useState("All");
   const [sort, setSort] = useState<"popular" | "low" | "high">("popular");
 
+  const filters = useMemo(
+    () => [{ slug: "All", name: "All" }, ...categories.map((c) => ({ slug: c.slug, name: c.name }))],
+    [categories],
+  );
+
   const visible = useMemo(() => {
-    const list = products.filter((p) => active === "All" || p.bestFor.includes(active));
+    const list = products.filter((p) => active === "All" || p.category === active);
     if (sort === "low") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "high") return [...list].sort((a, b) => b.price - a.price);
     return list;
@@ -48,18 +51,18 @@ function Shop() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <ul className="flex flex-wrap gap-2">
             {filters.map((f) => (
-              <li key={f}>
+              <li key={f.slug}>
                 <button
                   type="button"
-                  onClick={() => setActive(f)}
-                  aria-pressed={active === f}
+                  onClick={() => setActive(f.slug)}
+                  aria-pressed={active === f.slug}
                   className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
-                    active === f
+                    active === f.slug
                       ? "border-transparent bg-primary text-primary-foreground"
                       : "border-gold/40 hover:bg-accent/15"
                   }`}
                 >
-                  {f}
+                  {f.name}
                 </button>
               </li>
             ))}

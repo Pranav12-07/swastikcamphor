@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { FREE_SHIPPING_ABOVE, SHIPPING_FLAT } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
+import { useStoreSettings } from "@/lib/store-settings";
 
 export type CartLine = { slug: string; size: string; qty: number };
 
@@ -16,6 +16,7 @@ type CartValue = {
   discount: number;
   total: number;
   coupon: string | null;
+  freeShippingAbove: number;
   applyCoupon: (code: string) => boolean;
   removeCoupon: () => void;
 };
@@ -26,6 +27,7 @@ const COUPON_KEY = "swastik-coupon-v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products, coupons } = useCatalog();
+  const { shippingFlat, freeShippingAbove } = useStoreSettings();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [coupon, setCoupon] = useState<string | null>(null);
 
@@ -108,7 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : Math.round((subtotal * active.discount_value) / 100);
       if (active.max_discount !== null) discount = Math.min(discount, active.max_discount);
     }
-    const shipping = subtotal === 0 || subtotal - discount >= FREE_SHIPPING_ABOVE ? 0 : SHIPPING_FLAT;
+    const shipping = subtotal === 0 || subtotal - discount >= freeShippingAbove ? 0 : shippingFlat;
     return {
       lines,
       add,
@@ -121,6 +123,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discount,
       total: subtotal - discount + shipping,
       coupon,
+      freeShippingAbove,
       applyCoupon: (code: string) => {
         const normalized = code.trim().toUpperCase();
         const match = coupons.find((c) => c.code === normalized);
@@ -142,7 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [lines, coupon, coupons, products, add, setQty, remove, clear]);
+  }, [lines, coupon, coupons, products, add, setQty, remove, clear, shippingFlat, freeShippingAbove]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
