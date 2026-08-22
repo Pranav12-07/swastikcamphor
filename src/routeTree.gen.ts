@@ -22,7 +22,9 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as ReturnRefundPolicyRouteImport } from './routes/return-refund-policy'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
+import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAdminUsersRouteImport } from './routes/admin/admin-users'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
@@ -47,6 +49,7 @@ import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
 import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
+import { Route as AuthenticatedOrdersOrderNumberRouteImport } from './routes/_authenticated/orders.$orderNumber'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
@@ -119,9 +122,19 @@ const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   path: '/terms-and-conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackOrderRoute = TrackOrderRouteImport.update({
+  id: '/track-order',
+  path: '/track-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -244,6 +257,12 @@ const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
   path: '/chat/$threadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOrdersOrderNumberRoute =
+  AuthenticatedOrdersOrderNumberRouteImport.update({
+    id: '/orders/$orderNumber',
+    path: '/orders/$orderNumber',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
   id: '/admin/orders/',
   path: '/admin/orders/',
@@ -295,7 +314,9 @@ export interface FileRoutesByFullPath {
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
+  '/track-order': typeof TrackOrderRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/blogs': typeof AdminBlogsRoute
@@ -320,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
@@ -341,7 +363,9 @@ export interface FileRoutesByTo {
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
+  '/track-order': typeof TrackOrderRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/blogs': typeof AdminBlogsRoute
@@ -366,6 +390,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
   '/chat': typeof ChatIndexRoute
+  '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
@@ -389,7 +414,9 @@ export interface FileRoutesById {
   '/return-refund-policy': typeof ReturnRefundPolicyRoute
   '/shop': typeof ShopRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
+  '/track-order': typeof TrackOrderRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/admin-users': typeof AdminAdminUsersRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/blogs': typeof AdminBlogsRoute
@@ -414,6 +441,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/_authenticated/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
@@ -437,7 +465,9 @@ export interface FileRouteTypes {
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
+    | '/track-order'
     | '/account'
+    | '/wishlist'
     | '/admin/admin-users'
     | '/admin/analytics'
     | '/admin/blogs'
@@ -462,6 +492,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/chat/'
+    | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders/'
@@ -483,7 +514,9 @@ export interface FileRouteTypes {
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
+    | '/track-order'
     | '/account'
+    | '/wishlist'
     | '/admin/admin-users'
     | '/admin/analytics'
     | '/admin/blogs'
@@ -508,6 +541,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/blogs'
     | '/chat'
+    | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders'
@@ -530,7 +564,9 @@ export interface FileRouteTypes {
     | '/return-refund-policy'
     | '/shop'
     | '/terms-and-conditions'
+    | '/track-order'
     | '/_authenticated/account'
+    | '/_authenticated/wishlist'
     | '/admin/admin-users'
     | '/admin/analytics'
     | '/admin/blogs'
@@ -555,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/chat/'
+    | '/_authenticated/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
     | '/admin/orders/'
@@ -578,6 +615,7 @@ export interface RootRouteChildren {
   ReturnRefundPolicyRoute: typeof ReturnRefundPolicyRoute
   ShopRoute: typeof ShopRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
+  TrackOrderRoute: typeof TrackOrderRoute
   AdminAdminUsersRoute: typeof AdminAdminUsersRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBlogsRoute: typeof AdminBlogsRoute
@@ -704,11 +742,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsAndConditionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track-order': {
+      id: '/track-order'
+      path: '/track-order'
+      fullPath: '/track-order'
+      preLoaderRoute: typeof TrackOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/account': {
       id: '/_authenticated/account'
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wishlist': {
+      id: '/_authenticated/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof AuthenticatedWishlistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/admin/': {
@@ -879,6 +931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/orders/$orderNumber': {
+      id: '/_authenticated/orders/$orderNumber'
+      path: '/orders/$orderNumber'
+      fullPath: '/orders/$orderNumber'
+      preLoaderRoute: typeof AuthenticatedOrdersOrderNumberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/admin/orders/': {
       id: '/admin/orders/'
       path: '/admin/orders'
@@ -933,10 +992,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
+  AuthenticatedOrdersOrderNumberRoute: typeof AuthenticatedOrdersOrderNumberRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
+  AuthenticatedOrdersOrderNumberRoute: AuthenticatedOrdersOrderNumberRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -956,6 +1019,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnRefundPolicyRoute: ReturnRefundPolicyRoute,
   ShopRoute: ShopRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
+  TrackOrderRoute: TrackOrderRoute,
   AdminAdminUsersRoute: AdminAdminUsersRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBlogsRoute: AdminBlogsRoute,

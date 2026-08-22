@@ -1,0 +1,97 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const ORDER_COLUMNS =
+  "id, order_number, status, payment_status, payment_provider, total, subtotal, shipping, discount, tax, items, customer_name, email, phone, address, city, state, pincode, tracking_number, courier, expected_delivery, delivery_note, created_at, updated_at";
+
+export type TrackedOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  payment_status: string;
+  payment_provider: string | null;
+  total: number;
+  subtotal: number;
+  shipping: number;
+  discount: number;
+  tax: number;
+  items: Array<{ name?: string; size?: string; qty?: number; quantity?: number; price?: number }>;
+  customer_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  tracking_number: string | null;
+  courier: string | null;
+  expected_delivery: string | null;
+  delivery_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrderEvent = { id: string; status: string; note: string | null; created_at: string };
+
+/** Orders belonging to the signed-in customer. */
+export const getMyOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as TrackedOrder[];
+  });
+
+/** A single order + its timeline — RLS restricts this to the owner. */
+export const getMyOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ orderNumber: z.string().trim().min(3).max(40) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: order, error } = await context.supabase
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("order_number", data.orderNumber)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!order) throw new Error("Order not found");
+    const { data: events } = await context.supabase
+      .from("order_events")
+      .select("id, status, note, created_at")
+      .eq("order_id", (order as { id: string }).id)
+      .order("created_at", { ascending: true });
+    return { order: order as unknown as TrackedOrder, events: (events ?? []) as OrderEvent[] };
+  });
+
+/** Guest tracking: order number + the email used on the order must both match. */
+export const trackOrder = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        orderNumber: z.string().trim().min(3).max(40),
+        email: z.string().trim().email().max(255),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("order_number", data.orderNumber.toUpperCase())
+      .ilike("email", data.email)
+      .maybeSingle();
+    if (!order) throw new Error("We could not find an order with those details.");
+    const { data: events } = await supabaseAdmin
+      .from("order_events")
+      .select("id, status, note, created_at")
+      .eq("order_id", (order as { id: string }).id)
+      .order("created_at", { ascending: true });
+    return { order: order as unknown as TrackedOrder, events: (events ?? []) as OrderEvent[] };
+  });

@@ -337,6 +337,8 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
         tracking_number: z.string().trim().max(80).nullable().optional(),
         courier: z.string().trim().max(80).nullable().optional(),
         admin_notes: z.string().trim().max(1000).nullable().optional(),
+        expected_delivery: z.string().trim().max(40).nullable().optional(),
+        delivery_note: z.string().trim().max(300).nullable().optional(),
         note: z.string().trim().max(300).optional(),
       })
       .parse(input),
@@ -377,6 +379,40 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
         tracking: data.tracking_number ?? "",
       },
     });
+
+    // Keep the customer in the loop whenever the fulfilment status changes.
+    if (data.status && o.email) {
+      const labels: Record<string, string> = {
+        pending: "Received",
+        confirmed: "Confirmed",
+        processing: "Being packed",
+        packed: "Packed",
+        shipped: "Shipped",
+        out_for_delivery: "Out for delivery",
+        delivered: "Delivered",
+        cancelled: "Cancelled",
+        returned: "Returned",
+        refunded: "Refunded",
+      };
+      try {
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        await sendTemplateEmail("order-status-update", o.email, {
+          templateData: {
+          orderNumber: o.order_number ?? "",
+          customerName: o.customer_name ?? "Customer",
+          status: data.status,
+          statusLabel: labels[data.status] ?? data.status,
+          note: note ?? data.delivery_note ?? "",
+          courier: data.courier ?? "",
+          trackingNumber: data.tracking_number ?? "",
+          expectedDelivery: data.expected_delivery ?? "",
+          trackUrl: "https://swastikcamphor.in/track-order",
+          },
+        });
+      } catch (err) {
+        console.error("order status email failed", err);
+      }
+    }
     return { ok: true as const };
   });
 

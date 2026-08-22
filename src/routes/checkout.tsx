@@ -7,6 +7,7 @@ import { formatINR } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { placeOrder } from "@/lib/api.functions";
 import { useCart } from "@/lib/cart";
+import { useAuth } from "@/lib/auth";
 import { UpiPayment } from "@/components/checkout/UpiPayment";
 
 export const Route = createFileRoute("/checkout")({
@@ -44,11 +45,37 @@ const fields = [
 function Checkout() {
   const { products } = useCatalog();
   const cart = useCart();
+  const { session, loading: authLoading } = useAuth();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [method, setMethod] = useState<"upi" | "cod">("upi");
   const [placed, setPlaced] = useState<{ email: string; total: number } | null>(null);
+
+  // Login is required before placing an order — the cart is preserved throughout.
+  if (!authLoading && !session && !orderNumber) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Checkout"
+          title="Sign in to place your order"
+          subtitle="Your cart is saved. Sign in with an email OTP or password and we'll bring you straight back here."
+        />
+        <div className="mx-auto max-w-md px-4 py-16 text-center md:px-8">
+          <Link
+            to="/auth"
+            search={{ redirect: "/checkout" }}
+            className="inline-flex rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            Sign in / Create account
+          </Link>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Signing in links this order to your account so you can track it any time.
+          </p>
+        </div>
+      </>
+    );
+  }
 
   if (orderNumber && placed) {
     return (
@@ -70,7 +97,14 @@ function Checkout() {
           {method === "upi" && (
             <UpiPayment orderNumber={orderNumber} email={placed.email} amount={placed.total} />
           )}
-          <div className="text-center">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/orders/$orderNumber"
+              params={{ orderNumber }}
+              className="inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Track this order
+            </Link>
             <Link
               to="/shop"
               className="inline-flex rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium"

@@ -35,6 +35,8 @@ function OrderDetailPage() {
   const [tracking, setTracking] = useState("");
   const [courier, setCourier] = useState("");
   const [notes, setNotes] = useState("");
+  const [expected, setExpected] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
   const [dirty, setDirty] = useState(false);
 
   const order = (data?.order ?? null) as Record<string, unknown> | null;
@@ -142,6 +144,19 @@ function OrderDetailPage() {
                 placeholder="Tracking number"
                 className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
+              <input
+                defaultValue={(order["expected_delivery"] as string) ?? ""}
+                onChange={(e) => { setExpected(e.target.value); setDirty(true); }}
+                placeholder="Expected delivery (e.g. 26 Aug 2026)"
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+              <textarea
+                defaultValue={(order["delivery_note"] as string) ?? ""}
+                onChange={(e) => { setDeliveryNote(e.target.value); setDirty(true); }}
+                rows={2}
+                placeholder="Note shown to the customer in status emails"
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
               <textarea
                 defaultValue={(order["admin_notes"] as string) ?? ""}
                 onChange={(e) => { setNotes(e.target.value); setDirty(true); }}
@@ -156,6 +171,8 @@ function OrderDetailPage() {
                     courier: courier || (order["courier"] as string) || null,
                     tracking_number: tracking || (order["tracking_number"] as string) || null,
                     admin_notes: notes || (order["admin_notes"] as string) || null,
+                    expected_delivery: expected || (order["expected_delivery"] as string) || null,
+                    delivery_note: deliveryNote || (order["delivery_note"] as string) || null,
                   },
                   "Shipment details saved",
                 )}
