@@ -26,6 +26,16 @@ export const Route = createFileRoute("/")({
     ],
   }),
   loader: () => listBlogs(),
+  errorComponent: () => (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <h1 className="font-display text-2xl">Something went wrong loading the page</h1>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <h1 className="font-display text-2xl">Page not found</h1>
+    </div>
+  ),
   component: Index,
 });
 
