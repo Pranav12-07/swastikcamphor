@@ -1059,6 +1059,16 @@ export type Database = {
         Args: { _qty: number; _reference: string; _slug: string }
         Returns: number
       }
+      place_order: {
+        Args: {
+          _coupon: string
+          _customer: Json
+          _items: Json
+          _payment_method: string
+          _user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
