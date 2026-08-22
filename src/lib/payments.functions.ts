@@ -168,7 +168,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
         } else if (status.state === "PAID" && !amountOk) {
           console.error("phonepe amount mismatch", order.order_number, status.amountPaise, expected);
           paymentStatus = "awaiting_verification";
-        } else if (status.state !== "PENDING") {
+        } else if (status.state !== "PENDING" && status.state !== "PAID") {
           await settleOrderUnpaid(order.order_number, status.state);
           paymentStatus = status.state.toLowerCase();
         }
