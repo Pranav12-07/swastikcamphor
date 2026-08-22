@@ -717,3 +717,135 @@ export const adminUploadProductImage = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { url: `/api/public/product-image/${path}` };
   });
+
+// ---------------------------------- contact messages ----------------------------------
+export const adminListMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const { data, error } = await context.supabase
+      .from("contact_submissions")
+      .select("id, name, email, phone, subject, message, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSetMessageStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: uuid, status: z.enum(["new", "read", "replied", "resolved"]) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const { error } = await context.supabase
+      .from("contact_submissions")
+      .update({ status: data.status, updated_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "message.status_changed", entity: "contact", entityId: data.id, details: { status: data.status } });
+    return { ok: true as const };
+  });
+
+export const adminDeleteMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, getRoles, isSuper, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "customers");
+    const roles = await getRoles(context.supabase as never, context.userId);
+    if (!isSuper(roles)) throw new Error("Only a super admin can delete messages");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("contact_submissions").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "message.deleted", entity: "contact", entityId: data.id });
+    return { ok: true as const };
+  });
+
+// ---------------------------------- blogs ----------------------------------
+const blogSchema = z.object({
+  slug: z.string().trim().min(2).max(120),
+  title: z.string().trim().min(2).max(200),
+  excerpt: z.string().trim().max(500).nullable().default(null),
+  content: z.string().trim().max(60000).default(""),
+  cover_image: z.string().trim().max(500).nullable().default(null),
+  cover_alt: z.string().trim().max(200).nullable().default(null),
+  category: z.string().trim().max(80).nullable().default(null),
+  tags: z.array(z.string().trim().min(1).max(40)).max(15).default([]),
+  status: z.enum(["draft", "published"]).default("draft"),
+  seo_title: z.string().trim().max(200).nullable().default(null),
+  seo_description: z.string().trim().max(400).nullable().default(null),
+  seo_keywords: z.string().trim().max(400).nullable().default(null),
+  related_links: z.array(z.string().trim().min(1).max(200)).max(12).default([]),
+  read_time: z.string().trim().max(30).nullable().default(null),
+});
+
+export const adminListBlogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { data, error } = await context.supabase
+      .from("blogs")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminGetBlog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { data: row, error } = await context.supabase.from("blogs").select("*").eq("id", data.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Blog not found");
+    return row;
+  });
+
+export const adminSaveBlog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => blogSchema.extend({ id: uuid.optional() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { id, ...fields } = data;
+    const payload = {
+      ...fields,
+      published_at: fields.status === "published" ? new Date().toISOString() : null,
+    };
+    const query = id
+      ? context.supabase.from("blogs").update(payload).eq("id", id).select("id, slug").maybeSingle()
+      : context.supabase.from("blogs").upsert(payload, { onConflict: "slug" }).select("id, slug").maybeSingle();
+    const { data: saved, error } = await query;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "blog.updated" : "blog.created", entity: "blog", entityId: (saved?.id as string) ?? id, details: { title: data.title, status: data.status } });
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({
+      type: id ? "blog.updated" : "blog.created",
+      title: `Blog ${data.status === "published" ? "published" : "saved as draft"}: ${data.title}`,
+      body: data.excerpt ?? "",
+      link: "/admin/blogs",
+      details: { slug: data.slug, status: data.status },
+    });
+    return { ok: true as const, id: (saved?.id as string) ?? id };
+  });
+
+export const adminDeleteBlog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { error } = await context.supabase.from("blogs").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "blog.deleted", entity: "blog", entityId: data.id });
+    const { notifyAdmin } = await import("@/lib/notify.server");
+    await notifyAdmin({ type: "blog.deleted", title: "Blog deleted", link: "/admin/blogs", details: { blog_id: data.id } });
+    return { ok: true as const };
+  });
