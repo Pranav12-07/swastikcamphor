@@ -1,22 +1,54 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import promo from "@/assets/tradition-promo-v2.mp4.asset.json";
+import scenePooja from "@/assets/tradition-promo-v2.mp4.asset.json";
+import sceneAarti from "@/assets/tradition-scene-aarti.mp4.asset.json";
+import sceneFamily from "@/assets/tradition-scene-family.mp4.asset.json";
+import sceneFestival from "@/assets/tradition-scene-festival.mp4.asset.json";
+import sceneProduct from "@/assets/tradition-scene-product.mp4.asset.json";
 import logo from "@/assets/swastik-logo-trimmed.png.asset.json";
 import poster from "@/assets/tradition-poster.jpg";
 
-const captions = [
-  "Bring purity to every pooja.",
-  "A tradition trusted by generations.",
-  "Freshness for your home.",
-  "Perfect for every special occasion.",
+type Scene = { url: string; label: string; caption: string; alt: string };
+
+const scenes: Scene[] = [
+  {
+    url: scenePooja.url,
+    label: "Morning Pooja",
+    caption: "Start your day with tradition.",
+    alt: "Camphor tablet lit during a morning pooja at a home temple",
+  },
+  {
+    url: sceneAarti.url,
+    label: "Aarti",
+    caption: "Keep traditions alive, every day.",
+    alt: "Camphor tablet burning in a brass holder during aarti",
+  },
+  {
+    url: sceneFamily.url,
+    label: "Family Prayer",
+    caption: "A familiar part of Indian homes.",
+    alt: "An Indian family praying with a camphor tablet burning on the pooja thali",
+  },
+  {
+    url: sceneFestival.url,
+    label: "Festival",
+    caption: "From everyday prayers to special occasions.",
+    alt: "Festive pooja thali with a camphor tablet, diya and marigold flowers",
+  },
+  {
+    url: sceneProduct.url,
+    label: "The Product",
+    caption: "Pure camphor. Purity you can trust.",
+    alt: "Close-up of pure Swastik Camphor tablets in a brass camphor holder",
+  },
 ];
 
 export function TraditionVideo() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
-  const [caption, setCaption] = useState(0);
-  const [ended, setEnded] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [endCard, setEndCard] = useState(false);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -36,22 +68,28 @@ export function TraditionVideo() {
     return () => io.disconnect();
   }, []);
 
+  // Play the current scene whenever the source changes.
   useEffect(() => {
     if (!visible) return;
-    const id = window.setInterval(() => setCaption((c) => (c + 1) % captions.length), 2400);
-    return () => window.clearInterval(id);
-  }, [visible]);
+    const v = videoRef.current;
+    if (!v) return;
+    setEndCard(false);
+    v.load();
+    v.play().catch(() => {});
+  }, [visible, index]);
 
-  useEffect(() => {
-    if (visible) videoRef.current?.play().catch(() => {});
-  }, [visible]);
+  const isLast = index === scenes.length - 1;
 
-  // Show the branded end card for the last ~1.6s of every loop.
   const onTimeUpdate = () => {
     const v = videoRef.current;
     if (!v || !v.duration) return;
-    setEnded(v.duration - v.currentTime < 1.6);
+    // Branded end card only on the final scene.
+    setEndCard(isLast && v.duration - v.currentTime < 1.4);
   };
+
+  const onEnded = () => setIndex((i) => (i + 1) % scenes.length);
+
+  const current = scenes[index];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
@@ -59,7 +97,8 @@ export function TraditionVideo() {
         <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Swastik Camphor</p>
         <h2 className="mt-3 font-display text-3xl md:text-4xl">Tradition in Every Moment</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-          From the morning pooja to festive rituals and a fresher home — pure camphor for every occasion.
+          Morning pooja, daily aarti, family prayers, festivals and the pure tablet itself — one film,
+          every moment camphor belongs to.
         </p>
       </div>
 
@@ -71,16 +110,17 @@ export function TraditionVideo() {
           {visible ? (
             <video
               ref={videoRef}
+              key={current.url}
               className="h-full w-full object-cover"
-              src={promo.url}
+              src={current.url}
               poster={poster}
               autoPlay
               muted
-              loop
               playsInline
-              preload="metadata"
+              preload="auto"
               onTimeUpdate={onTimeUpdate}
-              aria-label="Swastik Camphor film: a camphor flame lit during morning pooja at a traditional Indian home temple"
+              onEnded={onEnded}
+              aria-label={current.alt}
             />
           ) : (
             <img
@@ -96,7 +136,10 @@ export function TraditionVideo() {
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(180deg, oklch(0.2 0.06 28 / 0.35) 0%, transparent 35%, oklch(0.2 0.06 28 / 0.88) 100%)" }}
+          style={{
+            background:
+              "linear-gradient(180deg, oklch(0.2 0.06 28 / 0.35) 0%, transparent 35%, oklch(0.2 0.06 28 / 0.88) 100%)",
+          }}
           aria-hidden="true"
         />
 
@@ -106,10 +149,17 @@ export function TraditionVideo() {
           <span className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground">Estd 1968</span>
         </div>
 
+        {/* Scene label */}
+        <div className="pointer-events-none absolute right-5 top-5 rounded-full bg-background/75 px-3 py-1.5 backdrop-blur-sm md:right-7 md:top-7">
+          <span className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            {index + 1}/{scenes.length} · {current.label}
+          </span>
+        </div>
+
         {/* Branded end card */}
         <div
           className={`pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm transition-opacity duration-700 ${
-            ended ? "opacity-100" : "opacity-0"
+            endCard ? "opacity-100" : "opacity-0"
           }`}
           aria-hidden="true"
         >
@@ -122,11 +172,27 @@ export function TraditionVideo() {
 
         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-6 text-center md:p-10">
           <p
-            key={caption}
+            key={current.caption}
             className="animate-rise-in font-display text-xl text-gold-soft drop-shadow md:text-3xl"
           >
-            {captions[caption]}
+            {current.caption}
           </p>
+
+          <div className="flex items-center gap-2">
+            {scenes.map((s, i) => (
+              <button
+                key={s.url}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`Play scene: ${s.label}`}
+                aria-current={i === index}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === index ? "w-8 bg-gold" : "w-3 bg-gold/35 hover:bg-gold/60"
+                }`}
+              />
+            ))}
+          </div>
+
           <Link
             to="/shop"
             className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
