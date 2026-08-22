@@ -53,15 +53,42 @@ export const submitContact = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => contactSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("contact_submissions").insert({
-      name: data.name,
-      email: data.email,
-      phone: data.phone || null,
-      subject: data.subject,
-      message: data.message,
-    });
+    const { data: row, error } = await supabaseAdmin
+      .from("contact_submissions")
+      .insert({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        subject: data.subject,
+        message: data.message,
+        status: "new",
+      })
+      .select("id, created_at")
+      .maybeSingle();
     if (error) throw new Error("We could not send your message. Please try again.");
-    return { ok: true as const };
+
+    const messageId = (row?.id as string | undefined) ?? "";
+    try {
+      const { notifyAdmin } = await import("@/lib/notify.server");
+      await notifyAdmin({
+        type: "contact.received",
+        title: `New contact message: ${data.subject}`,
+        body: data.message,
+        link: "/admin/messages",
+        idempotencyKey: `contact-${messageId}`,
+        details: {
+          message_id: messageId,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || "—",
+          subject: data.subject,
+        },
+      });
+    } catch (notifyError) {
+      console.error("contact notification failed", notifyError);
+    }
+
+    return { ok: true as const, messageId };
   });
 
 export const placeOrder = createServerFn({ method: "POST" })
@@ -82,6 +109,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     const orderNumber = `SC${Date.now().toString(36).toUpperCase()}`;
+    const paymentStatus = data.payment_method === "cod" ? "cod_pending" : "pending";
     const { error } = await supabaseAdmin.from("orders").insert({
       order_number: orderNumber,
       user_id: userId,
@@ -98,11 +126,16 @@ export const placeOrder = createServerFn({ method: "POST" })
       discount: data.discount,
       total: data.total,
       coupon_code: data.coupon_code ?? null,
+      status: "pending",
       payment_provider: data.payment_method === "cod" ? "cod" : "upi",
-      payment_status: data.payment_method === "cod" ? "cod_pending" : "pending",
+      payment_status: paymentStatus,
     });
     if (error) throw new Error("We could not place your order. Please try again.");
 
+    const fullAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
+    const placedAt = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+    // Admin notification email + in-app notification, then customer confirmation.
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("new-order-notification", "", {
@@ -111,15 +144,57 @@ export const placeOrder = createServerFn({ method: "POST" })
           customerName: data.customer_name,
           email: data.email,
           phone: data.phone,
-          address: `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`,
+          address: fullAddress,
           paymentMethod: data.payment_method,
+          paymentStatus,
+          subtotal: data.subtotal,
+          shipping: data.shipping,
+          discount: data.discount,
+          couponCode: data.coupon_code ?? "",
+          placedAt,
           total: data.total,
           items: data.items,
         },
         idempotencyKey: `new-order-notification-${orderNumber}`,
+        replyTo: data.email,
       });
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
+    }
+
+    try {
+      const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+      await admin.from("admin_notifications").insert({
+        type: "order.created",
+        title: `New order ${orderNumber} — ₹${data.total}`,
+        body: `${data.customer_name} • ${data.phone} • ${data.items.length} item(s)`,
+        link: "/admin/orders",
+      });
+    } catch (notifyError) {
+      console.error("order notification insert failed", notifyError);
+    }
+
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("order-confirmation", data.email, {
+        templateData: {
+          orderNumber,
+          customerName: data.customer_name,
+          address: fullAddress,
+          paymentMethod: data.payment_method,
+          paymentStatus,
+          subtotal: data.subtotal,
+          shipping: data.shipping,
+          discount: data.discount,
+          tax: 0,
+          total: data.total,
+          placedAt,
+          items: data.items,
+        },
+        idempotencyKey: `order-confirmation-${orderNumber}`,
+      });
+    } catch (emailError) {
+      console.error("Customer confirmation email failed", emailError);
     }
 
     return { orderNumber };

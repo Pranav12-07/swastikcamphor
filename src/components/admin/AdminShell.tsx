@@ -3,6 +3,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  FileText,
+  MessageSquare,
   LayoutDashboard, Package, FolderTree, Boxes, ShoppingCart, Users, CreditCard, Ticket,
   Star, Truck, Image as ImageIcon, BarChart3, Bell, Mail, Settings as SettingsIcon,
   UserCog, ShieldCheck, LogOut, Menu, X, ExternalLink,
@@ -24,6 +26,8 @@ const NAV: Array<{ to: string; label: string; icon: typeof Package; area: Area }
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart, area: "orders" },
   { to: "/admin/customers", label: "Customers", icon: Users, area: "customers" },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, area: "orders" },
+  { to: "/admin/blogs", label: "Blogs", icon: FileText, area: "marketing" },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare, area: "customers" },
   { to: "/admin/coupons", label: "Coupons", icon: Ticket, area: "marketing" },
   { to: "/admin/reviews", label: "Reviews", icon: Star, area: "reviews" },
   { to: "/admin/shipping", label: "Shipping", icon: Truck, area: "settings" },

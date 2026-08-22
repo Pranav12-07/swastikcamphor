@@ -7,6 +7,7 @@ import { useCatalog } from "@/lib/catalog";
 import { marketplaces, site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
 import { useBanners } from "@/hooks/use-banners";
+import { listBlogs } from "@/lib/blog.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +25,17 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  loader: () => listBlogs(),
+  errorComponent: () => (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <h1 className="font-display text-2xl">Something went wrong loading the page</h1>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <h1 className="font-display text-2xl">Page not found</h1>
+    </div>
+  ),
   component: Index,
 });
 
@@ -35,6 +47,7 @@ const values = [
 ];
 
 function Index() {
+  const posts = Route.useLoaderData().slice(0, 3);
   const { products } = useCatalog();
   const heroBanners = useBanners("hero");
   const banner = heroBanners[0];
@@ -192,6 +205,41 @@ function Index() {
           </ul>
         </div>
       </section>
+
+      {posts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
+          <h2 className="reveal font-display text-3xl">Latest camphor guides</h2>
+          <div className="gold-rule mt-3 w-16" />
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {posts.map((post, i) => (
+              <article key={post.slug} className="card-premium reveal group overflow-hidden" style={{ transitionDelay: `${i * 80}ms` }}>
+                <Link to="/blogs/$slug" params={{ slug: post.slug }} className="block">
+                  {post.cover_image && (
+                    <div className="aspect-16/9 overflow-hidden">
+                      <img
+                        src={post.cover_image}
+                        alt={post.cover_alt ?? post.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+                      {[post.category, post.read_time].filter(Boolean).join(" • ")}
+                    </p>
+                    <h3 className="mt-3 font-display text-lg">{post.title}</h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{post.excerpt}</p>
+                  </div>
+                </Link>
+              </article>
+            ))}
+          </div>
+          <Link to="/blogs" className="mt-8 inline-flex rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15">
+            Read all guides
+          </Link>
+        </section>
+      )}
     </>
   );
 }

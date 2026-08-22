@@ -63,6 +63,8 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     seo_title: g("seo_title"),
     seo_description: g("seo_description"),
     seo_keywords: g("seo_keywords"),
+    seo_h1: g("seo_h1"),
+    seo_subtitle: g("seo_subtitle"),
   });
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
@@ -105,6 +107,8 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         seo_title: form.seo_title || null,
         seo_description: form.seo_description || null,
         seo_keywords: form.seo_keywords || null,
+        seo_h1: form.seo_h1 || null,
+        seo_subtitle: form.seo_subtitle || null,
       };
       await save({ data: payload });
       await qc.invalidateQueries({ queryKey: ["admin-products"] });
@@ -196,6 +200,8 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
           <Field label="SEO title"><input className={input} value={form.seo_title} onChange={(e) => set("seo_title", e.target.value)} maxLength={150} /></Field>
           <Field label="SEO description"><input className={input} value={form.seo_description} onChange={(e) => set("seo_description", e.target.value)} maxLength={300} /></Field>
           <Field label="SEO keywords"><input className={input} value={form.seo_keywords} onChange={(e) => set("seo_keywords", e.target.value)} maxLength={300} /></Field>
+          <Field label="Page heading (H1)" hint="Shown as the main title on the product page"><input className={input} value={form.seo_h1} onChange={(e) => set("seo_h1", e.target.value)} maxLength={200} /></Field>
+          <Field label="Page subtitle"><input className={input} value={form.seo_subtitle} onChange={(e) => set("seo_subtitle", e.target.value)} maxLength={300} /></Field>
         </div>
       </Card>
 
