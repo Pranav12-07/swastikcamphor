@@ -360,7 +360,8 @@
   .animate-flicker,
   .animate-rise-in,
   .animate-ken-burns,
-  .gold-rule.rule-animate {
+  .gold-rule.rule-animate,
+  .text-shine {
     animation: none;
   }
   .card-premium:hover {
