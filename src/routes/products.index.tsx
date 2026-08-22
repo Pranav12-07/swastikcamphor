@@ -7,7 +7,7 @@ import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
 
-export const Route = createFileRoute("/products")({
+export const Route = createFileRoute("/products/")({
   head: () => ({
     meta: [
       { title: "Our Products — Camphor Tablets, Bhimseni, Cones & Gift Packs" },
