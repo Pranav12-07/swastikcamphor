@@ -125,6 +125,69 @@ export type Database = {
         }
         Relationships: []
       }
+      blogs: {
+        Row: {
+          category: string | null
+          content: string
+          cover_alt: string | null
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          read_time: string | null
+          related_links: string[]
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string
+          cover_alt?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          read_time?: string | null
+          related_links?: string[]
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          cover_alt?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          read_time?: string | null
+          related_links?: string[]
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -240,7 +303,9 @@ export type Database = {
           message: string
           name: string
           phone: string | null
+          status: string
           subject: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -250,7 +315,9 @@ export type Database = {
           message: string
           name: string
           phone?: string | null
+          status?: string
           subject: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -260,7 +327,9 @@ export type Database = {
           message?: string
           name?: string
           phone?: string | null
+          status?: string
           subject?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -533,7 +602,9 @@ export type Database = {
           name: string
           price: number
           seo_description: string | null
+          seo_h1: string | null
           seo_keywords: string | null
+          seo_subtitle: string | null
           seo_title: string | null
           short_description: string | null
           sizes: string[]
@@ -565,7 +636,9 @@ export type Database = {
           name: string
           price?: number
           seo_description?: string | null
+          seo_h1?: string | null
           seo_keywords?: string | null
+          seo_subtitle?: string | null
           seo_title?: string | null
           short_description?: string | null
           sizes?: string[]
@@ -597,7 +670,9 @@ export type Database = {
           name?: string
           price?: number
           seo_description?: string | null
+          seo_h1?: string | null
           seo_keywords?: string | null
+          seo_subtitle?: string | null
           seo_title?: string | null
           short_description?: string | null
           sizes?: string[]
