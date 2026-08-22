@@ -112,10 +112,16 @@ function AuthPage() {
           email: email.trim(),
           options: { shouldCreateUser: true, emailRedirectTo: window.location.origin },
         });
-        if (otpError) throw otpError;
+        if (otpError) {
+          throw new Error(
+            /rate|too many|limit/i.test(otpError.message)
+              ? "Too many attempts. Please wait before trying again."
+              : "We couldn't send the verification email. Please check your email address and try again.",
+          );
+        }
         setSent(true);
         setCooldown(RESEND_SECONDS);
-        toast.success("We emailed you a 6-digit code.");
+        toast.success("We've sent a verification code to your email.");
       }
     } catch (err) {
       const message =
@@ -133,7 +139,7 @@ function AuthPage() {
     setError(null);
     try {
       const token = code.trim();
-      if (!/^\d{6}$/.test(token)) throw new Error("Incorrect OTP. Please check the code and try again.");
+      if (!/^\d{6}$/.test(token)) throw new Error("Incorrect verification code. Please try again.");
 
       if (channel === "whatsapp") {
         const e164 = toE164(phone)!;
@@ -159,8 +165,10 @@ function AuthPage() {
         if (verifyError) {
           throw new Error(
             /expired/i.test(verifyError.message)
-              ? "This OTP has expired. Please request a new OTP."
-              : "Incorrect OTP. Please check the code and try again.",
+              ? "This verification code has expired. Please request a new code."
+              : /rate|too many|limit/i.test(verifyError.message)
+                ? "Too many attempts. Please wait before trying again."
+                : "Incorrect verification code. Please try again.",
           );
         }
         const userId = verified.user?.id;
@@ -180,7 +188,7 @@ function AuthPage() {
       }
       toast.success("Signed in.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Incorrect OTP. Please check the code and try again.";
+      const message = err instanceof Error ? err.message : "Incorrect verification code. Please try again.";
       setError(message);
       toast.error(message);
     } finally {
