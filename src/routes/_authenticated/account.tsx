@@ -87,8 +87,12 @@ function AccountPage() {
             Save changes
           </button>
         </div>
+        <AddressBook />
+        </div>
 
+        <div className="space-y-8">
         <div className="space-y-4">
+
           <h2 className="font-display text-lg">Orders</h2>
           {orders.isLoading ? (
             <p className="text-sm text-muted-foreground">Loading your orders…</p>
