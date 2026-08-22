@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/phonepe/callback")({
           await settleOrderPaid(order.order_number, { transactionId: status.transactionId, siteUrl: origin });
         } else if (status.state === "PAID" && !amountOk) {
           console.error("phonepe webhook amount mismatch", order.order_number, status.amountPaise, expectedPaise);
-        } else if (status.state !== "PENDING") {
+        } else if (status.state !== "PENDING" && status.state !== "PAID") {
           const { settleOrderUnpaid } = await import("@/lib/payments.server");
           await settleOrderUnpaid(order.order_number, status.state);
         }

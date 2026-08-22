@@ -58,6 +58,7 @@ import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
 import { Route as AdminProductsAddRouteImport } from './routes/admin/products/add'
 import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products/edit/$id'
+import { Route as ApiPublicPhonepeCallbackRouteImport } from './routes/api/public/phonepe/callback'
 import { Route as ApiPublicProductImageSplatRouteImport } from './routes/api/public/product-image/$'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -308,6 +309,12 @@ const AdminProductsEditIdRoute = AdminProductsEditIdRouteImport.update({
   path: '/products/edit/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiPublicPhonepeCallbackRoute =
+  ApiPublicPhonepeCallbackRouteImport.update({
+    id: '/api/public/phonepe/callback',
+    path: '/api/public/phonepe/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicProductImageSplatRoute =
   ApiPublicProductImageSplatRouteImport.update({
     id: '/api/public/product-image/$',
@@ -380,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -433,6 +441,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -489,6 +498,7 @@ export interface FileRoutesById {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
+  '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -545,6 +555,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -598,6 +609,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/products'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -653,6 +665,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
+    | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -682,6 +695,7 @@ export interface RootRouteChildren {
   BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  ApiPublicPhonepeCallbackRoute: typeof ApiPublicPhonepeCallbackRoute
   ApiPublicProductImageSplatRoute: typeof ApiPublicProductImageSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1033,6 +1047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsEditIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/public/phonepe/callback': {
+      id: '/api/public/phonepe/callback'
+      path: '/api/public/phonepe/callback'
+      fullPath: '/api/public/phonepe/callback'
+      preLoaderRoute: typeof ApiPublicPhonepeCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/product-image/$': {
       id: '/api/public/product-image/$'
       path: '/api/public/product-image/$'
@@ -1160,6 +1181,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  ApiPublicPhonepeCallbackRoute: ApiPublicPhonepeCallbackRoute,
   ApiPublicProductImageSplatRoute: ApiPublicProductImageSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
