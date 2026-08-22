@@ -51,9 +51,6 @@ export function Header() {
               <span className="block truncate text-base leading-tight text-foreground lg:text-lg">
                 {site.name}
               </span>
-              <span className="block truncate text-[0.62rem] uppercase tracking-[0.2em] text-muted-foreground lg:text-[0.68rem]">
-                ESTD 1968
-              </span>
             </span>
         </Link>
 
