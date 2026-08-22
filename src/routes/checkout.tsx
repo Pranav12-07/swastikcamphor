@@ -3,7 +3,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
-import { formatINR, products } from "@/data/products";
+import { formatINR } from "@/data/products";
+import { useCatalog } from "@/lib/catalog";
 import { placeOrder } from "@/lib/api.functions";
 import { useCart } from "@/lib/cart";
 import { UpiPayment } from "@/components/checkout/UpiPayment";
@@ -41,6 +42,7 @@ const fields = [
 ] as const;
 
 function Checkout() {
+  const { products } = useCatalog();
   const cart = useCart();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
