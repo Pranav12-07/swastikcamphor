@@ -202,14 +202,34 @@ function Checkout() {
           payment_method: method,
         },
       });
-      setPlaced({ email: parsed.data.email, total: cart.total });
+      if (session && saveAddress && !chosen) {
+        await saveMyAddress({
+          data: {
+            label: "Home",
+            full_name: parsed.data.customer_name,
+            phone: parsed.data.phone,
+            line1: parsed.data.address,
+            city: parsed.data.city,
+            state: parsed.data.state,
+            pincode: parsed.data.pincode,
+            is_default: addresses.length === 0,
+          },
+        }).catch(() => undefined);
+      }
+      // Totals come back from the server — it is the pricing authority.
+      setPlaced({ email: parsed.data.email, total: result.total });
       cart.clear();
       setOrderNumber(result.orderNumber);
-    } catch {
-      toast.error("We could not place your order. Please try again or call us.");
+    } catch (err) {
+      toast.error(
+        err instanceof Error && err.message && err.message.length < 140
+          ? err.message
+          : "We could not place your order. Please try again or call us.",
+      );
     } finally {
       setBusy(false);
     }
+
   };
 
   return (
