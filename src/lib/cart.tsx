@@ -1,6 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useCatalog } from "@/lib/catalog";
 import { useStoreSettings } from "@/lib/store-settings";
+import { useAuth } from "@/lib/auth";
+import { getMyCart, syncMyCart } from "@/lib/cart.functions";
+
 
 export type CartLine = { slug: string; size: string; qty: number };
 
