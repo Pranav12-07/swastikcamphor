@@ -81,7 +81,9 @@ function Index() {
               banner.title
             ) : (
               <>
-                Purity in every <strong className="font-bold text-gradient-gold">PURE CAMPHOR</strong> tablet
+                <strong className="font-bold text-gradient-gold">PURE CAMPHOR.</strong>
+                <br />
+                <strong className="font-bold">PURE TRADITION</strong>
               </>
             )}
           </h1>
