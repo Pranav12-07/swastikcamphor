@@ -71,7 +71,7 @@ function Index() {
         />
         <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft">
-            ESTD 1968 • Hyderabad
+            ESTD 1968
           </p>
           <h1
             className="animate-rise-in text-shine mt-4 max-w-3xl text-4xl leading-[1.1] md:text-6xl"
