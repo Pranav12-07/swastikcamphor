@@ -236,7 +236,44 @@ export const submitUpiReference = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
     if (error) throw new Error("We could not save your payment reference. Please try again.");
+
+    // Record the payment attempt; upi_ref is unique so a reused UTR is rejected.
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id, order_id")
+      .eq("upi_ref", data.reference)
+      .maybeSingle();
+    if (existing && existing.order_id !== order.id) {
+      throw new Error("That transaction reference has already been used for another order.");
+    }
+    const { data: pending } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("order_id", order.id)
+      .is("upi_ref", null)
+      .limit(1)
+      .maybeSingle();
+    if (pending) {
+      await supabaseAdmin
+        .from("payments")
+        .update({ upi_ref: data.reference, method: "upi", status: "awaiting_verification" })
+        .eq("id", pending.id);
+    } else if (!existing) {
+      const { data: ord } = await supabaseAdmin
+        .from("orders")
+        .select("total")
+        .eq("id", order.id)
+        .maybeSingle();
+      await supabaseAdmin.from("payments").insert({
+        order_id: order.id,
+        method: "upi",
+        amount: Number(ord?.total ?? 0),
+        upi_ref: data.reference,
+        status: "awaiting_verification",
+      });
+    }
     return { ok: true as const };
+
   });
 
 export const listThreads = createServerFn({ method: "POST" })
