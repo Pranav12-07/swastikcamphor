@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/swastik-logo.png.asset.json";
+import logoAsset from "@/assets/swastik-logo-trimmed.png.asset.json";
 import { mainNav, site } from "@/config/site";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
@@ -70,11 +70,11 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (
             <Link
               to="/admin"
-              className="inline-flex rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
+              className="hidden rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15 sm:inline-flex"
             >
               Admin
             </Link>
@@ -84,7 +84,7 @@ export function Header() {
               <Link
                 to="/account"
                 aria-label="My account"
-                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
               >
                 <User className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -92,7 +92,7 @@ export function Header() {
                 type="button"
                 onClick={signOut}
                 aria-label="Sign out"
-                className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -100,7 +100,7 @@ export function Header() {
           ) : (
             <Link
               to="/auth"
-              className="rounded-full border border-gold/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/15"
+              className="rounded-full border border-gold/40 px-2.5 py-2 text-[0.7rem] font-medium transition-colors hover:bg-accent/15 sm:px-3 sm:text-xs"
             >
               Sign in
             </Link>
@@ -108,7 +108,7 @@ export function Header() {
           <Link
             to="/cart"
             aria-label={`Cart with ${count} items`}
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15"
+            className="relative grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
             {count > 0 && (
@@ -122,7 +122,7 @@ export function Header() {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
-            className="grid h-10 w-10 place-items-center rounded-full border border-gold/40 lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 sm:h-10 sm:w-10 lg:hidden"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
