@@ -113,7 +113,7 @@ export function TraditionVideo() {
               key={current.url}
               className="h-full w-full object-cover"
               src={current.url}
-              poster={poster}
+              
               autoPlay
               muted
               playsInline
