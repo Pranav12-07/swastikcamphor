@@ -1,9 +1,7 @@
 import * as React from 'react'
 import { createAuthEmailHandler } from '@lovable.dev/email-js'
 import { createFileRoute } from '@tanstack/react-router'
-import { SignupEmail } from '@/lib/email-templates/signup'
 import { InviteEmail } from '@/lib/email-templates/invite'
-import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { VerificationCodeEmail } from '@/lib/email-templates/verification-code'
@@ -27,17 +25,11 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
+            // Code-only: never fall back to a link/button email.
             signup: {
-              subject: 'Your Swastik Camphor verification code',
+              subject: 'Swastik Camphor - Email Verification',
               render: (data) =>
-                data.token
-                  ? React.createElement(VerificationCodeEmail, { token: data.token })
-                  : React.createElement(SignupEmail, {
-                      siteName: SITE_NAME,
-                      siteUrl: SITE_URL,
-                      recipient: data.email,
-                      confirmationUrl: data.url,
-                    }),
+                React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },
             invite: {
               subject: "You've been invited",
@@ -49,14 +41,9 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             magiclink: {
-              subject: 'Your Swastik Camphor verification code',
+              subject: 'Swastik Camphor - Email Verification',
               render: (data) =>
-                data.token
-                  ? React.createElement(VerificationCodeEmail, { token: data.token })
-                  : React.createElement(MagicLinkEmail, {
-                      siteName: SITE_NAME,
-                      confirmationUrl: data.url,
-                    }),
+                React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },
             recovery: {
               subject: 'Reset your password',
@@ -78,7 +65,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             reauthentication: {
-              subject: 'Your verification code',
+              subject: 'Swastik Camphor - Email Verification',
               render: (data) =>
                 React.createElement(VerificationCodeEmail, { token: data.token ?? '' }),
             },

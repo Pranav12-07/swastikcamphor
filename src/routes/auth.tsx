@@ -194,9 +194,10 @@ function AuthPage() {
       }
 
       if (!emailSchema.safeParse(email).success) throw new Error("Please enter a valid email address.");
+      // No emailRedirectTo: this is a code-only OTP flow, never a magic login link.
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { shouldCreateUser: true, emailRedirectTo: window.location.origin },
+        options: { shouldCreateUser: true },
       });
       if (otpError) {
         throw new Error(
