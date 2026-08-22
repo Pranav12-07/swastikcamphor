@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import scenePooja from "@/assets/tradition-pooja-v4.mp4.asset.json";
-import sceneAarti from "@/assets/tradition-flame-v4.mp4.asset.json";
 import sceneFamily from "@/assets/tradition-family-v4.mp4.asset.json";
-import sceneFestival from "@/assets/tradition-festival-v4.mp4.asset.json";
 import sceneProduct from "@/assets/tradition-product-v4.mp4.asset.json";
 import logo from "@/assets/swastik-logo-trimmed.png.asset.json";
 import poster from "@/assets/tradition-poster.jpg";
@@ -18,22 +16,10 @@ const scenes: Scene[] = [
     alt: "Camphor tablet lit during a morning pooja at a home temple",
   },
   {
-    url: sceneAarti.url,
-    label: "Real Camphor Flame",
-    caption: "Pure tradition, every day.",
-    alt: "Close-up of a small camphor tablet burning with a natural flame in a brass holder",
-  },
-  {
     url: sceneFamily.url,
     label: "Family Aarti",
     caption: "A tradition shared with family.",
     alt: "An Indian family performing aarti with a camphor tablet burning in the foreground",
-  },
-  {
-    url: sceneFestival.url,
-    label: "Festival",
-    caption: "From everyday prayers to special occasions.",
-    alt: "Festive pooja thali with a camphor tablet, diya and marigold flowers",
   },
   {
     url: sceneProduct.url,
@@ -97,7 +83,7 @@ export function TraditionVideo() {
         <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Swastik Camphor</p>
         <h2 className="mt-3 font-display text-3xl md:text-4xl">Tradition in Every Moment</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-          Morning pooja, daily aarti, family prayers, festivals and the pure tablet itself — one film,
+          Morning pooja, family aarti and the pure tablet itself — one film,
           every moment camphor belongs to.
         </p>
       </div>
