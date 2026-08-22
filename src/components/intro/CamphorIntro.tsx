@@ -18,9 +18,11 @@ const scenes: Scene[] = [
   { glyph: "🕯️", title: "Daily Spiritual Practices", subtitle: "A small flame. A timeless tradition." },
 ];
 
-const BRAND_MS = 650;
-const SCENE_MS = 480;
-const OUTRO_MS = 750;
+const BRAND_MS = 380;
+const SCENE_MS = 190;
+const OUTRO_MS = 380;
+/** Only a short highlight reel plays — keeps the opening under ~1.5s. */
+const REEL = 4;
 
 export function CamphorIntro() {
   const [phase, setPhase] = useState<"brand" | "scenes" | "outro" | "done">("brand");
