@@ -52,7 +52,7 @@ function Products() {
             <figure className="overflow-hidden rounded-3xl">
               <img
                 src={product.image}
-                alt={product.name}
+                alt={`${product.name} — pure camphor for pooja and aarti`}
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105"
               />

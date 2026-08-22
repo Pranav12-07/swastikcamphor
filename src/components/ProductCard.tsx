@@ -31,7 +31,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       <div className="relative aspect-4/3 overflow-hidden">
         <img
           src={product.image}
-          alt={product.name}
+          alt={`${product.name} by Swastik Camphor`}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-108"
         />
