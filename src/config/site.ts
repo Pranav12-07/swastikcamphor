@@ -72,6 +72,7 @@ export const mainNav = [
 
 export const supportNav = [
   { label: "FAQ", to: "/faq" },
+  { label: "Track Order", to: "/track-order" },
   { label: "Privacy Policy", to: "/privacy-policy" },
   { label: "Terms & Conditions", to: "/terms-and-conditions" },
   { label: "Return & Refund Policy", to: "/return-refund-policy" },

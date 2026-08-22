@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -104,6 +104,13 @@ function AccountPage() {
                     <span className="text-muted-foreground capitalize">payment: {o.payment_status}</span>
                     <span className="ml-auto font-medium">{formatINR(Number(o.total))}</span>
                   </div>
+                  <Link
+                    to="/orders/$orderNumber"
+                    params={{ orderNumber: o.order_number }}
+                    className="mt-3 inline-flex text-sm font-medium text-primary underline"
+                  >
+                    Track this order
+                  </Link>
                 </li>
               ))}
             </ul>

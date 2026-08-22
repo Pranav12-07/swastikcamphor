@@ -469,8 +469,10 @@ export type Database = {
           courier: string | null
           created_at: string
           customer_name: string
+          delivery_note: string | null
           discount: number
           email: string
+          expected_delivery: string | null
           id: string
           items: Json
           order_number: string
@@ -498,8 +500,10 @@ export type Database = {
           courier?: string | null
           created_at?: string
           customer_name: string
+          delivery_note?: string | null
           discount?: number
           email: string
+          expected_delivery?: string | null
           id?: string
           items?: Json
           order_number: string
@@ -527,8 +531,10 @@ export type Database = {
           courier?: string | null
           created_at?: string
           customer_name?: string
+          delivery_note?: string | null
           discount?: number
           email?: string
+          expected_delivery?: string | null
           id?: string
           items?: Json
           order_number?: string
@@ -756,6 +762,27 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_slug: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_slug: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_slug?: string
           user_id?: string
         }
         Relationships: []

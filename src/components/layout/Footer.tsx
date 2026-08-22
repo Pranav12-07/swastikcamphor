@@ -9,15 +9,14 @@ export function Footer() {
     <footer className="mt-24 border-t border-gold/25 bg-secondary/60">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:px-8 lg:grid-cols-4">
         <div>
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0">
             <img
               src={logoAsset.url}
               alt="Swastik Camphor logo"
-              className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-gold/50"
-              width={48}
-              height={48}
+              className="h-14 w-14 shrink-0 rounded-full object-contain"
+              width={56}
+              height={56}
             />
-            <span className="font-display text-xl">{site.name}</span>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             100% pure, natural camphor crafted with devotion in Hyderabad — for pooja, aarti, aromatherapy

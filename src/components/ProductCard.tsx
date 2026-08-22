@@ -1,9 +1,26 @@
+import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR, type Product } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { add } = useCart();
+  const wishlist = useWishlist();
+  const saved = wishlist.has(product.slug);
+
+  async function onWishlist() {
+    if (!wishlist.signedIn) {
+      toast.info("Sign in to save products to your wishlist.");
+      return;
+    }
+    try {
+      const result = await wishlist.toggle(product.slug);
+      toast.success(result.saved ? "Saved to your wishlist" : "Removed from your wishlist");
+    } catch {
+      toast.error("We could not update your wishlist.");
+    }
+  }
 
   return (
     <article
@@ -20,6 +37,15 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-[0.65rem] uppercase tracking-widest text-primary-foreground">
           100% Pure
         </span>
+        <button
+          type="button"
+          onClick={onWishlist}
+          aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+          aria-pressed={saved}
+          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur transition-transform hover:scale-110"
+        >
+          <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+        </button>
       </div>
       <div className="flex flex-1 flex-col p-5">
         <h3 className="font-display text-xl">{product.name}</h3>

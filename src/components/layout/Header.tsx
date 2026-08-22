@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
+import { Heart, LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/swastik-logo-trimmed.png.asset.json";
 import { mainNav, site } from "@/config/site";
@@ -81,6 +81,13 @@ export function Header() {
           )}
           {session ? (
             <>
+              <Link
+                to="/wishlist"
+                aria-label="My wishlist"
+                className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:grid sm:h-10 sm:w-10"
+              >
+                <Heart className="h-4 w-4" aria-hidden="true" />
+              </Link>
               <Link
                 to="/account"
                 aria-label="My account"
