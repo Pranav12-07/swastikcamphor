@@ -74,14 +74,14 @@ function Index() {
             ESTD 1968 • Hyderabad
           </p>
           <h1
-            className="animate-rise-in mt-4 max-w-3xl text-4xl leading-[1.1] text-gold-soft md:text-6xl"
+            className="animate-rise-in text-shine mt-4 max-w-3xl text-4xl leading-[1.1] md:text-6xl"
             style={{ animationDelay: "80ms" }}
           >
             {banner ? (
               banner.title
             ) : (
               <>
-                <strong className="font-bold text-gradient-gold">PURE CAMPHOR.</strong>
+                <strong className="font-bold">PURE CAMPHOR.</strong>
                 <br />
                 <strong className="font-bold">PURE TRADITION</strong>
               </>
