@@ -22,6 +22,7 @@ import { CatalogProvider } from "@/lib/catalog";
 import { AuthProvider } from "@/lib/auth";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
