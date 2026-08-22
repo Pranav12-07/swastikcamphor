@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import scenePooja from "@/assets/tradition-pooja-v4.mp4.asset.json";
-import sceneAarti from "@/assets/tradition-flame-v4.mp4.asset.json";
 import sceneFamily from "@/assets/tradition-family-v4.mp4.asset.json";
-import sceneFestival from "@/assets/tradition-festival-v4.mp4.asset.json";
 import sceneProduct from "@/assets/tradition-product-v4.mp4.asset.json";
 import logo from "@/assets/swastik-logo-trimmed.png.asset.json";
 import poster from "@/assets/tradition-poster.jpg";
@@ -18,22 +16,10 @@ const scenes: Scene[] = [
     alt: "Camphor tablet lit during a morning pooja at a home temple",
   },
   {
-    url: sceneAarti.url,
-    label: "Real Camphor Flame",
-    caption: "Pure tradition, every day.",
-    alt: "Close-up of a small camphor tablet burning with a natural flame in a brass holder",
-  },
-  {
     url: sceneFamily.url,
     label: "Family Aarti",
     caption: "A tradition shared with family.",
     alt: "An Indian family performing aarti with a camphor tablet burning in the foreground",
-  },
-  {
-    url: sceneFestival.url,
-    label: "Festival",
-    caption: "From everyday prayers to special occasions.",
-    alt: "Festive pooja thali with a camphor tablet, diya and marigold flowers",
   },
   {
     url: sceneProduct.url,
