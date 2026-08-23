@@ -26,6 +26,7 @@ interface Props {
   total?: number
   placedAt?: string
   orderUrl?: string
+  receiptUrl?: string
   items?: OrderItem[]
 }
 
@@ -48,6 +49,7 @@ const Email = ({
   total = 0,
   placedAt = '',
   orderUrl = '',
+  receiptUrl = '',
   items = [],
 }: Props) => (
   <Html lang="en" dir="ltr">
@@ -97,12 +99,22 @@ const Email = ({
           <Text style={label}>Order status</Text>
           <Text style={value}>{orderStatus}</Text>
         </Section>
-        {orderUrl ? (
+        {orderUrl || receiptUrl ? (
           <Section style={{ marginTop: '20px' }}>
-            <Button href={orderUrl} style={button}>
-              View My Order
-            </Button>
+            {orderUrl ? (
+              <Button href={orderUrl} style={button}>
+                View My Order
+              </Button>
+            ) : null}
+            {receiptUrl ? (
+              <Button href={receiptUrl} style={ghostButton}>
+                Download PDF Receipt
+              </Button>
+            ) : null}
           </Section>
+        ) : null}
+        {receiptUrl ? (
+          <Text style={muted}>Your branded PDF receipt is ready — tap “Download PDF Receipt” above for the official copy.</Text>
         ) : null}
         <Hr style={hr} />
         <Text style={muted}>
@@ -136,6 +148,7 @@ export const template = {
     total: 447,
     placedAt: '22 Aug 2026, 3:30 pm',
     orderUrl: 'https://swastikcamphor.lovable.app/orders/SCLK92X1',
+    receiptUrl: 'https://swastikcamphor.lovable.app/receipt/SCLK92X1.pdf',
     items: [{ name: 'Camphor Tablets', size: '100g', qty: 2, price: 199 }],
   },
 } satisfies TemplateEntry
@@ -155,4 +168,13 @@ const button = {
   borderRadius: '999px',
   fontSize: '14px',
   textDecoration: 'none',
+}
+const ghostButton = {
+  border: '1px solid #6b1220',
+  color: '#6b1220',
+  padding: '11px 20px',
+  borderRadius: '999px',
+  fontSize: '14px',
+  textDecoration: 'none',
+  marginLeft: '10px',
 }
