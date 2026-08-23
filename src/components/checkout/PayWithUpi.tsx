@@ -23,11 +23,6 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [watching, setWatching] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(/android|iphone|ipad|ipod/i.test(navigator.userAgent));
-  }, []);
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
