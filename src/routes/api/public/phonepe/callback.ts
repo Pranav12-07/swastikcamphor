@@ -1,39 +1,59 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * PhonePe server-to-server callback.
- * Signature is verified before anything is trusted; the payment is then
- * re-confirmed with PhonePe's status API before an order can become PAID.
+ * PhonePe server-to-server webhook.
+ *
+ * v2 (Standard Checkout): the `Authorization` header carries
+ * SHA256(username:password) configured on the PhonePe dashboard.
+ * v1 (legacy): X-VERIFY checksum over the base64 body.
+ *
+ * In both cases the body is only used to learn WHICH order changed — the
+ * payment itself is always re-confirmed with PhonePe's Order Status API
+ * before an order can become PAID.
  */
 export const Route = createFileRoute("/api/public/phonepe/callback")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { getPhonePeConfig, verifyCallbackChecksum, checkStatus } = await import("@/lib/phonepe.server");
+        const { getPhonePeConfig, verifyCallbackChecksum, verifyWebhookAuth, checkStatus } = await import(
+          "@/lib/phonepe.server"
+        );
         const cfg = getPhonePeConfig();
         if (!cfg) return new Response("not configured", { status: 503 });
 
         const rawBody = await request.text();
-        let base64 = "";
-        try {
-          base64 = String((JSON.parse(rawBody) as { response?: string }).response ?? "");
-        } catch {
-          return new Response("bad request", { status: 400 });
-        }
-        if (!base64) return new Response("bad request", { status: 400 });
+        let merchantTransactionId: string | undefined;
 
-        if (!verifyCallbackChecksum(request.headers.get("x-verify"), base64, cfg)) {
-          return new Response("invalid signature", { status: 401 });
+        if (cfg.version === "v2") {
+          const authOk = verifyWebhookAuth(request.headers.get("authorization"));
+          if (authOk === false) return new Response("invalid signature", { status: 401 });
+          try {
+            const body = JSON.parse(rawBody) as { payload?: Record<string, any> };
+            merchantTransactionId = body.payload?.["merchantOrderId"] as string | undefined;
+          } catch {
+            return new Response("bad request", { status: 400 });
+          }
+        } else {
+          let base64 = "";
+          try {
+            base64 = String((JSON.parse(rawBody) as { response?: string }).response ?? "");
+          } catch {
+            return new Response("bad request", { status: 400 });
+          }
+          if (!base64) return new Response("bad request", { status: 400 });
+          if (!verifyCallbackChecksum(request.headers.get("x-verify"), base64, cfg)) {
+            return new Response("invalid signature", { status: 401 });
+          }
+          try {
+            const decoded = JSON.parse(Buffer.from(base64, "base64").toString("utf8")) as {
+              data?: Record<string, any>;
+            };
+            merchantTransactionId = decoded.data?.["merchantTransactionId"] as string | undefined;
+          } catch {
+            return new Response("bad payload", { status: 400 });
+          }
         }
 
-        let decoded: { data?: Record<string, any> } = {};
-        try {
-          decoded = JSON.parse(Buffer.from(base64, "base64").toString("utf8"));
-        } catch {
-          return new Response("bad payload", { status: 400 });
-        }
-
-        const merchantTransactionId = decoded.data?.["merchantTransactionId"] as string | undefined;
         if (!merchantTransactionId) return new Response("missing transaction", { status: 400 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
