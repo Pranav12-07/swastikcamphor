@@ -190,7 +190,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQty,
       remove,
       clear,
-      count: lines.reduce((n, l) => n + l.qty, 0),
+      // Badge counts distinct products, not total quantity.
+      count: lines.length,
+      itemCount: lines.reduce((n, l) => n + l.qty, 0),
       subtotal,
       shipping,
       discount,
