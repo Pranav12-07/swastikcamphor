@@ -80,11 +80,13 @@ export type InitiateArgs = {
   phone?: string;
   /** UPI intent app hint — opens Google Pay / PhonePe / Paytm directly on mobile. */
   targetApp?: "GOOGLE_PAY" | "PHONEPE" | "PAYTM" | null;
+  /** Ask PhonePe for a dynamic UPI QR for this exact transaction. */
+  qr?: boolean;
   mobileFlow: boolean;
 };
 
 export type InitiateResult =
-  | { ok: true; redirectUrl: string; intentUrl: string | null }
+  | { ok: true; redirectUrl: string | null; intentUrl: string | null; qrData: string | null }
   | { ok: false; error: string };
 
 export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): Promise<InitiateResult> {
@@ -96,9 +98,11 @@ export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): P
     redirectUrl: args.redirectUrl,
     redirectMode: "REDIRECT",
     callbackUrl: args.callbackUrl,
-    paymentInstrument: args.targetApp
-      ? { type: "UPI_INTENT", targetApp: args.targetApp }
-      : { type: "PAY_PAGE" },
+    paymentInstrument: args.qr
+      ? { type: "UPI_QR" }
+      : args.targetApp
+        ? { type: "UPI_INTENT", targetApp: args.targetApp }
+        : { type: "PAY_PAGE" },
   };
   if (args.phone) payload["mobileNumber"] = args.phone.replace(/\D/g, "").slice(-10);
 
@@ -132,8 +136,15 @@ export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): P
   const instrumentResponse = json.data?.["instrumentResponse"] ?? {};
   const redirect = instrumentResponse?.redirectInfo?.url as string | undefined;
   const intent = instrumentResponse?.intentUrl as string | undefined;
-  if (!redirect && !intent) return { ok: false, error: "The payment gateway did not return a payment link." };
-  return { ok: true, redirectUrl: redirect ?? intent!, intentUrl: intent ?? null };
+  const qrData = (instrumentResponse?.qrData ?? instrumentResponse?.qrString) as string | undefined;
+  if (!redirect && !intent && !qrData)
+    return { ok: false, error: "The payment gateway did not return a payment link." };
+  return {
+    ok: true,
+    redirectUrl: redirect ?? intent ?? null,
+    intentUrl: intent ?? null,
+    qrData: qrData ?? null,
+  };
 }
 
 export type StatusResult = {

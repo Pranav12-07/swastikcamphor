@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const startSchema = z.object({
   orderNumber: z.string().trim().min(3).max(40),
-  app: z.enum(["gpay", "phonepe", "paytm", "any"]).default("any"),
+  app: z.enum(["gpay", "phonepe", "paytm", "any", "qr"]).default("any"),
   mobile: z.boolean().default(false),
 });
 
@@ -89,6 +89,7 @@ export const startPayment = createServerFn({ method: "POST" })
     const result = await initiatePayment(
       {
         merchantTransactionId,
+        qr: data.app === "qr",
         amountPaise,
         redirectUrl: `${origin}/order-success/${order.order_number}`,
         callbackUrl: `${origin}/api/public/phonepe/callback`,
@@ -120,7 +121,13 @@ export const startPayment = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
 
-    return { ok: true as const, redirectUrl: result.redirectUrl, intentUrl: result.intentUrl };
+    return {
+      ok: true as const,
+      redirectUrl: result.redirectUrl,
+      intentUrl: result.intentUrl,
+      qrData: result.qrData,
+      transactionRef: merchantTransactionId,
+    };
   });
 
 /** Authoritative payment state — always re-verified with PhonePe while pending. */
