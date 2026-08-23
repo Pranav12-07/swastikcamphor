@@ -69,9 +69,13 @@ export function AdminShell({
   const { data: me, isLoading, isError } = useAdminMe();
 
   useEffect(() => {
-    if (!isLoading && (isError || (me && !me.isStaff))) {
-      navigate({ to: "/admin/login", replace: true });
+    if (isLoading) return;
+    // Signed in but without a staff role: this is a customer, send them home.
+    if (me && !me.isStaff) {
+      navigate({ to: "/account", replace: true });
+      return;
     }
+    if (isError) navigate({ to: "/admin/login", replace: true });
   }, [isLoading, isError, me, navigate]);
 
   useEffect(() => setOpen(false), [pathname]);
@@ -89,8 +93,8 @@ export function AdminShell({
         <div>
           <h1 className="text-xl font-semibold">Access denied</h1>
           <p className="mt-2 text-sm text-muted-foreground">This area is restricted to Swastik Camphor staff.</p>
-          <Link to="/admin/login" className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
-            Go to admin login
+          <Link to="/account" className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+            Go to my account
           </Link>
         </div>
       </div>
