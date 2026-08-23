@@ -289,6 +289,21 @@ export const submitUpiReference = createServerFn({ method: "POST" })
 
     const reference = data.reference.toUpperCase();
 
+    // The same UTR can only belong to one order — block re-use of another order's reference.
+    const { data: clash } = await supabaseAdmin
+      .from("payments")
+      .select("id, order_id")
+      .eq("transaction_id", reference)
+      .neq("order_id", order.id)
+      .limit(1)
+      .maybeSingle();
+    if (clash) {
+      return {
+        ok: false as const,
+        error: "This UPI reference is already linked to another order. Please check your payment receipt.",
+      };
+    }
+
     const { data: existing } = await supabaseAdmin
       .from("payments")
       .select("id")
