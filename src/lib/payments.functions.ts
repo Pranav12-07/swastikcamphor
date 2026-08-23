@@ -160,7 +160,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const { data: payment } = await supabaseAdmin
       .from("payments")
-      .select("gateway_order_id, transaction_id, status, method")
+      .select("gateway_order_id, transaction_id, status, method, gateway")
       .eq("order_id", order.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -171,8 +171,11 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const cfg = getPhonePeConfig();
     const pendingish = ["pending", "processing", "awaiting_verification"].includes(paymentStatus);
-    if (cfg && pendingish && payment?.gateway_order_id) {
+    // Manual UPI references are verified by a human in the admin portal, never by the gateway.
+    const manual = payment?.gateway === "upi_manual";
+    if (cfg && pendingish && !manual && payment?.gateway_order_id) {
       const status = await checkStatus(payment.gateway_order_id, cfg);
+
       if (status) {
         const expected = Math.round(Number(order.total) * 100);
         const amountOk = status.amountPaise == null || status.amountPaise === expected;
