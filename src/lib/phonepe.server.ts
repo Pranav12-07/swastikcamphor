@@ -371,7 +371,11 @@ export type StatusResult = {
 };
 
 export async function checkStatus(merchantTransactionId: string, cfg: PhonePeConfig): Promise<StatusResult | null> {
-  return cfg.version === "v2" ? statusV2(merchantTransactionId, cfg) : statusV1(merchantTransactionId, cfg);
+  if (cfg.version === "v1") return statusV1(merchantTransactionId, cfg);
+  const legacy = legacyConfig();
+  const token = await getAccessToken(cfg);
+  if (!token && legacy) return statusV1(merchantTransactionId, legacy);
+  return statusV2(merchantTransactionId, cfg);
 }
 
 async function statusV2(
