@@ -10,8 +10,19 @@ const startSchema = z.object({
 
 const statusSchema = z.object({ orderNumber: z.string().trim().min(3).max(40) });
 
+const referenceSchema = z.object({
+  orderNumber: z.string().trim().min(3).max(40),
+  reference: z
+    .string()
+    .trim()
+    .min(6, "Enter the 12-digit UPI reference / UTR number")
+    .max(40)
+    .regex(/^[A-Za-z0-9-]+$/, "Only letters, numbers and dashes are allowed"),
+});
+
 export type PaymentStateResponse = {
-  state: "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "EXPIRED" | "COD";
+  state: "PENDING" | "AWAITING" | "PAID" | "FAILED" | "CANCELLED" | "EXPIRED" | "COD";
+
   orderNumber: string;
   total: number;
   paymentStatus: string;
