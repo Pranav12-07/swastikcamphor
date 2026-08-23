@@ -125,6 +125,31 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const isMobile = typeof navigator !== "undefined" && /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
   /**
+   * PhonePe's hosted checkout only renders the live QR when it runs as a real
+   * top-level page. Inside an iframe (editor preview, embeds) it degrades to a
+   * blurred "Click to view QR" screen — so always break out of the frame.
+   */
+  const openPaymentPage = (url: string) => {
+    const framed = typeof window !== "undefined" && window.top !== window.self;
+    if (!framed) {
+      window.location.href = url;
+      return;
+    }
+    try {
+      // Same-origin parents allow a direct top-level navigation.
+      if (window.top) {
+        window.top.location.href = url;
+        return;
+      }
+    } catch {
+      /* cross-origin parent — fall through to a new tab */
+    }
+    const tab = window.open(url, "_blank", "noopener,noreferrer");
+    if (!tab) window.location.href = url;
+  };
+
+
+  /**
    * Starts a real PhonePe transaction on the server and hands the customer to
    * the gateway (hosted page, UPI app intent, or a dynamic gateway QR).
    */
