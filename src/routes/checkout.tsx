@@ -53,7 +53,6 @@ function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
-  const [method, setMethod] = useState<"upi" | "cod">("upi");
   const [placed, setPlaced] = useState<{ email: string; total: number } | null>(null);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>("new");
