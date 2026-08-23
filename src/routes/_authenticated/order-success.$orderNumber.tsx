@@ -153,10 +153,13 @@ function OrderSuccessPage() {
             ? "Payment successful 🎉"
             : state === "COD"
               ? "Order confirmed"
-              : state === "PENDING" || !state
-                ? "Verifying your payment…"
-                : "Payment not completed"
+              : state === "AWAITING"
+                ? "Payment under verification"
+                : state === "PENDING" || !state
+                  ? "Verifying your payment…"
+                  : "Payment not completed"
         }
+
         subtitle={`Order #${orderNumber}`}
       />
 
