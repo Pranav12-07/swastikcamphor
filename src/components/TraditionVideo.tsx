@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import scenePooja from "@/assets/tradition-pooja-v6.mp4.asset.json";
 import sceneFamily from "@/assets/tradition-family-v6.mp4.asset.json";
@@ -43,12 +43,17 @@ const scenes: Scene[] = [
   },
 ];
 
+const CROSSFADE_S = 0.6;
+
 export function TraditionVideo() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const layerRefs = [useRef<HTMLVideoElement>(null), useRef<HTMLVideoElement>(null)] as const;
   const [visible, setVisible] = useState(false);
-  const [index, setIndex] = useState(0);
+  /** Which scene index each of the two stacked <video> layers holds. */
+  const [slots, setSlots] = useState<[number, number]>([0, 1 % scenes.length]);
+  const [active, setActive] = useState(0);
   const [endCard, setEndCard] = useState(false);
+  const switching = useRef(false);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -68,28 +73,71 @@ export function TraditionVideo() {
     return () => io.disconnect();
   }, []);
 
-  // Play the current scene whenever the source changes.
-  useEffect(() => {
-    if (!visible) return;
-    const v = videoRef.current;
-    if (!v) return;
-    setEndCard(false);
-    v.load();
-    v.play().catch(() => {});
-  }, [visible, index]);
-
+  const index = slots[active]!;
+  const current = scenes[index] ?? scenes[0]!;
   const isLast = index === scenes.length - 1;
 
-  const onTimeUpdate = () => {
-    const v = videoRef.current;
-    if (!v || !v.duration) return;
-    // Branded end card only on the final scene.
-    setEndCard(isLast && v.duration - v.currentTime < 1.4);
+  // Keep the active layer playing; keep the idle layer buffered at frame 0.
+  useEffect(() => {
+    if (!visible) return;
+    const a = layerRefs[active].current;
+    const b = layerRefs[active === 0 ? 1 : 0].current;
+    a?.play().catch(() => {});
+    if (b) {
+      b.pause();
+      try {
+        b.currentTime = 0;
+      } catch {
+        /* not seekable yet */
+      }
+      b.load();
+    }
+    switching.current = false;
+  }, [visible, active, slots]);
+
+  /** Crossfade into the already-buffered idle layer. */
+  const advance = useCallback(
+    (target?: number) => {
+      if (switching.current) return;
+      switching.current = true;
+      const idle = active === 0 ? 1 : 0;
+      const next = target ?? (slots[idle] ?? (index + 1) % scenes.length);
+      setSlots((prev) => {
+        const copy = [...prev] as [number, number];
+        copy[idle] = next;
+        return copy;
+      });
+      const nextEl = layerRefs[idle].current;
+      if (nextEl) {
+        try {
+          nextEl.currentTime = 0;
+        } catch {
+          /* ignore */
+        }
+        nextEl.play().catch(() => {});
+      }
+      setActive(idle);
+      // Queue the following scene onto the layer we just left.
+      window.setTimeout(() => {
+        setSlots((prev) => {
+          const copy = [...prev] as [number, number];
+          copy[active] = (next + 1) % scenes.length;
+          return copy;
+        });
+      }, CROSSFADE_S * 1000 + 200);
+    },
+    [active, index, slots],
+  );
+
+  const onTimeUpdate = (layer: number) => () => {
+    if (layer !== active) return;
+    const v = layerRefs[layer].current;
+    if (!v || !v.duration || Number.isNaN(v.duration)) return;
+    const remaining = v.duration - v.currentTime;
+    setEndCard(isLast && remaining < 1.4);
+    // Start the crossfade before the final (often black) frame is reached.
+    if (remaining <= CROSSFADE_S) advance();
   };
-
-  const onEnded = () => setIndex((i) => (i + 1) % scenes.length);
-
-  const current = scenes[index] ?? scenes[0]!;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
@@ -106,32 +154,35 @@ export function TraditionVideo() {
         ref={wrapRef}
         className="reveal reveal-zoom relative mt-9 overflow-hidden rounded-3xl border border-gold/25"
       >
-        <div className="aspect-video w-full bg-black">
-          {visible ? (
-            <video
-              ref={videoRef}
-              key={current.url}
-              className="h-full w-full object-cover"
-              src={current.url}
-              
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              onTimeUpdate={onTimeUpdate}
-              onEnded={onEnded}
-              aria-label={current.alt}
-            />
-          ) : (
-            <img
-              src={poster}
-              alt="Camphor flame glowing in a brass holder at a traditional Indian home temple"
-              className="h-full w-full object-cover"
-              loading="lazy"
-              width={1600}
-              height={900}
-            />
-          )}
+        <div className="relative aspect-video w-full">
+          {/* Poster stays underneath so no black frame is ever exposed. */}
+          <img
+            src={poster}
+            alt="Camphor flame glowing in a brass holder at a traditional Indian home temple"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            width={1600}
+            height={900}
+          />
+          {visible &&
+            ([0, 1] as const).map((layer) => (
+              <video
+                key={layer}
+                ref={layerRefs[layer]}
+                src={scenes[slots[layer]!]?.url}
+                className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+                style={{ opacity: layer === active ? 1 : 0 }}
+                autoPlay={layer === active}
+                muted
+                playsInline
+                preload="auto"
+                onTimeUpdate={onTimeUpdate(layer)}
+                onEnded={() => layer === active && advance()}
+                onError={() => layer === active && advance()}
+                aria-hidden={layer !== active}
+                aria-label={layer === active ? current.alt : undefined}
+              />
+            ))}
         </div>
 
         <div
@@ -183,7 +234,7 @@ export function TraditionVideo() {
               <button
                 key={s.url}
                 type="button"
-                onClick={() => setIndex(i)}
+                onClick={() => advance(i)}
                 aria-label={`Play scene: ${s.label}`}
                 aria-current={i === index}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
