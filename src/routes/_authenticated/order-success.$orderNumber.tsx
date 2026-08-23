@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Loader2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,6 +10,7 @@ import { getPaymentState } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { downloadReceiptPdf } from "@/lib/receipt";
+import { useOrderRealtime } from "@/hooks/use-order-realtime";
 
 export const Route = createFileRoute("/_authenticated/order-success/$orderNumber")({
   head: () => ({
@@ -88,6 +89,7 @@ function OrderSuccessPage() {
   const [popupOpen, setPopupOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const cleared = useRef(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["payment-state", orderNumber],
