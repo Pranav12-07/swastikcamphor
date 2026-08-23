@@ -305,45 +305,16 @@ function Checkout() {
             </label>
           )}
 
-          <fieldset className="sm:col-span-2">
-            <legend className="text-sm font-medium">Payment method</legend>
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              {([
-                { id: "upi", label: "UPI — Google Pay / PhonePe", hint: "Instant, secure QR or app payment" },
-                { id: "cod", label: "Cash on delivery", hint: "Pay the courier when it arrives" },
-              ] as const).map((option) => (
-                <label
-                  key={option.id}
-                  className={`flex cursor-pointer flex-col rounded-xl border px-4 py-3 text-sm transition-colors ${
-                    method === option.id ? "border-primary bg-primary/5" : "border-gold/40"
-                  }`}
-                >
-                  <span className="flex items-center gap-2 font-medium">
-                    <input
-                      type="radio"
-                      name="payment_method"
-                      value={option.id}
-                      checked={method === option.id}
-                      onChange={() => setMethod(option.id)}
-                      className="accent-primary"
-                    />
-                    {option.label}
-                  </span>
-                  <span className="mt-1 pl-6 text-xs text-muted-foreground">{option.hint}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <div className="sm:col-span-2 rounded-xl border border-gold/40 bg-card/50 p-4 text-sm">
+            <p className="font-medium">Payment method</p>
+            <p className="mt-1 text-muted-foreground">UPI QR — secure, instant, verified by the gateway.</p>
+          </div>
           <button
             type="submit"
             disabled={busy}
             className="sm:col-span-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
           >
-            {busy
-              ? "Placing order…"
-              : method === "upi"
-                ? `Continue to UPI payment • ${formatINR(cart.total)}`
-                : `Place order • ${formatINR(cart.total)}`}
+            {busy ? "Placing order…" : `Continue to UPI payment • ${formatINR(cart.total)}`}
           </button>
         </form>
 
