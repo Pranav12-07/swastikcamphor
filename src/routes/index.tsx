@@ -74,7 +74,7 @@ function Index() {
           aria-hidden="true"
         />
         <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-36">
-          <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft">
+          <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft underline underline-offset-4">
             ESTD 1968
           </p>
           <h1
