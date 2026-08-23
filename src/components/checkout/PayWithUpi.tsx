@@ -127,6 +127,33 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     }
   };
 
+  /** Sends the UTR to the server so our team can verify the transfer. */
+  const sendReference = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (sending) return;
+    setSending(true);
+    try {
+      const result = await submitRef({ data: { orderNumber, reference: reference.trim() } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.state === "PAID") {
+        setPayState("PAID");
+        navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
+        return;
+      }
+      setPayState("AWAITING");
+      toast.success("Reference received — we are verifying your payment");
+      navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
+    } catch {
+      toast.error("Could not submit the reference. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+
   return (
     <div className="card-premium p-6 md:p-8">
       <h2 className="font-display text-2xl">Pay {formatINR(amount)} via UPI</h2>
