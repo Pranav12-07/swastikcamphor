@@ -362,10 +362,30 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
     const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "orders");
     const { id, note, ...fields } = data;
+
+    // Verifying a manual UPI transfer must run the same settlement as a gateway
+    // confirmation: stock, confirmation emails and order events — exactly once.
+    if (data.payment_status === "paid") {
+      const { data: target } = await context.supabase
+        .from("orders")
+        .select("order_number, payment_id, payment_provider")
+        .eq("id", id)
+        .maybeSingle();
+      const t = (target ?? {}) as { order_number?: string; payment_id?: string | null; payment_provider?: string | null };
+      if (t.order_number) {
+        const { settleOrderPaid } = await import("@/lib/payments.server");
+        await settleOrderPaid(t.order_number, {
+          transactionId: t.payment_id ?? null,
+          provider: t.payment_provider ?? "upi_manual",
+        });
+      }
+    }
+
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const [k, v] of Object.entries(fields)) if (v !== undefined) patch[k] = v;
     const { error } = await context.supabase.from("orders").update(patch as never).eq("id", id);
     if (error) throw new Error(error.message);
+
     if (data.status || data.payment_status) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin.from("order_events").insert({
