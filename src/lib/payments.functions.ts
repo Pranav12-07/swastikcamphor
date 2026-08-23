@@ -235,6 +235,11 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     return {
       state,
+      createdAt: order.created_at,
+      expiresAt:
+        state === "PENDING"
+          ? new Date(new Date(order.created_at).getTime() + PAYMENT_WINDOW_MINUTES * 60_000).toISOString()
+          : null,
       orderNumber: order.order_number,
       total: Number(order.total),
       paymentStatus: finalStatus,
