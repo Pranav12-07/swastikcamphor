@@ -6,7 +6,7 @@ import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { OrderTracker } from "@/components/orders/OrderTracker";
-import { getMyOrder, type TrackedOrder } from "@/lib/orders.functions";
+import { getMyOrder, getMyReceiptUrl, type TrackedOrder } from "@/lib/orders.functions";
 import { downloadReceiptPdf } from "@/lib/receipt";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderNumber")({
@@ -59,11 +59,21 @@ function OrderTrackingPage() {
 /** Branded PDF invoice for a paid order, generated in the browser on demand. */
 function InvoiceButton({ order }: { order: TrackedOrder }) {
   const [busy, setBusy] = useState(false);
+  const hostedUrl = useServerFn(getMyReceiptUrl);
 
   async function download() {
     if (busy) return;
     setBusy(true);
     try {
+      // Prefer the same hosted PDF that was emailed on payment; fall back to
+      // generating it in the browser if storage is unavailable.
+      try {
+        const { url } = await hostedUrl({ data: { orderNumber: order.order_number } });
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      } catch {
+        /* fall through to local generation */
+      }
       await downloadReceiptPdf({
         orderNumber: order.order_number,
         paymentStatus: order.payment_status,
