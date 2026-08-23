@@ -80,6 +80,7 @@ export async function settleOrderPaid(
       payment_status: "paid",
       status: order.status === "pending" || order.status === "placed" ? "confirmed" : order.status,
       payment_provider: info.provider ?? "phonepe",
+      payment_method: info.provider === "cod" ? "cod" : "upi",
       payment_id: info.transactionId ?? null,
       paid_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
