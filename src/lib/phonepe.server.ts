@@ -105,6 +105,10 @@ export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): P
         : { type: "PAY_PAGE" },
   };
   if (args.phone) payload["mobileNumber"] = args.phone.replace(/\D/g, "").slice(-10);
+  // Tells PhonePe which checkout experience to render: the desktop pay page shows
+  // the live scan-and-pay QR, the mobile one shows UPI app buttons.
+  payload["deviceContext"] = { deviceOS: args.mobileFlow ? "ANDROID" : "WEB" };
+
 
   const base64 = Buffer.from(JSON.stringify(payload)).toString("base64");
   const path = "/pg/v1/pay";
