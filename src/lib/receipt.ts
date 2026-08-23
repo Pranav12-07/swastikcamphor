@@ -21,7 +21,7 @@ export type ReceiptData = {
 
 const rupees = (n: number) => `Rs. ${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
-export async function downloadReceiptPdf(data: ReceiptData) {
+export async function buildReceiptDoc(data: ReceiptData) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -152,5 +152,10 @@ export async function downloadReceiptPdf(data: ReceiptData) {
   y += 26;
   doc.text("Thank you for shopping with Swastik Camphor — info@swastikcamphor.in", left, y);
 
+  return doc;
+}
+
+export async function downloadReceiptPdf(data: ReceiptData) {
+  const doc = await buildReceiptDoc(data);
   doc.save(`Swastik-Camphor-Receipt-${data.orderNumber}.pdf`);
 }
