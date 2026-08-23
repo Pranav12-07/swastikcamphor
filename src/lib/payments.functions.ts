@@ -258,3 +258,85 @@ export const getPaymentState = createServerFn({ method: "POST" })
       })),
     };
   });
+
+/**
+ * Customer submits the UPI reference / UTR number after paying to our static QR.
+ * This never marks the order paid — it queues it for admin verification.
+ */
+export const submitUpiReference = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => referenceSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getOrderByNumber } = await import("@/lib/payments.server");
+    const { notifyAdmin } = await import("@/lib/notify.server");
+
+    const order = await getOrderByNumber(data.orderNumber);
+    if (!order) return { ok: false as const, error: "We could not find that order." };
+    if (order.user_id && order.user_id !== context.userId) return { ok: false as const, error: "We could not find that order." };
+    if (order.payment_status === "paid") return { ok: true as const, state: "PAID" as const };
+
+    const reference = data.reference.toUpperCase();
+
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("order_id", order.id)
+      .eq("gateway", "upi_manual")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabaseAdmin
+        .from("payments")
+        .update({ transaction_id: reference, status: "awaiting_verification", amount: Number(order.total) })
+        .eq("id", existing.id);
+    } else {
+      await supabaseAdmin.from("payments").insert({
+        order_id: order.id,
+        method: "upi",
+        amount: Number(order.total),
+        status: "awaiting_verification",
+        gateway: "upi_manual",
+        gateway_order_id: order.order_number,
+        transaction_id: reference,
+        currency: "INR",
+      });
+    }
+
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: "awaiting_verification",
+        payment_method: "upi",
+        payment_provider: "upi_manual",
+        payment_id: reference,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .neq("payment_status", "paid");
+
+    await supabaseAdmin.from("order_events").insert({
+      order_id: order.id,
+      status: "payment: awaiting_verification",
+      note: `Customer submitted UPI reference ${reference}`,
+    });
+
+    await notifyAdmin({
+      type: "order.payment_reference",
+      title: `UPI reference submitted for order ${order.order_number}`,
+      body: `Reference ${reference} • ${order.customer_name}`,
+      link: "/admin/payments",
+      details: {
+        order_id: order.order_number,
+        customer: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        total: order.total,
+        reference,
+      },
+    });
+
+    return { ok: true as const, state: "AWAITING" as const };
+  });
