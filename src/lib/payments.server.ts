@@ -130,8 +130,10 @@ export async function settleOrderPaid(
   const adminClaim = await claimEmail("admin_notification_sent");
 
   // Branded PDF receipt, rendered server-side and hosted behind a signed link.
+  // Always generated on settlement (even if the email was already claimed) so
+  // the invoice is downloadable from the order page and can be re-sent.
   let receiptUrl = "";
-  if (customerClaim) {
+  {
     const { storeReceiptPdf } = await import("@/lib/receipt.server");
     receiptUrl =
       (await storeReceiptPdf({

@@ -95,3 +95,49 @@ export const trackOrder = createServerFn({ method: "POST" })
       .order("created_at", { ascending: true });
     return { order: order as unknown as TrackedOrder, events: (events ?? []) as OrderEvent[] };
   });
+
+/**
+ * A fresh signed download link for the customer's hosted PDF invoice.
+ * Only the owner of a paid order can request it; the PDF is regenerated
+ * on demand if it is missing from storage.
+ */
+export const getMyReceiptUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ orderNumber: z.string().trim().min(3).max(40) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: order, error } = await context.supabase
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("order_number", data.orderNumber)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!order) throw new Error("Order not found");
+    const o = order as unknown as TrackedOrder;
+    if (o.payment_status !== "paid") throw new Error("Invoice is available once the payment is confirmed.");
+
+    const { storeReceiptPdf } = await import("@/lib/receipt.server");
+    const url = await storeReceiptPdf({
+      orderNumber: o.order_number,
+      paymentStatus: o.payment_status,
+      paymentMethod: o.payment_provider === "cod" ? "Cash on delivery" : "UPI",
+      paymentReference: null,
+      customerName: o.customer_name,
+      email: o.email,
+      phone: o.phone,
+      address: `${o.address}, ${o.city}, ${o.state} ${o.pincode}`,
+      items: (o.items ?? []).map((i) => ({
+        name: i.name ?? "Item",
+        size: i.size ?? "",
+        qty: Number(i.qty ?? i.quantity ?? 1),
+        price: Number(i.price ?? 0),
+      })),
+      subtotal: Number(o.subtotal),
+      shipping: Number(o.shipping),
+      discount: Number(o.discount),
+      tax: Number(o.tax),
+      total: Number(o.total),
+    });
+    if (!url) throw new Error("Could not prepare the invoice right now.");
+    return { url };
+  });
