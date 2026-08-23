@@ -178,6 +178,7 @@ export async function settleOrderPaid(
         total: Number(order.total),
         placedAt,
         orderUrl: `${base}/orders/${order.order_number}`,
+        receiptUrl,
         items,
       },
       idempotencyKey: `order-paid-customer-${order.order_number}`,
