@@ -129,6 +129,34 @@ export async function settleOrderPaid(
   const customerClaim = await claimEmail("customer_confirmation_sent");
   const adminClaim = await claimEmail("admin_notification_sent");
 
+  // Branded PDF receipt, rendered server-side and hosted behind a signed link.
+  let receiptUrl = "";
+  if (customerClaim) {
+    const { storeReceiptPdf } = await import("@/lib/receipt.server");
+    receiptUrl =
+      (await storeReceiptPdf({
+        orderNumber: order.order_number,
+        paymentStatus: "paid",
+        paymentMethod: info.provider === "cod" ? "Cash on delivery" : "UPI",
+        paymentReference: info.transactionId ?? null,
+        customerName: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        address: fullAddress,
+        items: items.map((it: { name?: string; size?: string; qty?: number; price?: number }) => ({
+          name: it.name ?? "",
+          size: it.size ?? "",
+          qty: Number(it.qty ?? 0),
+          price: Number(it.price ?? 0),
+        })),
+        subtotal: Number(order.subtotal),
+        shipping: Number(order.shipping),
+        discount: Number(order.discount),
+        tax: Number(order.tax),
+        total: Number(order.total),
+      })) ?? "";
+  }
+
   // Customer confirmation
   if (customerClaim)
   try {
