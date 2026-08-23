@@ -147,6 +147,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   const showIntro = INTRO_ENABLED && pathname === "/";
 
   return (
@@ -154,22 +155,32 @@ function RootComponent() {
       <AuthProvider>
       <CatalogProvider>
       <CartProvider>
-        {showIntro && <CamphorIntro />}
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        {isAdmin ? (
+          <>
             <Outlet />
-          </main>
-          <Footer />
-        </div>
-        <ChatWidget />
-        <WhatsAppButton />
-        <AmbientAudio />
-        <Toaster position="top-center" richColors />
+            <Toaster position="top-center" richColors />
+          </>
+        ) : (
+          <>
+            {showIntro && <CamphorIntro />}
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <Outlet />
+              </main>
+              <Footer />
+            </div>
+            <ChatWidget />
+            <WhatsAppButton />
+            <AmbientAudio />
+            <Toaster position="top-center" richColors />
+          </>
+        )}
       </CartProvider>
       </CatalogProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
 }
+

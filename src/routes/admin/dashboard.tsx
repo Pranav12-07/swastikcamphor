@@ -23,16 +23,30 @@ export const Route = createFileRoute("/admin/dashboard")({
 
 function Sparkline({ data }: { data: Array<{ date: string; revenue: number }> }) {
   const max = Math.max(1, ...data.map((d) => d.revenue));
+  const first = data[0]?.date;
+  const last = data[data.length - 1]?.date;
+  const fmt = (d?: string) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "");
   return (
-    <div className="flex h-32 items-end gap-1">
-      {data.map((d) => (
-        <div key={d.date} className="flex-1" title={`${d.date}: ${inr(d.revenue)}`}>
-          <div className="w-full rounded-t bg-primary/70" style={{ height: `${Math.max(2, (d.revenue / max) * 100)}%` }} />
-        </div>
-      ))}
+    <div>
+      <div className="flex h-32 items-end gap-1">
+        {data.map((d) => (
+          <div key={d.date} className="flex h-full flex-1 items-end" title={`${fmt(d.date)}: ${inr(d.revenue)}`}>
+            <div
+              className="w-full rounded-t bg-primary/70 transition-all"
+              style={{ height: `${d.revenue > 0 ? Math.max(6, (d.revenue / max) * 100) : 2}%` }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wide text-muted-foreground">
+        <span>{fmt(first)}</span>
+        <span>Peak {inr(max)}</span>
+        <span>{fmt(last)}</span>
+      </div>
     </div>
   );
 }
+
 
 function DashboardPage() {
   const fn = useServerFn(adminDashboardStats);
