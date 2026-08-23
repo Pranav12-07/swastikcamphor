@@ -203,7 +203,30 @@ export function isMerchantBlocked(message: string | undefined | null) {
 }
 
 export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): Promise<InitiateResult> {
-  return cfg.version === "v2" ? initiateV2(args, cfg) : initiateV1(args, cfg);
+  if (cfg.version === "v1") return initiateV1(args, cfg);
+  const legacy = legacyConfig();
+  const token = await getAccessToken(cfg);
+  // v2 credentials rejected → keep checkout alive on the legacy salt-key setup.
+  if (!token && legacy) return initiateV1(args, legacy);
+  return initiateV2(args, cfg);
+}
+
+/** Legacy salt-key credentials, when they are still configured. */
+function legacyConfig(): Extract<PhonePeConfig, { version: "v1" }> | null {
+  const merchantId = process.env["PHONEPE_MERCHANT_ID"];
+  const saltKey = process.env["PHONEPE_SALT_KEY"];
+  if (!merchantId || !saltKey) return null;
+  const env = (process.env["PHONEPE_ENV"] || "sandbox").toLowerCase();
+  return {
+    version: "v1",
+    merchantId,
+    saltKey,
+    saltIndex: process.env["PHONEPE_SALT_INDEX"] || "1",
+    host:
+      env === "live" || env === "production"
+        ? "https://api.phonepe.com/apis/hermes"
+        : "https://api-preprod.phonepe.com/apis/pg-sandbox",
+  };
 }
 
 async function initiateV2(
