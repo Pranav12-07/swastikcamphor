@@ -192,7 +192,7 @@ function Checkout() {
           discount: cart.discount,
           total: cart.total,
           coupon_code: cart.coupon,
-          payment_method: method,
+          payment_method: "upi",
         },
       });
       if (session && saveAddress && !chosen) {
@@ -213,10 +213,6 @@ function Checkout() {
       // The cart is only cleared once the payment is verified (order-success page).
       setPlaced({ email: parsed.data.email, total: result.total });
       setOrderNumber(result.orderNumber);
-      if (method === "cod") {
-        cart.clear();
-        navigate({ to: "/order-success/$orderNumber", params: { orderNumber: result.orderNumber } });
-      }
     } catch (err) {
       toast.error(
         err instanceof Error && err.message && err.message.length < 140
