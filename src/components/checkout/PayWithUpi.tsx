@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, CheckCircle2, Copy, Loader2, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Copy, Clock3, Loader2, QrCode, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import QRCode from "qrcode";
-import { getPaymentState } from "@/lib/payments.functions";
+import { getPaymentState, submitUpiReference } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
+
 
 const UPI_APPS = [
   { id: "gpay", label: "Google Pay", scheme: "tez" },
@@ -22,14 +23,18 @@ const UPI_APPS = [
  */
 export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amount: number }) {
   const state = useServerFn(getPaymentState);
+  const submitRef = useServerFn(submitUpiReference);
   const navigate = useNavigate();
 
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [payState, setPayState] = useState<"PENDING" | "PAID" | "FAILED">("PENDING");
+  const [payState, setPayState] = useState<"PENDING" | "AWAITING" | "PAID" | "FAILED">("PENDING");
   const [checkedAt, setCheckedAt] = useState<Date | null>(null);
   const [appError, setAppError] = useState<string | null>(null);
+  const [reference, setReference] = useState("");
+  const [sending, setSending] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const upiUri =
     `upi://pay?pa=${encodeURIComponent(upi.vpa)}&pn=${encodeURIComponent(upi.payeeName)}` +
@@ -59,9 +64,12 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
           if (timer.current) clearInterval(timer.current);
           setPayState("FAILED");
+        } else if (result.state === "AWAITING") {
+          setPayState("AWAITING");
         } else {
           setPayState("PENDING");
         }
+
       } catch {
         /* transient network hiccup — keep polling */
       }
@@ -119,6 +127,33 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     }
   };
 
+  /** Sends the UTR to the server so our team can verify the transfer. */
+  const sendReference = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (sending) return;
+    setSending(true);
+    try {
+      const result = await submitRef({ data: { orderNumber, reference: reference.trim() } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.state === "PAID") {
+        setPayState("PAID");
+        navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
+        return;
+      }
+      setPayState("AWAITING");
+      toast.success("Reference received — we are verifying your payment");
+      navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
+    } catch {
+      toast.error("Could not submit the reference. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+
   return (
     <div className="card-premium p-6 md:p-8">
       <h2 className="font-display text-2xl">Pay {formatINR(amount)} via UPI</h2>
@@ -143,6 +178,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
         ) : payState === "FAILED" ? (
           <AlertTriangle className="h-5 w-5 text-destructive" />
+        ) : payState === "AWAITING" ? (
+          <Clock3 className="h-5 w-5 text-gold" />
         ) : (
           <Loader2 className="h-5 w-5 animate-spin text-gold" />
         )}
@@ -152,16 +189,21 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
               ? "Payment verified"
               : payState === "FAILED"
                 ? "Payment not completed"
-                : "Payment pending — waiting for confirmation"}
+                : payState === "AWAITING"
+                  ? "Reference received — verification in progress"
+                  : "Payment pending — waiting for confirmation"}
           </p>
           <p className="text-xs text-muted-foreground">
             {payState === "PAID"
               ? "Taking you to your order confirmation…"
               : payState === "FAILED"
                 ? "No money was captured. Scan the QR again to retry."
-                : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
+                : payState === "AWAITING"
+                  ? "Our team confirms UPI transfers within a few hours. You will get an email the moment it is verified."
+                  : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
           </p>
         </div>
+
       </div>
 
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
@@ -226,9 +268,38 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
             {copied ? "Copied" : "Copy UPI ID"}
           </button>
         </div>
-
-
       </div>
+
+      {payState !== "PAID" && (
+        <form onSubmit={sendReference} className="mt-6 rounded-2xl border border-gold/30 bg-muted/20 p-5 text-left">
+          <label htmlFor="upi-reference" className="text-sm font-medium">
+            Already paid? Share your UPI reference
+          </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Copy the 12-digit UTR / transaction ID from your UPI app receipt so we can confirm your order.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input
+              id="upi-reference"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="e.g. 418923746512"
+              inputMode="numeric"
+              maxLength={40}
+              className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-gold"
+            />
+            <button
+              type="submit"
+              disabled={sending || reference.trim().length < 6}
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50"
+            >
+              {sending ? "Submitting…" : "Submit reference"}
+            </button>
+          </div>
+        </form>
+      )}
+
+
 
 
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">

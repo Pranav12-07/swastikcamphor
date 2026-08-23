@@ -10,8 +10,19 @@ const startSchema = z.object({
 
 const statusSchema = z.object({ orderNumber: z.string().trim().min(3).max(40) });
 
+const referenceSchema = z.object({
+  orderNumber: z.string().trim().min(3).max(40),
+  reference: z
+    .string()
+    .trim()
+    .min(6, "Enter the 12-digit UPI reference / UTR number")
+    .max(40)
+    .regex(/^[A-Za-z0-9-]+$/, "Only letters, numbers and dashes are allowed"),
+});
+
 export type PaymentStateResponse = {
-  state: "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "EXPIRED" | "COD";
+  state: "PENDING" | "AWAITING" | "PAID" | "FAILED" | "CANCELLED" | "EXPIRED" | "COD";
+
   orderNumber: string;
   total: number;
   paymentStatus: string;
@@ -149,7 +160,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const { data: payment } = await supabaseAdmin
       .from("payments")
-      .select("gateway_order_id, transaction_id, status, method")
+      .select("gateway_order_id, transaction_id, status, method, gateway")
       .eq("order_id", order.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -160,8 +171,11 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const cfg = getPhonePeConfig();
     const pendingish = ["pending", "processing", "awaiting_verification"].includes(paymentStatus);
-    if (cfg && pendingish && payment?.gateway_order_id) {
+    // Manual UPI references are verified by a human in the admin portal, never by the gateway.
+    const manual = payment?.gateway === "upi_manual";
+    if (cfg && pendingish && !manual && payment?.gateway_order_id) {
       const status = await checkStatus(payment.gateway_order_id, cfg);
+
       if (status) {
         const expected = Math.round(Number(order.total) * 100);
         const amountOk = status.amountPaise == null || status.amountPaise === expected;
@@ -200,15 +214,18 @@ export const getPaymentState = createServerFn({ method: "POST" })
     const state: PaymentStateResponse["state"] =
       finalStatus === "paid"
         ? "PAID"
-        : finalStatus === "cod_pending"
-          ? "COD"
-          : finalStatus === "cancelled"
-            ? "CANCELLED"
-            : finalStatus === "expired"
-              ? "EXPIRED"
-              : finalStatus === "failed"
-                ? "FAILED"
-                : "PENDING";
+        : finalStatus === "awaiting_verification"
+          ? "AWAITING"
+          : finalStatus === "cod_pending"
+            ? "COD"
+            : finalStatus === "cancelled"
+              ? "CANCELLED"
+              : finalStatus === "expired"
+                ? "EXPIRED"
+                : finalStatus === "failed"
+                  ? "FAILED"
+                  : "PENDING";
+
 
     return {
       state,
@@ -240,4 +257,86 @@ export const getPaymentState = createServerFn({ method: "POST" })
         image: l.image_url ?? null,
       })),
     };
+  });
+
+/**
+ * Customer submits the UPI reference / UTR number after paying to our static QR.
+ * This never marks the order paid — it queues it for admin verification.
+ */
+export const submitUpiReference = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => referenceSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getOrderByNumber } = await import("@/lib/payments.server");
+    const { notifyAdmin } = await import("@/lib/notify.server");
+
+    const order = await getOrderByNumber(data.orderNumber);
+    if (!order) return { ok: false as const, error: "We could not find that order." };
+    if (order.user_id && order.user_id !== context.userId) return { ok: false as const, error: "We could not find that order." };
+    if (order.payment_status === "paid") return { ok: true as const, state: "PAID" as const };
+
+    const reference = data.reference.toUpperCase();
+
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("order_id", order.id)
+      .eq("gateway", "upi_manual")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabaseAdmin
+        .from("payments")
+        .update({ transaction_id: reference, status: "awaiting_verification", amount: Number(order.total) })
+        .eq("id", existing.id);
+    } else {
+      await supabaseAdmin.from("payments").insert({
+        order_id: order.id,
+        method: "upi",
+        amount: Number(order.total),
+        status: "awaiting_verification",
+        gateway: "upi_manual",
+        gateway_order_id: order.order_number,
+        transaction_id: reference,
+        currency: "INR",
+      });
+    }
+
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: "awaiting_verification",
+        payment_method: "upi",
+        payment_provider: "upi_manual",
+        payment_id: reference,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .neq("payment_status", "paid");
+
+    await supabaseAdmin.from("order_events").insert({
+      order_id: order.id,
+      status: "payment: awaiting_verification",
+      note: `Customer submitted UPI reference ${reference}`,
+    });
+
+    await notifyAdmin({
+      type: "order.payment_reference",
+      title: `UPI reference submitted for order ${order.order_number}`,
+      body: `Reference ${reference} • ${order.customer_name}`,
+      link: "/admin/payments",
+      details: {
+        order_id: order.order_number,
+        customer: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        total: order.total,
+        reference,
+      },
+    });
+
+    return { ok: true as const, state: "AWAITING" as const };
   });

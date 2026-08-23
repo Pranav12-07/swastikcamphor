@@ -94,6 +94,7 @@ function OrderSuccessPage() {
     queryFn: () => fetchState({ data: { orderNumber } }),
     refetchInterval: (query) => {
       const state = query.state.data?.state;
+      if (state === "AWAITING") return 15000;
       if (!state || state === "PENDING") {
         if (Date.now() - startedAt.current > POLL_TIMEOUT_MS) return false;
         return 3000;
@@ -108,12 +109,13 @@ function OrderSuccessPage() {
   }, [data]);
 
   useEffect(() => {
-    if ((data?.state === "PAID" || data?.state === "COD") && !cleared.current) {
+    if ((data?.state === "PAID" || data?.state === "COD" || data?.state === "AWAITING") && !cleared.current) {
       cleared.current = true;
       setPopupOpen(data.state === "PAID");
       cart.clear();
     }
   }, [data, cart]);
+
 
   const state = data?.state;
 
@@ -151,10 +153,13 @@ function OrderSuccessPage() {
             ? "Payment successful 🎉"
             : state === "COD"
               ? "Order confirmed"
-              : state === "PENDING" || !state
-                ? "Verifying your payment…"
-                : "Payment not completed"
+              : state === "AWAITING"
+                ? "Payment under verification"
+                : state === "PENDING" || !state
+                  ? "Verifying your payment…"
+                  : "Payment not completed"
         }
+
         subtitle={`Order #${orderNumber}`}
       />
 
@@ -296,6 +301,31 @@ function OrderSuccessPage() {
             </div>
           </div>
         )}
+
+        {data && state === "AWAITING" && (
+          <div className="card-premium p-8 text-center">
+            <h2 className="font-display text-xl">Thank you — we received your payment reference</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Reference <span className="font-mono">{data.paymentReference ?? "—"}</span> for {formatINR(data.total)} is
+              being verified by our team. You will get a confirmation email as soon as it clears — usually within a few
+              hours. Please do not pay again.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/orders/$orderNumber"
+                params={{ orderNumber }}
+                className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium"
+              >
+                Track this order
+              </Link>
+              <Link to="/shop" className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground">
+                Continue shopping
+              </Link>
+            </div>
+          </div>
+        )}
+
+
 
         {data && (state === "FAILED" || state === "CANCELLED" || state === "EXPIRED") && (
           <div className="space-y-6">
