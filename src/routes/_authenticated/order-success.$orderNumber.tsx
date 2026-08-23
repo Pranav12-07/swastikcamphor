@@ -104,6 +104,13 @@ function OrderSuccessPage() {
     refetchOnWindowFocus: true,
   });
 
+  // Live push from the backend: the screen flips the moment the payment is settled.
+  const onOrderChange = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["payment-state", orderNumber] });
+  }, [queryClient, orderNumber]);
+  const live = useOrderRealtime(orderNumber, onOrderChange);
+
+
   useEffect(() => {
     if (data?.state === "PENDING" && Date.now() - startedAt.current > POLL_TIMEOUT_MS) setTimedOut(true);
   }, [data]);
