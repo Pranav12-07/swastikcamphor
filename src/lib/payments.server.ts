@@ -114,18 +114,24 @@ export async function settleOrderPaid(
 
   // Claim the email slots atomically: only the caller that flips the flag sends.
   const claimEmail = async (column: "customer_confirmation_sent" | "admin_notification_sent") => {
+    const patch =
+      column === "customer_confirmation_sent"
+        ? { customer_confirmation_sent: true }
+        : { admin_notification_sent: true };
     const { data } = await supabaseAdmin
       .from("orders")
-      .update({ [column]: true })
+      .update(patch)
       .eq("id", order.id)
       .eq(column, false)
       .select("id");
     return Boolean(data && data.length > 0);
   };
+  const customerClaim = await claimEmail("customer_confirmation_sent");
+  const adminClaim = await claimEmail("admin_notification_sent");
 
   // Customer confirmation
+  if (customerClaim)
   try {
-    if (!(await claimEmail("customer_confirmation_sent"))) throw new Error("already-sent");
     await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
         orderNumber: order.order_number,
