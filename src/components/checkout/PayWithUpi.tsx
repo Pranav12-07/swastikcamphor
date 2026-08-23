@@ -373,20 +373,23 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           Pay exactly {formatINR(amount)} • Order {orderNumber}
         </p>
 
-        <div className="mt-5 rounded-xl border border-gold/30 bg-muted/30 p-4">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">UPI ID</p>
-          <p className="mt-1 break-all text-sm font-semibold">{upi.vpa}</p>
-          <p className="text-xs text-muted-foreground">{upi.payeeName}</p>
-          <button
-            type="button"
-            onClick={copyVpa}
-            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
-          >
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? "Copied" : "Copy UPI ID"}
-          </button>
-        </div>
+        {!gateway && (
+          <div className="mt-5 rounded-xl border border-gold/30 bg-muted/30 p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">UPI ID</p>
+            <p className="mt-1 break-all text-sm font-semibold">{upi.vpa}</p>
+            <p className="text-xs text-muted-foreground">{upi.payeeName}</p>
+            <button
+              type="button"
+              onClick={copyVpa}
+              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied" : "Copy UPI ID"}
+            </button>
+          </div>
+        )}
       </div>
+      )}
 
       {payState !== "PAID" && (
         <form onSubmit={sendReference} className="mt-6 rounded-2xl border border-gold/30 bg-muted/20 p-5 text-left">
