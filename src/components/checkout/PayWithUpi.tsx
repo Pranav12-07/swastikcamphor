@@ -69,7 +69,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
       }
       const raw = result.qrData;
       if (!raw) {
-        setError("The gateway did not return a QR for this order. Please use a UPI app below.");
+        setError("The gateway did not return a QR for this order. Please try generating it again.");
         return;
       }
       const image = raw.startsWith("data:image")
