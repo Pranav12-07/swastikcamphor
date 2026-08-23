@@ -111,7 +111,7 @@ export function Header() {
           )}
           <Link
             to="/cart"
-            aria-label={`Cart with ${count} items`}
+            aria-label={`Cart with ${count} product${count === 1 ? "" : "s"}`}
             className="relative grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
