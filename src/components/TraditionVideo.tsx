@@ -54,6 +54,7 @@ export function TraditionVideo() {
   const [active, setActive] = useState(0);
   const [endCard, setEndCard] = useState(false);
   const switching = useRef(false);
+  const refFor = (i: number) => (i === 0 ? layerRefs[0] : layerRefs[1]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -80,8 +81,8 @@ export function TraditionVideo() {
   // Keep the active layer playing; keep the idle layer buffered at frame 0.
   useEffect(() => {
     if (!visible) return;
-    const a = layerRefs[active].current;
-    const b = layerRefs[active === 0 ? 1 : 0].current;
+    const a = refFor(active).current;
+    const b = refFor(active === 0 ? 1 : 0).current;
     a?.play().catch(() => {});
     if (b) {
       b.pause();
@@ -107,7 +108,7 @@ export function TraditionVideo() {
         copy[idle] = next;
         return copy;
       });
-      const nextEl = layerRefs[idle].current;
+      const nextEl = refFor(idle).current;
       if (nextEl) {
         try {
           nextEl.currentTime = 0;
@@ -131,7 +132,7 @@ export function TraditionVideo() {
 
   const onTimeUpdate = (layer: number) => () => {
     if (layer !== active) return;
-    const v = layerRefs[layer].current;
+    const v = refFor(layer).current;
     if (!v || !v.duration || Number.isNaN(v.duration)) return;
     const remaining = v.duration - v.currentTime;
     setEndCard(isLast && remaining < 1.4);
@@ -168,7 +169,7 @@ export function TraditionVideo() {
             ([0, 1] as const).map((layer) => (
               <video
                 key={layer}
-                ref={layerRefs[layer]}
+                ref={refFor(layer)}
                 src={scenes[slots[layer]!]?.url}
                 className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
                 style={{ opacity: layer === active ? 1 : 0 }}
