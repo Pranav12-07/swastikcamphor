@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, ErrorState, StatusBadge, TableSkeleton, fmtDate, inr } from "@/components/admin/ui";
 import { adminGetOrder, adminUpdateOrder } from "@/lib/admin.functions";
+import { adminResendInvoice } from "@/lib/payments-admin.functions";
 
 export const Route = createFileRoute("/admin/orders/$id")({
   ssr: false,
@@ -31,6 +32,8 @@ function OrderDetailPage() {
   const qc = useQueryClient();
   const get = useServerFn(adminGetOrder);
   const update = useServerFn(adminUpdateOrder);
+  const resendInvoice = useServerFn(adminResendInvoice);
+  const [sendingInvoice, setSendingInvoice] = useState(false);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
   const [tracking, setTracking] = useState("");
   const [courier, setCourier] = useState("");
@@ -180,6 +183,25 @@ function OrderDetailPage() {
               >
                 Save shipment details
               </button>
+              {order["payment_status"] === "paid" && (
+                <button
+                  disabled={sendingInvoice}
+                  onClick={async () => {
+                    setSendingInvoice(true);
+                    try {
+                      const res = await resendInvoice({ data: { orderId: id } });
+                      toast.success(res.sent ? "Invoice emailed to the customer" : "Customer is unsubscribed — email not sent");
+                    } catch {
+                      toast.error("Could not email the invoice.");
+                    } finally {
+                      setSendingInvoice(false);
+                    }
+                  }}
+                  className="mt-2 w-full rounded-md border border-input px-3 py-2 text-sm font-medium disabled:opacity-50"
+                >
+                  {sendingInvoice ? "Sending invoice…" : "Email PDF invoice again"}
+                </button>
+              )}
             </Card>
           </div>
         </div>
