@@ -302,6 +302,31 @@ function OrderSuccessPage() {
           </div>
         )}
 
+        {data && state === "AWAITING" && (
+          <div className="card-premium p-8 text-center">
+            <h2 className="font-display text-xl">Thank you — we received your payment reference</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Reference <span className="font-mono">{data.paymentReference ?? "—"}</span> for {formatINR(data.total)} is
+              being verified by our team. You will get a confirmation email as soon as it clears — usually within a few
+              hours. Please do not pay again.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/orders/$orderNumber"
+                params={{ orderNumber }}
+                className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium"
+              >
+                Track this order
+              </Link>
+              <Link to="/shop" className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground">
+                Continue shopping
+              </Link>
+            </div>
+          </div>
+        )}
+
+
+
         {data && (state === "FAILED" || state === "CANCELLED" || state === "EXPIRED") && (
           <div className="space-y-6">
             <div className="card-premium p-8 text-center">
