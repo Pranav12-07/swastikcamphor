@@ -8,6 +8,12 @@ import { getPaymentState } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
 
+const UPI_APPS = [
+  { id: "gpay", label: "Google Pay", scheme: "tez" },
+  { id: "phonepe", label: "PhonePe", scheme: "phonepe" },
+  { id: "paytm", label: "Paytm", scheme: "paytmmp" },
+] as const;
+
 /**
  * UPI-only checkout. A QR is generated for our own UPI ID with the exact order
  * amount and reference. No other payment methods are offered. The browser never
@@ -22,6 +28,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [copied, setCopied] = useState(false);
   const [payState, setPayState] = useState<"PENDING" | "PAID" | "FAILED">("PENDING");
   const [checkedAt, setCheckedAt] = useState<Date | null>(null);
+  const [appError, setAppError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const upiUri =
@@ -65,6 +72,22 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     watchPayment();
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [watchPayment]);
+
+  /** Opens a specific UPI app (or the Android chooser) with the order prefilled. */
+  const openApp = (id: string, scheme: string) => {
+    setAppError(null);
+    const link = scheme === "upi" ? upiUri : upiUri.replace("upi://", `${scheme}://`);
+    const started = Date.now();
+    const onHide = () => { if (document.hidden) setAppError(null); };
+    document.addEventListener("visibilitychange", onHide, { once: true });
+    window.location.href = link;
+    // If we are still visible after a moment, the app never opened.
+    setTimeout(() => {
+      if (!document.hidden && Date.now() - started < 3000 && id !== "any") {
+        setAppError("This app is not installed. Please choose another UPI app.");
+      }
+    }, 1800);
+  };
 
   const copyVpa = async () => {
     try {
@@ -155,14 +178,32 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           </button>
         </div>
 
-        <a
-          href={upiUri}
-          className="mt-4 inline-flex items-center justify-center rounded-xl border border-gold/40 px-5 py-3 text-sm font-medium md:hidden"
-        >
-          Open UPI app to pay
-        </a>
+        <div className="mt-5 md:hidden">
+          <p className="text-sm font-medium">Pay directly with UPI</p>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {UPI_APPS.map((app) => (
+              <button
+                key={app.id}
+                type="button"
+                onClick={() => openApp(app.id, app.scheme)}
+                className="rounded-xl border border-gold/40 px-3 py-3 text-xs font-medium transition-transform duration-300 active:scale-95"
+              >
+                {app.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => openApp("any", "upi")}
+            className="mt-2 w-full rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+          >
+            Pay with any UPI app
+          </button>
+          {appError && <p className="mt-2 text-xs text-destructive">{appError}</p>}
+        </div>
 
       </div>
+
 
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-gold" /> Your order is marked paid only after the payment is verified.
