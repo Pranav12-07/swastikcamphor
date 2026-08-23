@@ -248,3 +248,158 @@ export async function settleOrderUnpaid(orderNumber: string, state: Exclude<Phon
     note: `Payment ${paymentStatus}`,
   });
 }
+
+/**
+ * Admin-approved refund. Restores stock once, records the refund on the payment
+ * row and tells the customer. Idempotent: a second call is a no-op.
+ */
+export async function settleOrderRefunded(
+  orderNumber: string,
+  info: { amount?: number | null; reason?: string | null; actorId?: string | null; siteUrl?: string },
+): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const order = await getOrderByNumber(orderNumber);
+  if (!order) return false;
+  if (order.payment_status === "refunded") return false;
+
+  const amount = info.amount != null && info.amount > 0 ? Number(info.amount) : Number(order.total);
+  const partial = amount < Number(order.total);
+
+  const { data: updated } = await supabaseAdmin
+    .from("orders")
+    .update({
+      payment_status: partial ? "partially_refunded" : "refunded",
+      status: partial ? order.status : "refunded",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", order.id)
+    .neq("payment_status", "refunded")
+    .select("id");
+  if (!updated || updated.length === 0) return false;
+
+  await supabaseAdmin
+    .from("payments")
+    .update({
+      status: partial ? "partially_refunded" : "refunded",
+      failure_reason: info.reason ?? null,
+      verified_by: info.actorId ?? null,
+      verified_at: new Date().toISOString(),
+    })
+    .eq("order_id", order.id);
+
+  // Full refunds return the goods to stock; partial refunds do not.
+  if (!partial) {
+    const items = await orderItems(order.id);
+    for (const item of items) {
+      const { data: product } = await supabaseAdmin
+        .from("products")
+        .select("id, stock_quantity")
+        .eq("slug", item.slug)
+        .maybeSingle();
+      if (!product) continue;
+      const next = Number(product.stock_quantity ?? 0) + item.qty;
+      await supabaseAdmin.from("products").update({ stock_quantity: next }).eq("id", product.id);
+      await supabaseAdmin.from("inventory_transactions").insert({
+        product_id: product.id,
+        change: item.qty,
+        resulting_stock: next,
+        reason: "refund_release",
+        reference: order.order_number,
+      });
+    }
+  }
+
+  await supabaseAdmin.from("order_events").insert({
+    order_id: order.id,
+    status: partial ? "partially_refunded" : "refunded",
+    note: `Refund of Rs. ${amount.toLocaleString("en-IN")}${info.reason ? ` — ${info.reason}` : ""}`,
+    actor_id: info.actorId ?? null,
+  });
+
+  if (order.user_id) {
+    await supabaseAdmin.from("customer_notifications").insert({
+      user_id: order.user_id,
+      title: `Refund initiated for order ${order.order_number}`,
+      body: `Rs. ${amount.toLocaleString("en-IN")} will reach your account in 5-7 business days.`,
+      link: `/orders/${order.order_number}`,
+    });
+  }
+
+  const base = info.siteUrl?.replace(/\/$/, "") ?? "https://swastikcamphor.lovable.app";
+  try {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("order-status-update", order.email, {
+      templateData: {
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        status: "refunded",
+        statusLabel: partial ? "Partial refund initiated" : "Refund initiated",
+        note: `We have initiated a refund of Rs. ${amount.toLocaleString("en-IN")}${info.reason ? ` (${info.reason})` : ""}. It reaches your original payment method within 5-7 business days.`,
+        trackUrl: `${base}/orders/${order.order_number}`,
+      },
+      idempotencyKey: `order-refund-${order.order_number}`,
+    });
+  } catch (error) {
+    console.error("refund email failed", error);
+  }
+
+  return true;
+}
+
+/** Admin rejects a manual UPI reference — the order returns to unpaid. */
+export async function rejectManualPayment(
+  orderNumber: string,
+  info: { reason: string; actorId?: string | null; siteUrl?: string },
+): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const order = await getOrderByNumber(orderNumber);
+  if (!order || order.payment_status === "paid") return false;
+
+  await supabaseAdmin
+    .from("orders")
+    .update({ payment_status: "pending", updated_at: new Date().toISOString() })
+    .eq("id", order.id)
+    .neq("payment_status", "paid");
+
+  await supabaseAdmin
+    .from("payments")
+    .update({ status: "failed", failure_reason: info.reason, verified_by: info.actorId ?? null, verified_at: new Date().toISOString() })
+    .eq("order_id", order.id)
+    .eq("status", "awaiting_verification");
+
+  await supabaseAdmin.from("order_events").insert({
+    order_id: order.id,
+    status: "payment: rejected",
+    note: info.reason,
+    actor_id: info.actorId ?? null,
+  });
+
+  if (order.user_id) {
+    await supabaseAdmin.from("customer_notifications").insert({
+      user_id: order.user_id,
+      title: `We could not verify your payment for ${order.order_number}`,
+      body: info.reason,
+      link: `/orders/${order.order_number}`,
+    });
+  }
+
+  const base = info.siteUrl?.replace(/\/$/, "") ?? "https://swastikcamphor.lovable.app";
+  try {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("order-status-update", order.email, {
+      templateData: {
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        status: "payment_failed",
+        statusLabel: "Payment could not be verified",
+        note: `${info.reason} Please retry the payment or share the correct UPI reference from your bank app.`,
+        trackUrl: `${base}/orders/${order.order_number}`,
+      },
+      idempotencyKey: `order-payment-rejected-${order.order_number}-${Date.now()}`,
+    });
+  } catch (error) {
+    console.error("payment rejection email failed", error);
+  }
+
+  return true;
+}
