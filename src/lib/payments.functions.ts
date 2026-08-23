@@ -96,15 +96,9 @@ export const startPayment = createServerFn({ method: "POST" })
 
     const merchantTransactionId = `SC${order.order_number}${Date.now().toString(36).toUpperCase()}`.slice(0, 34);
 
-    const targetApp =
-      data.mobile && data.app === "gpay"
-        ? ("GOOGLE_PAY" as const)
-        : data.mobile && data.app === "phonepe"
-          ? ("PHONEPE" as const)
-          : data.mobile && data.app === "paytm"
-            ? ("PAYTM" as const)
-            : null;
-
+    // Always request PhonePe's standard desktop pay page: it renders the live
+    // scannable QR directly. Mobile/app-intent contexts make PhonePe hide it
+    // behind a blurred "Click to view QR" screen.
     const result = await initiatePayment(
       {
         merchantTransactionId,
@@ -114,8 +108,9 @@ export const startPayment = createServerFn({ method: "POST" })
         callbackUrl: `${origin}/api/public/phonepe/callback`,
         userRef: order.user_id ?? order.order_number,
         phone: order.phone,
-        targetApp,
-        mobileFlow: data.mobile,
+        targetApp: null,
+        mobileFlow: false,
+      
       },
       cfg,
     );
