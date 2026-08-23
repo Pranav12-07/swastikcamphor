@@ -366,3 +366,10 @@ export const submitUpiReference = createServerFn({ method: "POST" })
 
     return { ok: true as const, state: "AWAITING" as const };
   });
+
+/** Tells the checkout UI whether the PhonePe gateway is live-configured. */
+export const getGatewayStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { getPhonePeConfig } = await import("@/lib/phonepe.server");
+  const cfg = getPhonePeConfig();
+  return { configured: Boolean(cfg), live: (process.env["PHONEPE_ENV"] || "sandbox").toLowerCase() === "live" };
+});
