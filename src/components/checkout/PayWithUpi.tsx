@@ -143,23 +143,6 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         )}
       </div>
 
-      {isMobile && (
-      <div className="mt-6 grid gap-3 grid-cols-3">
-        {APPS.map((app) => (
-          <button
-            key={app.id}
-            type="button"
-            disabled={busy !== null}
-            onClick={() => payWithApp(app.id)}
-            className="flex items-center justify-center gap-2 rounded-xl border border-gold/40 bg-card px-4 py-3.5 text-sm font-medium transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
-          >
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: app.color }} />
-            {busy === app.id ? <Loader2 className="h-4 w-4 animate-spin" /> : app.label}
-          </button>
-        ))}
-      </div>
-      )}
-
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-gold" /> Payments are verified with the gateway before your order is
         marked paid.
