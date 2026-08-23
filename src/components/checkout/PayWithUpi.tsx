@@ -113,6 +113,56 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [watchPayment]);
 
+  // Is the PhonePe gateway configured? Decides between the live checkout and the manual UPI fallback.
+  useEffect(() => {
+    let alive = true;
+    status({})
+      .then((r) => { if (alive) setGateway(Boolean(r.configured)); })
+      .catch(() => { if (alive) setGateway(false); });
+    return () => { alive = false; };
+  }, [status]);
+
+  const isMobile = typeof navigator !== "undefined" && /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  /**
+   * Starts a real PhonePe transaction on the server and hands the customer to
+   * the gateway (hosted page, UPI app intent, or a dynamic gateway QR).
+   */
+  const payViaGateway = async (app: "gpay" | "phonepe" | "paytm" | "any" | "qr") => {
+    if (starting) return;
+    setStarting(app);
+    setAppError(null);
+    try {
+      const result = await start({ data: { orderNumber, app, mobile: isMobile && app !== "qr" } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      if (app === "qr") {
+        if (result.qrData) {
+          const img = await QRCode.toDataURL(result.qrData, { width: 512, margin: 1 });
+          setGatewayQr(img);
+          toast.success("Scan the QR — we confirm your payment automatically");
+        } else {
+          toast.error("The gateway did not return a QR. Please use the pay button instead.");
+        }
+        void checkNow();
+        return;
+      }
+      const target = result.intentUrl ?? result.redirectUrl;
+      if (!target) {
+        toast.error("Could not open the payment page. Please try again.");
+        return;
+      }
+      window.location.href = target;
+    } catch {
+      toast.error("Could not start the payment. Please try again.");
+    } finally {
+      setStarting(null);
+    }
+  };
+
+
   /** Opens a specific UPI app (or the Android chooser) with the order prefilled. */
   const openApp = (id: string, scheme: string) => {
     setAppError(null);
