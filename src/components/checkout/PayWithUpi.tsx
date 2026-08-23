@@ -208,7 +208,13 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
                 ? "No money was captured. Scan the QR again to retry."
                 : payState === "AWAITING"
                   ? "Our team confirms UPI transfers within a few hours. You will get an email the moment it is verified."
-                  : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
+                  : `${live ? "Live — confirms automatically" : "Checking every 5 seconds"}${
+                      checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""
+                    }${
+                      remaining != null && remaining > 0
+                        ? ` • QR valid for ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
+                        : ""
+                    }`}
           </p>
         </div>
 
