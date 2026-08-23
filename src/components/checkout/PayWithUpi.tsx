@@ -23,14 +23,18 @@ const UPI_APPS = [
  */
 export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amount: number }) {
   const state = useServerFn(getPaymentState);
+  const submitRef = useServerFn(submitUpiReference);
   const navigate = useNavigate();
 
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [payState, setPayState] = useState<"PENDING" | "PAID" | "FAILED">("PENDING");
+  const [payState, setPayState] = useState<"PENDING" | "AWAITING" | "PAID" | "FAILED">("PENDING");
   const [checkedAt, setCheckedAt] = useState<Date | null>(null);
   const [appError, setAppError] = useState<string | null>(null);
+  const [reference, setReference] = useState("");
+  const [sending, setSending] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const upiUri =
     `upi://pay?pa=${encodeURIComponent(upi.vpa)}&pn=${encodeURIComponent(upi.payeeName)}` +
