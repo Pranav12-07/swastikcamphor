@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { OrderTracker } from "@/components/orders/OrderTracker";
-import { getMyOrder } from "@/lib/orders.functions";
+import { getMyOrder, type TrackedOrder } from "@/lib/orders.functions";
+import { downloadReceiptPdf } from "@/lib/receipt";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderNumber")({
   head: () => ({
