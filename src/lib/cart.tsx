@@ -13,7 +13,10 @@ type CartValue = {
   setQty: (slug: string, size: string, qty: number) => void;
   remove: (slug: string, size: string) => void;
   clear: () => void;
+  /** Distinct products in the cart (badge value). */
   count: number;
+  /** Total units across all lines. */
+  itemCount: number;
   subtotal: number;
   shipping: number;
   discount: number;
