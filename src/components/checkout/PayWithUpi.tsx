@@ -322,28 +322,10 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
             {starting === "any" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
             Pay {formatINR(amount)} securely
           </button>
-          <div className="mt-3 grid grid-cols-3 gap-2 md:hidden">
-            {UPI_APPS.map((app) => (
-              <button
-                key={app.id}
-                type="button"
-                onClick={() => void payViaGateway(app.id)}
-                disabled={starting !== null}
-                className="rounded-xl border border-gold/40 px-3 py-3 text-xs font-medium transition-transform duration-300 active:scale-95 disabled:opacity-60"
-              >
-                {starting === app.id ? "Opening…" : app.label}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => void payViaGateway("qr")}
-            disabled={starting !== null}
-            className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground underline-offset-4 hover:underline disabled:opacity-60"
-          >
-            <QrCode className="h-3.5 w-3.5" />
-            {starting === "qr" ? "Generating QR…" : "Show a scan-and-pay QR instead"}
-          </button>
+          <p className="mt-3 text-xs text-muted-foreground">
+            You'll see the live PhonePe QR and UPI options on the secure payment page.
+          </p>
+
           {appError && <p className="mt-2 text-xs text-destructive">{appError}</p>}
         </div>
       )}
