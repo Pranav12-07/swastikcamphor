@@ -178,6 +178,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
         ) : payState === "FAILED" ? (
           <AlertTriangle className="h-5 w-5 text-destructive" />
+        ) : payState === "AWAITING" ? (
+          <Clock3 className="h-5 w-5 text-gold" />
         ) : (
           <Loader2 className="h-5 w-5 animate-spin text-gold" />
         )}
@@ -187,16 +189,21 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
               ? "Payment verified"
               : payState === "FAILED"
                 ? "Payment not completed"
-                : "Payment pending — waiting for confirmation"}
+                : payState === "AWAITING"
+                  ? "Reference received — verification in progress"
+                  : "Payment pending — waiting for confirmation"}
           </p>
           <p className="text-xs text-muted-foreground">
             {payState === "PAID"
               ? "Taking you to your order confirmation…"
               : payState === "FAILED"
                 ? "No money was captured. Scan the QR again to retry."
-                : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
+                : payState === "AWAITING"
+                  ? "Our team confirms UPI transfers within a few hours. You will get an email the moment it is verified."
+                  : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
           </p>
         </div>
+
       </div>
 
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
