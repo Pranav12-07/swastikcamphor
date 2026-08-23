@@ -119,7 +119,7 @@ export const startPayment = createServerFn({ method: "POST" })
       },
       cfg,
     );
-    if (!result.ok) return { ok: false as const, error: result.error };
+    if (!result.ok) return { ok: false as const, error: result.error, blocked: result.blocked ?? false };
 
     await supabaseAdmin.from("payments").insert({
       order_id: order.id,

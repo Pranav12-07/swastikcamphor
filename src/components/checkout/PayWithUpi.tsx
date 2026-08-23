@@ -160,9 +160,16 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     try {
       const result = await start({ data: { orderNumber, app, mobile: isMobile && app !== "qr" } });
       if (!result.ok) {
+        // Gateway refused at the merchant level (e.g. IP allow-list): switch the
+        // customer to the direct UPI QR instead of leaving them stuck.
+        if ("blocked" in result && result.blocked) {
+          setGateway(false);
+          setGatewayQr(null);
+        }
         toast.error(result.error);
         return;
       }
+
       if (app === "qr") {
         if (result.qrData) {
           const img = await QRCode.toDataURL(result.qrData, { width: 512, margin: 1 });

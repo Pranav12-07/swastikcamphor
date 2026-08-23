@@ -87,7 +87,25 @@ export type InitiateArgs = {
 
 export type InitiateResult =
   | { ok: true; redirectUrl: string | null; intentUrl: string | null; qrData: string | null }
-  | { ok: false; error: string };
+  | { ok: false; error: string; blocked?: boolean };
+
+/**
+ * PhonePe rejects live transactions when the calling server IP is not the one
+ * the merchant was onboarded with ("Transaction IP Address does not match with
+ * onboarding IP Address"). Our checkout runs on serverless workers with rotating
+ * egress IPs, so this can never be satisfied from the app side — it has to be
+ * relaxed on the merchant account. Detect it so checkout can fall back to the
+ * direct UPI QR instead of dead-ending the customer.
+ */
+export function isMerchantBlocked(message: string | undefined | null) {
+  const m = (message ?? "").toLowerCase();
+  return (
+    m.includes("ip address") ||
+    m.includes("not whitelisted") ||
+    m.includes("merchant not onboarded") ||
+    m.includes("unauthorized")
+  );
+}
 
 export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): Promise<InitiateResult> {
   const payload: Record<string, unknown> = {
@@ -135,6 +153,13 @@ export async function initiatePayment(args: InitiateArgs, cfg: PhonePeConfig): P
     | null;
   if (!res.ok || !json?.success) {
     console.error("phonepe initiate failed", res.status, json?.message);
+    if (isMerchantBlocked(json?.message))
+      return {
+        ok: false,
+        error:
+          "The card/UPI gateway is temporarily unavailable. Please pay with the UPI QR below — we verify it automatically.",
+        blocked: true,
+      };
     return { ok: false, error: json?.message || "The payment could not be started. Please try again." };
   }
 
