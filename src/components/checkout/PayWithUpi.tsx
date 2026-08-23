@@ -275,38 +275,86 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
 
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
-        <div className="md:hidden">
-          <p className="text-sm font-medium">Pay directly with UPI</p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+      {gateway && payState !== "PAID" && (
+        <div className="mt-6 rounded-2xl border border-gold/50 bg-card p-5 text-center">
+          <p className="text-sm font-medium">Pay securely — confirmed automatically</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Powered by PhonePe Payment Gateway. Your order updates the moment the bank confirms.
+          </p>
+          <button
+            type="button"
+            onClick={() => void payViaGateway("any")}
+            disabled={starting !== null}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
+          >
+            {starting === "any" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            Pay {formatINR(amount)} securely
+          </button>
+          <div className="mt-3 grid grid-cols-3 gap-2 md:hidden">
             {UPI_APPS.map((app) => (
               <button
                 key={app.id}
                 type="button"
-                onClick={() => openApp(app.id, app.scheme)}
-                className="rounded-xl border border-gold/40 px-3 py-3 text-xs font-medium transition-transform duration-300 active:scale-95"
+                onClick={() => void payViaGateway(app.id)}
+                disabled={starting !== null}
+                className="rounded-xl border border-gold/40 px-3 py-3 text-xs font-medium transition-transform duration-300 active:scale-95 disabled:opacity-60"
               >
-                {app.label}
+                {starting === app.id ? "Opening…" : app.label}
               </button>
             ))}
           </div>
           <button
             type="button"
-            onClick={() => openApp("any", "upi")}
-            className="mt-2 w-full rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+            onClick={() => void payViaGateway("qr")}
+            disabled={starting !== null}
+            className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground underline-offset-4 hover:underline disabled:opacity-60"
           >
-            Pay with any UPI app
+            <QrCode className="h-3.5 w-3.5" />
+            {starting === "qr" ? "Generating QR…" : "Show a scan-and-pay QR instead"}
           </button>
           {appError && <p className="mt-2 text-xs text-destructive">{appError}</p>}
         </div>
+      )}
 
-        <div className="my-5 flex items-center gap-3 md:hidden">
-          <span className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium text-muted-foreground">OR</span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
+      <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
+        {!gateway && (
+          <>
+            <div className="md:hidden">
+              <p className="text-sm font-medium">Pay directly with UPI</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {UPI_APPS.map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    onClick={() => openApp(app.id, app.scheme)}
+                    className="rounded-xl border border-gold/40 px-3 py-3 text-xs font-medium transition-transform duration-300 active:scale-95"
+                  >
+                    {app.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => openApp("any", "upi")}
+                className="mt-2 w-full rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+              >
+                Pay with any UPI app
+              </button>
+              {appError && <p className="mt-2 text-xs text-destructive">{appError}</p>}
+            </div>
 
-        <p className="text-sm font-medium">Scan QR code to pay</p>
+            <div className="my-5 flex items-center gap-3 md:hidden">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs font-medium text-muted-foreground">OR</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        )}
+
+        <p className="text-sm font-medium">
+          {gatewayQr ? "Scan this gateway QR to pay" : "Scan QR code to pay"}
+        </p>
+
 
         {qrImage ? (
           <img
