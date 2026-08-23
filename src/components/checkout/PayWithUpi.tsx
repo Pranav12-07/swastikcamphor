@@ -356,9 +356,9 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         </p>
 
 
-        {qrImage ? (
+        {(gatewayQr ?? qrImage) ? (
           <img
-            src={qrImage}
+            src={(gatewayQr ?? qrImage) as string}
             alt={`UPI QR code to pay ${formatINR(amount)} for order ${orderNumber}`}
             className="mx-auto mt-4 h-60 w-60 rounded-xl bg-white p-3 shadow-sm"
           />
