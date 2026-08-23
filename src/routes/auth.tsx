@@ -57,9 +57,33 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // After a session exists, the destination comes from the backend role, never
+  // from client state: staff land in /admin, customers always in /account.
   useEffect(() => {
-    if (session) navigate({ to: redirect ?? "/account", replace: true });
+    if (!session) return;
+    let active = true;
+    (async () => {
+      let staff = false;
+      try {
+        const me = await adminMe(undefined as never);
+        staff = me.isStaff;
+      } catch {
+        staff = false;
+      }
+      if (!active) return;
+      if (staff) {
+        navigate({ to: "/admin/dashboard", replace: true });
+        return;
+      }
+      // Customers may return to where they were, but never into the admin area.
+      const target = redirect && !redirect.startsWith("/admin") ? redirect : "/account";
+      navigate({ to: target, replace: true });
+    })();
+    return () => {
+      active = false;
+    };
   }, [session, navigate, redirect]);
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
