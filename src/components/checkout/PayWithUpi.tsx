@@ -92,39 +92,6 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     }
   };
 
-  /** Opens a UPI app directly (mobile) or PhonePe's secure UPI page. */
-  const payWithApp = async (app: (typeof APPS)[number]["id"]) => {
-    setBusy(app);
-    setError(null);
-    try {
-      const result = await start({ data: { orderNumber, app, mobile: true } });
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      const url = result.intentUrl ?? result.redirectUrl;
-      if (!url) {
-        setError("The gateway did not return a payment link. Please scan the QR instead.");
-        return;
-      }
-      watchPayment();
-      const framed = window.top !== window.self;
-      if (!framed) {
-        window.location.href = url;
-        return;
-      }
-      try {
-        window.top!.location.href = url;
-      } catch {
-        const tab = window.open(url, "_blank", "noopener,noreferrer");
-        if (!tab) window.location.href = url;
-      }
-    } catch {
-      setError("We could not start the payment. Please try again.");
-    } finally {
-      setBusy(null);
-    }
-  };
 
   return (
     <div className="card-premium p-6 md:p-8">
