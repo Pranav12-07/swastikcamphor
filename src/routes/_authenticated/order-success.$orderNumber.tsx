@@ -319,6 +319,13 @@ function OrderSuccessPage() {
               being verified by our team. You will get a confirmation email as soon as it clears — usually within a few
               hours. Please do not pay again.
             </p>
+            <p className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <span
+                className={`h-2 w-2 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-muted-foreground/40"}`}
+                aria-hidden
+              />
+              {live ? "Live — this page updates the moment it is verified" : "Checking for updates…"}
+            </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
                 to="/orders/$orderNumber"
