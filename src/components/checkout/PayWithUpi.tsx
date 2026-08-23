@@ -384,9 +384,15 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           </>
         )}
 
+        <p className="mb-3 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-destructive">
+          Live payment — real money will be debited
+        </p>
+
         <p className="text-sm font-medium">
           {gatewayQr ? "Scan this gateway QR to pay" : "Scan QR code to pay"}
         </p>
+
+
 
 
         {(gatewayQr ?? qrImage) ? (
