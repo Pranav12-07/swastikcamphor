@@ -25,8 +25,8 @@ export const site = {
  * Replace `vpa` with your own UPI ID to receive money in your account.
  */
 export const upi = {
-  vpa: "saipranav1207@oksbi",
-  payeeName: "Swastik Camphor",
+  vpa: "msvijayasreecamphorindustries.eazypay@icici",
+  payeeName: "MS Vijaya Sree Camphor Industries",
 } as const;
 
 /** Single source of truth for every social link on the site. */
