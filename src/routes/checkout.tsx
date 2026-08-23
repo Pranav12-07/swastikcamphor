@@ -117,23 +117,16 @@ function Checkout() {
   if (orderNumber && placed) {
     return (
       <>
-        <PageHeader
-          eyebrow="Order placed"
-          title={method === "upi" ? "Complete your UPI payment" : "Dhanyavaad! Your order is placed"}
-        />
+        <PageHeader eyebrow="Order placed" title="Complete your UPI payment" />
         <div className="mx-auto max-w-2xl space-y-6 px-4 py-16 md:px-8">
           <div className="card-premium p-8 text-center">
             <p className="text-muted-foreground">Your order reference is</p>
             <p className="mt-2 font-display text-3xl">{orderNumber}</p>
             <p className="mt-4 text-sm text-muted-foreground">
-              {method === "upi"
-                ? "Choose your UPI app below. Your order is confirmed only after the payment is verified."
-                : "Our team will call or email you shortly to confirm delivery. Please keep cash ready on delivery."}
+              Scan the QR below to pay. Your order is confirmed only after the payment is verified.
             </p>
           </div>
-          {method === "upi" && (
-            <PayWithUpi orderNumber={orderNumber} amount={placed.total} />
-          )}
+          <PayWithUpi orderNumber={orderNumber} amount={placed.total} />
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/orders/$orderNumber"
