@@ -39,7 +39,13 @@ export type PaymentStateResponse = {
   shipping: number;
   discount: number;
   tax: number;
+  createdAt: string;
+  /** UPI window after which we ask the customer to retry with a fresh payment. */
+  expiresAt: string | null;
 };
+
+/** Minutes a pending UPI payment stays valid before we prompt a retry. */
+const PAYMENT_WINDOW_MINUTES = 30;
 
 /** Creates (or reuses) a PhonePe payment for an order and returns the pay URL. */
 export const startPayment = createServerFn({ method: "POST" })
