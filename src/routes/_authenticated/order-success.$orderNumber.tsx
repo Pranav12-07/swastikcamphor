@@ -145,7 +145,7 @@ function OrderSuccessPage() {
             <div className="card-premium flex flex-col items-center p-8 text-center">
               <SuccessCheck />
               <h2 className="mt-4 font-display text-2xl">
-                {state === "PAID" ? "Payment Successful" : "Order Confirmed"}
+                {state === "PAID" ? "Payment Completed" : "Order Confirmed"}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">Your order has been placed successfully!</p>
               <dl className="mt-6 grid w-full gap-2 text-sm sm:grid-cols-2">
@@ -161,15 +161,17 @@ function OrderSuccessPage() {
                 </div>
                 <div className="rounded-xl border border-gold/30 p-3">
                   <dt className="text-xs uppercase text-muted-foreground">Payment method</dt>
-                  <dd className="font-medium">{state === "PAID" ? "UPI" : "Cash on delivery"}</dd>
+                  <dd className="font-medium">{data.paymentMethod}</dd>
                 </div>
                 <div className="rounded-xl border border-gold/30 p-3">
                   <dt className="text-xs uppercase text-muted-foreground">Payment status</dt>
                   <dd className="font-medium uppercase">{data.paymentStatus.replaceAll("_", " ")}</dd>
                 </div>
               </dl>
-              {data.transactionId && (
-                <p className="mt-3 font-mono text-xs text-muted-foreground">Txn {data.transactionId}</p>
+              {data.paymentReference && (
+                <p className="mt-3 font-mono text-xs text-muted-foreground">
+                  Payment reference: {data.paymentReference}
+                </p>
               )}
             </div>
 
@@ -225,7 +227,7 @@ function OrderSuccessPage() {
                 params={{ orderNumber }}
                 className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground"
               >
-                View order
+                View order details
               </Link>
               <Link to="/shop" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
                 Continue shopping

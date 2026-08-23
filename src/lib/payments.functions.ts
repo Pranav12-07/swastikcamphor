@@ -17,6 +17,8 @@ export type PaymentStateResponse = {
   paymentStatus: string;
   orderStatus: string;
   transactionId: string | null;
+  paymentMethod: string;
+  paymentReference: string | null;
   customerName: string;
   email: string;
   phone: string;
@@ -147,7 +149,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     const { data: payment } = await supabaseAdmin
       .from("payments")
-      .select("gateway_order_id, transaction_id, status")
+      .select("gateway_order_id, transaction_id, status, method")
       .eq("order_id", order.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -215,6 +217,13 @@ export const getPaymentState = createServerFn({ method: "POST" })
       paymentStatus: finalStatus,
       orderStatus: fresh?.status ?? order.status,
       transactionId,
+      paymentMethod:
+        finalStatus === "cod_pending" || fresh?.payment_status === "cod_pending"
+          ? "Cash on delivery"
+          : payment?.method === "upi" || !payment?.method
+            ? "UPI"
+            : String(payment.method).toUpperCase(),
+      paymentReference: transactionId ?? payment?.gateway_order_id ?? null,
       customerName: order.customer_name,
       email: order.email,
       phone: order.phone,
