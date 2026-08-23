@@ -114,7 +114,7 @@ const Email = ({
           </Section>
         ) : null}
         {receiptUrl ? (
-          <Text style={muted}>Your branded PDF receipt for this order is attached above as a secure download link.</Text>
+          <Text style={muted}>Your branded PDF receipt is ready — tap “Download PDF Receipt” above for the official copy.</Text>
         ) : null}
         <Hr style={hr} />
         <Text style={muted}>
