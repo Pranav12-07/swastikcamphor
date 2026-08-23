@@ -91,9 +91,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [hydrated, userId, lines]);
 
+  // A cart belongs to exactly one account. When the signed-in identity changes
+  // (sign-out, or a different account on the same browser) the local cart is
+  // wiped so one customer can never see another's basket.
+  const lastUserId = useRef<string | null>(null);
   useEffect(() => {
+    if (!hydrated) return;
+    const previous = lastUserId.current;
+    lastUserId.current = userId;
+    if (previous && previous !== userId) {
+      mergedFor.current = null;
+      setLines([]);
+      setCoupon(null);
+      try {
+        localStorage.removeItem(KEY);
+        localStorage.removeItem(COUPON_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
     if (!userId) mergedFor.current = null;
-  }, [userId]);
+  }, [hydrated, userId]);
 
 
   const persist = useCallback((next: CartLine[]) => {
