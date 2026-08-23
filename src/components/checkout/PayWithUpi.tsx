@@ -51,7 +51,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         setFailed(true);
         return;
       }
-      window.location.href = result.redirectUrl;
+      openGateway(result.redirectUrl);
     } catch {
       toast.error("We could not start the payment. Please try again.");
       setFailed(true);
