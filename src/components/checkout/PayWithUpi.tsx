@@ -7,6 +7,7 @@ import QRCode from "qrcode";
 import { getPaymentState, submitUpiReference } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
+import { useOrderRealtime } from "@/hooks/use-order-realtime";
 
 
 const UPI_APPS = [
@@ -33,6 +34,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [appError, setAppError] = useState<string | null>(null);
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
 
