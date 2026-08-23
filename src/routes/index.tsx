@@ -85,7 +85,7 @@ function Index() {
               banner.title
             ) : (
               <>
-                <strong className="font-bold">PURE CAMPHOR.</strong>
+                <strong className="font-bold">PURE CAMPHOR</strong>
                 <br />
                 <strong className="font-bold">PURE TRADITION</strong>
               </>
