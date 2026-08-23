@@ -98,8 +98,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
       <h2 className="font-display text-2xl">Pay {formatINR(amount)} securely</h2>
       <div className="gold-rule mt-3 w-14" />
       <p className="mt-4 text-sm text-muted-foreground">
-        UPI payment only. Scan the QR generated for this order, or open your UPI app — your order is confirmed
-        only after the payment is verified with the gateway.
+        QR payment only. Scan the QR generated for this order — your order is confirmed only after the payment is
+        verified with the gateway.
       </p>
 
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
