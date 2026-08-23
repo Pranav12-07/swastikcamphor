@@ -94,6 +94,7 @@ function OrderSuccessPage() {
     queryFn: () => fetchState({ data: { orderNumber } }),
     refetchInterval: (query) => {
       const state = query.state.data?.state;
+      if (state === "AWAITING") return 15000;
       if (!state || state === "PENDING") {
         if (Date.now() - startedAt.current > POLL_TIMEOUT_MS) return false;
         return 3000;
@@ -108,12 +109,13 @@ function OrderSuccessPage() {
   }, [data]);
 
   useEffect(() => {
-    if ((data?.state === "PAID" || data?.state === "COD") && !cleared.current) {
+    if ((data?.state === "PAID" || data?.state === "COD" || data?.state === "AWAITING") && !cleared.current) {
       cleared.current = true;
       setPopupOpen(data.state === "PAID");
       cart.clear();
     }
   }, [data, cart]);
+
 
   const state = data?.state;
 
