@@ -64,9 +64,12 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
           if (timer.current) clearInterval(timer.current);
           setPayState("FAILED");
+        } else if (result.state === "AWAITING") {
+          setPayState("AWAITING");
         } else {
           setPayState("PENDING");
         }
+
       } catch {
         /* transient network hiccup — keep polling */
       }
