@@ -214,15 +214,18 @@ export const getPaymentState = createServerFn({ method: "POST" })
     const state: PaymentStateResponse["state"] =
       finalStatus === "paid"
         ? "PAID"
-        : finalStatus === "cod_pending"
-          ? "COD"
-          : finalStatus === "cancelled"
-            ? "CANCELLED"
-            : finalStatus === "expired"
-              ? "EXPIRED"
-              : finalStatus === "failed"
-                ? "FAILED"
-                : "PENDING";
+        : finalStatus === "awaiting_verification"
+          ? "AWAITING"
+          : finalStatus === "cod_pending"
+            ? "COD"
+            : finalStatus === "cancelled"
+              ? "CANCELLED"
+              : finalStatus === "expired"
+                ? "EXPIRED"
+                : finalStatus === "failed"
+                  ? "FAILED"
+                  : "PENDING";
+
 
     return {
       state,
