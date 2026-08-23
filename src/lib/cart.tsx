@@ -13,7 +13,10 @@ type CartValue = {
   setQty: (slug: string, size: string, qty: number) => void;
   remove: (slug: string, size: string) => void;
   clear: () => void;
+  /** Distinct products in the cart (badge value). */
   count: number;
+  /** Total units across all lines. */
+  itemCount: number;
   subtotal: number;
   shipping: number;
   discount: number;
@@ -91,9 +94,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [hydrated, userId, lines]);
 
+  // A cart belongs to exactly one account. When the signed-in identity changes
+  // (sign-out, or a different account on the same browser) the local cart is
+  // wiped so one customer can never see another's basket.
+  const lastUserId = useRef<string | null>(null);
   useEffect(() => {
+    if (!hydrated) return;
+    const previous = lastUserId.current;
+    lastUserId.current = userId;
+    if (previous && previous !== userId) {
+      mergedFor.current = null;
+      setLines([]);
+      setCoupon(null);
+      try {
+        localStorage.removeItem(KEY);
+        localStorage.removeItem(COUPON_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
     if (!userId) mergedFor.current = null;
-  }, [userId]);
+  }, [hydrated, userId]);
 
 
   const persist = useCallback((next: CartLine[]) => {
@@ -172,7 +193,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQty,
       remove,
       clear,
-      count: lines.reduce((n, l) => n + l.qty, 0),
+      // Badge counts distinct products, not total quantity.
+      count: lines.length,
+      itemCount: lines.reduce((n, l) => n + l.qty, 0),
       subtotal,
       shipping,
       discount,
