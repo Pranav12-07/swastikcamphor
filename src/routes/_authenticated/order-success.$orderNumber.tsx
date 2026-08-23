@@ -3,12 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X } from "lucide-react";
+import { Download, Loader2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
 import { getPaymentState } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { downloadReceiptPdf } from "@/lib/receipt";
 
 export const Route = createFileRoute("/_authenticated/order-success/$orderNumber")({
   head: () => ({
@@ -85,6 +86,7 @@ function OrderSuccessPage() {
   const startedAt = useRef(Date.now());
   const [timedOut, setTimedOut] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const cleared = useRef(false);
 
   const { data, isLoading, error } = useQuery({
@@ -114,6 +116,31 @@ function OrderSuccessPage() {
   }, [data, cart]);
 
   const state = data?.state;
+
+  const handleDownloadReceipt = async () => {
+    if (!data || data.state !== "PAID") return;
+    setDownloading(true);
+    try {
+      await downloadReceiptPdf({
+        orderNumber: data.orderNumber,
+        paymentStatus: data.paymentStatus,
+        paymentMethod: data.paymentMethod,
+        paymentReference: data.paymentReference,
+        customerName: data.customerName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        items: data.items.map((i) => ({ name: i.name, size: i.size, qty: i.qty, price: i.price })),
+        subtotal: data.subtotal,
+        shipping: data.shipping,
+        discount: data.discount,
+        tax: data.tax,
+        total: data.total,
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <>
@@ -229,6 +256,17 @@ function OrderSuccessPage() {
               >
                 View order details
               </Link>
+              {state === "PAID" && (
+                <button
+                  type="button"
+                  onClick={handleDownloadReceipt}
+                  disabled={downloading}
+                  className="inline-flex items-center gap-2 rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium disabled:opacity-60"
+                >
+                  {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  Download receipt (PDF)
+                </button>
+              )}
               <Link to="/shop" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
                 Continue shopping
               </Link>
@@ -324,6 +362,15 @@ function OrderSuccessPage() {
                 >
                   View order
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleDownloadReceipt}
+                  disabled={downloading}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium disabled:opacity-60"
+                >
+                  {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  Download receipt
+                </button>
                 <Link to="/shop" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
                   Continue shopping
                 </Link>
