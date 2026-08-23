@@ -44,7 +44,12 @@ function OrderTrackingPage() {
         <div className="mt-6">
           {isLoading && <p className="text-sm text-muted-foreground">Loading your order…</p>}
           {error && <p className="text-sm text-destructive">We could not load this order.</p>}
-          {data && <OrderTracker order={data.order} events={data.events} />}
+          {data && (
+            <>
+              <OrderTracker order={data.order} events={data.events} />
+              {data.order.payment_status === "paid" && <InvoiceButton order={data.order} />}
+            </>
+          )}
         </div>
       </section>
     </>
