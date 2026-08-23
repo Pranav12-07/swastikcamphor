@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import QRCode from "qrcode";
-import { getPaymentState, submitUpiReference } from "@/lib/payments.functions";
+import { getGatewayStatus, getPaymentState, startPayment, submitUpiReference } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
 import { useOrderRealtime } from "@/hooks/use-order-realtime";
