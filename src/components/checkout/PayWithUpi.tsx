@@ -268,9 +268,38 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
             {copied ? "Copied" : "Copy UPI ID"}
           </button>
         </div>
-
-
       </div>
+
+      {payState !== "PAID" && (
+        <form onSubmit={sendReference} className="mt-6 rounded-2xl border border-gold/30 bg-muted/20 p-5 text-left">
+          <label htmlFor="upi-reference" className="text-sm font-medium">
+            Already paid? Share your UPI reference
+          </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Copy the 12-digit UTR / transaction ID from your UPI app receipt so we can confirm your order.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input
+              id="upi-reference"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="e.g. 418923746512"
+              inputMode="numeric"
+              maxLength={40}
+              className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-gold"
+            />
+            <button
+              type="submit"
+              disabled={sending || reference.trim().length < 6}
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50"
+            >
+              {sending ? "Submitting…" : "Submit reference"}
+            </button>
+          </div>
+        </form>
+      )}
+
+
 
 
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
