@@ -21,6 +21,25 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
+  /**
+   * PhonePe's hosted checkout (where "Click to view QR" lives) refuses to run
+   * inside an iframe — the QR panel never opens. So we always escape to the
+   * top-level window, falling back to a new tab when the frame is cross-origin.
+   */
+  const openGateway = (url: string) => {
+    const framed = window.top !== window.self;
+    if (!framed) {
+      window.location.href = url;
+      return;
+    }
+    try {
+      window.top!.location.href = url;
+    } catch {
+      const tab = window.open(url, "_blank", "noopener,noreferrer");
+      if (!tab) window.location.href = url;
+    }
+  };
+
   const pay = async (app: (typeof APPS)[number]["id"]) => {
     setBusy(app);
     setFailed(false);
@@ -32,7 +51,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         setFailed(true);
         return;
       }
-      window.location.href = result.redirectUrl;
+      openGateway(result.redirectUrl);
     } catch {
       toast.error("We could not start the payment. Please try again.");
       setFailed(true);
