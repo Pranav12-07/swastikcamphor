@@ -7,6 +7,7 @@ import QRCode from "qrcode";
 import { getPaymentState, submitUpiReference } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
+import { useOrderRealtime } from "@/hooks/use-order-realtime";
 
 
 const UPI_APPS = [
@@ -33,6 +34,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [appError, setAppError] = useState<string | null>(null);
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
 
@@ -49,52 +52,57 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     return () => { alive = false; };
   }, [upiUri]);
 
+  /** One authoritative status check against the server (the browser never decides). */
+  const checkNow = useCallback(async () => {
+    try {
+      const result = await state({ data: { orderNumber } });
+      setCheckedAt(new Date());
+      setExpiresAt(result.expiresAt ? new Date(result.expiresAt) : null);
+      if (result.state === "PAID") {
+        if (timer.current) clearInterval(timer.current);
+        setPayState("PAID");
+        toast.success("Payment verified");
+        setTimeout(() => navigate({ to: "/order-success/$orderNumber", params: { orderNumber } }), 1200);
+      } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
+        if (timer.current) clearInterval(timer.current);
+        setPayState("FAILED");
+      } else if (result.state === "AWAITING") {
+        setPayState("AWAITING");
+      } else {
+        setPayState("PENDING");
+      }
+    } catch {
+      /* transient network hiccup — the next tick retries */
+    }
+  }, [navigate, orderNumber, state]);
+
   /** Polls the authoritative server state until the payment is confirmed. */
   const watchPayment = useCallback(() => {
     if (timer.current) clearInterval(timer.current);
-    timer.current = setInterval(async () => {
-      try {
-        const result = await state({ data: { orderNumber } });
-        setCheckedAt(new Date());
-        if (result.state === "PAID") {
-          if (timer.current) clearInterval(timer.current);
-          setPayState("PAID");
-          toast.success("Payment verified");
-          setTimeout(() => navigate({ to: "/order-success/$orderNumber", params: { orderNumber } }), 1200);
-        } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
-          if (timer.current) clearInterval(timer.current);
-          setPayState("FAILED");
-        } else if (result.state === "AWAITING") {
-          setPayState("AWAITING");
-        } else {
-          setPayState("PENDING");
-        }
+    timer.current = setInterval(() => void checkNow(), 5000);
+  }, [checkNow]);
 
-      } catch {
-        /* transient network hiccup — keep polling */
-      }
-    }, 5000);
-  }, [navigate, orderNumber, state]);
+  // Instant push from the backend (webhook / gateway poll / admin verification).
+  const live = useOrderRealtime(orderNumber, checkNow);
 
   useEffect(() => {
     const onVisible = () => {
-      if (!document.hidden) {
-        state({ data: { orderNumber } })
-          .then((r) => {
-            setCheckedAt(new Date());
-            if (r.state === "PAID") {
-              setPayState("PAID");
-              toast.success("Payment verified");
-              navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
-            }
-          })
-          .catch(() => undefined);
-      }
+      if (!document.hidden) void checkNow();
     };
     document.addEventListener("visibilitychange", onVisible);
+    void checkNow();
     watchPayment();
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [watchPayment, state, orderNumber, navigate]);
+  }, [watchPayment, checkNow]);
+
+  // Countdown for the payment window.
+  useEffect(() => {
+    if (!expiresAt) { setRemaining(null); return; }
+    const tick = () => setRemaining(Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
 
   useEffect(() => {
     return () => { if (timer.current) clearInterval(timer.current); };
@@ -200,7 +208,13 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
                 ? "No money was captured. Scan the QR again to retry."
                 : payState === "AWAITING"
                   ? "Our team confirms UPI transfers within a few hours. You will get an email the moment it is verified."
-                  : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
+                  : `${live ? "Live — confirms automatically" : "Checking every 5 seconds"}${
+                      checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""
+                    }${
+                      remaining != null && remaining > 0
+                        ? ` • QR valid for ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
+                        : ""
+                    }`}
           </p>
         </div>
 

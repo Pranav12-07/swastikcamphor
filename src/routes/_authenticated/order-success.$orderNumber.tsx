@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Loader2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,6 +10,7 @@ import { getPaymentState } from "@/lib/payments.functions";
 import { formatINR } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { downloadReceiptPdf } from "@/lib/receipt";
+import { useOrderRealtime } from "@/hooks/use-order-realtime";
 
 export const Route = createFileRoute("/_authenticated/order-success/$orderNumber")({
   head: () => ({
@@ -88,6 +89,7 @@ function OrderSuccessPage() {
   const [popupOpen, setPopupOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const cleared = useRef(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["payment-state", orderNumber],
@@ -103,6 +105,13 @@ function OrderSuccessPage() {
     },
     refetchOnWindowFocus: true,
   });
+
+  // Live push from the backend: the screen flips the moment the payment is settled.
+  const onOrderChange = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["payment-state", orderNumber] });
+  }, [queryClient, orderNumber]);
+  const live = useOrderRealtime(orderNumber, onOrderChange);
+
 
   useEffect(() => {
     if (data?.state === "PENDING" && Date.now() - startedAt.current > POLL_TIMEOUT_MS) setTimedOut(true);
@@ -309,6 +318,13 @@ function OrderSuccessPage() {
               Reference <span className="font-mono">{data.paymentReference ?? "—"}</span> for {formatINR(data.total)} is
               being verified by our team. You will get a confirmation email as soon as it clears — usually within a few
               hours. Please do not pay again.
+            </p>
+            <p className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <span
+                className={`h-2 w-2 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-muted-foreground/40"}`}
+                aria-hidden
+              />
+              {live ? "Live — this page updates the moment it is verified" : "Checking for updates…"}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link

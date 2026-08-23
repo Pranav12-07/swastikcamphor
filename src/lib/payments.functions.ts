@@ -39,7 +39,13 @@ export type PaymentStateResponse = {
   shipping: number;
   discount: number;
   tax: number;
+  createdAt: string;
+  /** UPI window after which we ask the customer to retry with a fresh payment. */
+  expiresAt: string | null;
 };
+
+/** Minutes a pending UPI payment stays valid before we prompt a retry. */
+const PAYMENT_WINDOW_MINUTES = 30;
 
 /** Creates (or reuses) a PhonePe payment for an order and returns the pay URL. */
 export const startPayment = createServerFn({ method: "POST" })
@@ -229,6 +235,11 @@ export const getPaymentState = createServerFn({ method: "POST" })
 
     return {
       state,
+      createdAt: order.created_at,
+      expiresAt:
+        state === "PENDING"
+          ? new Date(new Date(order.created_at).getTime() + PAYMENT_WINDOW_MINUTES * 60_000).toISOString()
+          : null,
       orderNumber: order.order_number,
       total: Number(order.total),
       paymentStatus: finalStatus,
@@ -277,6 +288,21 @@ export const submitUpiReference = createServerFn({ method: "POST" })
     if (order.payment_status === "paid") return { ok: true as const, state: "PAID" as const };
 
     const reference = data.reference.toUpperCase();
+
+    // The same UTR can only belong to one order — block re-use of another order's reference.
+    const { data: clash } = await supabaseAdmin
+      .from("payments")
+      .select("id, order_id")
+      .eq("transaction_id", reference)
+      .neq("order_id", order.id)
+      .limit(1)
+      .maybeSingle();
+    if (clash) {
+      return {
+        ok: false as const,
+        error: "This UPI reference is already linked to another order. Please check your payment receipt.",
+      };
+    }
 
     const { data: existing } = await supabaseAdmin
       .from("payments")

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, EmptyState, ErrorState, StatCard, StatusBadge, TableSkeleton, fmtDate, inr } from "@/components/admin/ui";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { adminListPayments, adminResolvePayment, type AdminPaymentRow } from "@/lib/payments-admin.functions";
 
 export const Route = createFileRoute("/admin/payments")({
@@ -32,6 +33,9 @@ function csvEscape(value: string | number | null) {
 
 function PaymentsPage() {
   const qc = useQueryClient();
+  // Live ledger: any payment or order change pushes an immediate refresh.
+  useRealtimeRefresh("payments", ["admin-payments"]);
+  useRealtimeRefresh("orders", ["admin-payments"]);
   const list = useServerFn(adminListPayments);
   const resolve = useServerFn(adminResolvePayment);
   const { data, isLoading, error } = useQuery({
