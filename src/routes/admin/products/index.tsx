@@ -110,7 +110,11 @@ function ProductsPage() {
                       <tr key={p["id"] as string} className="border-t border-border">
                         <td className="py-2">
                           <div className="flex items-center gap-2">
-                            {p["image_url"] ? <img src={p["image_url"] as string} alt="" className="h-9 w-9 rounded object-cover" /> : <div className="h-9 w-9 rounded bg-muted" />}
+                            {typeof p["image_url"] === "string" && /^(https?:\/\/|\/)/.test(p["image_url"] as string) ? (
+                              <img src={p["image_url"] as string} alt="" loading="lazy" className="h-9 w-9 rounded object-cover" />
+                            ) : (
+                              <div className="h-9 w-9 rounded bg-muted" />
+                            )}
                             <div>
                               <p className="font-medium">{p["name"] as string}</p>
                               <p className="text-xs text-muted-foreground">/{p["slug"] as string}</p>
