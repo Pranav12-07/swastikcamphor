@@ -179,7 +179,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         toast.error("Could not open the payment page. Please try again.");
         return;
       }
-      window.location.href = target;
+      openPaymentPage(target);
     } catch {
       toast.error("Could not start the payment. Please try again.");
     } finally {
