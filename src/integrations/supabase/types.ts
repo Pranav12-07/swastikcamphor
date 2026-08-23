@@ -674,10 +674,12 @@ export type Database = {
         Row: {
           address: string
           admin_notes: string | null
+          admin_notification_sent: boolean
           city: string
           coupon_code: string | null
           courier: string | null
           created_at: string
+          customer_confirmation_sent: boolean
           customer_name: string
           delivery_note: string | null
           discount: number
@@ -688,6 +690,7 @@ export type Database = {
           order_number: string
           paid_at: string | null
           payment_id: string | null
+          payment_method: string | null
           payment_order_id: string | null
           payment_provider: string | null
           payment_status: string
@@ -706,10 +709,12 @@ export type Database = {
         Insert: {
           address: string
           admin_notes?: string | null
+          admin_notification_sent?: boolean
           city: string
           coupon_code?: string | null
           courier?: string | null
           created_at?: string
+          customer_confirmation_sent?: boolean
           customer_name: string
           delivery_note?: string | null
           discount?: number
@@ -720,6 +725,7 @@ export type Database = {
           order_number: string
           paid_at?: string | null
           payment_id?: string | null
+          payment_method?: string | null
           payment_order_id?: string | null
           payment_provider?: string | null
           payment_status?: string
@@ -738,10 +744,12 @@ export type Database = {
         Update: {
           address?: string
           admin_notes?: string | null
+          admin_notification_sent?: boolean
           city?: string
           coupon_code?: string | null
           courier?: string | null
           created_at?: string
+          customer_confirmation_sent?: boolean
           customer_name?: string
           delivery_note?: string | null
           discount?: number
@@ -752,6 +760,7 @@ export type Database = {
           order_number?: string
           paid_at?: string | null
           payment_id?: string | null
+          payment_method?: string | null
           payment_order_id?: string | null
           payment_provider?: string | null
           payment_status?: string

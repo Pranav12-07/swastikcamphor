@@ -80,6 +80,7 @@ export async function settleOrderPaid(
       payment_status: "paid",
       status: order.status === "pending" || order.status === "placed" ? "confirmed" : order.status,
       payment_provider: info.provider ?? "phonepe",
+      payment_method: info.provider === "cod" ? "cod" : "upi",
       payment_id: info.transactionId ?? null,
       paid_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -111,7 +112,25 @@ export async function settleOrderPaid(
 
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
 
+  // Claim the email slots atomically: only the caller that flips the flag sends.
+  const claimEmail = async (column: "customer_confirmation_sent" | "admin_notification_sent") => {
+    const patch =
+      column === "customer_confirmation_sent"
+        ? { customer_confirmation_sent: true }
+        : { admin_notification_sent: true };
+    const { data } = await supabaseAdmin
+      .from("orders")
+      .update(patch)
+      .eq("id", order.id)
+      .eq(column, false)
+      .select("id");
+    return Boolean(data && data.length > 0);
+  };
+  const customerClaim = await claimEmail("customer_confirmation_sent");
+  const adminClaim = await claimEmail("admin_notification_sent");
+
   // Customer confirmation
+  if (customerClaim)
   try {
     await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
@@ -140,6 +159,7 @@ export async function settleOrderPaid(
   }
 
   // Admin notification
+  if (adminClaim)
   try {
     await sendTemplateEmail("new-order-notification", "", {
       templateData: {
