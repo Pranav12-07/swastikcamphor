@@ -49,52 +49,57 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     return () => { alive = false; };
   }, [upiUri]);
 
+  /** One authoritative status check against the server (the browser never decides). */
+  const checkNow = useCallback(async () => {
+    try {
+      const result = await state({ data: { orderNumber } });
+      setCheckedAt(new Date());
+      setExpiresAt(result.expiresAt ? new Date(result.expiresAt) : null);
+      if (result.state === "PAID") {
+        if (timer.current) clearInterval(timer.current);
+        setPayState("PAID");
+        toast.success("Payment verified");
+        setTimeout(() => navigate({ to: "/order-success/$orderNumber", params: { orderNumber } }), 1200);
+      } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
+        if (timer.current) clearInterval(timer.current);
+        setPayState("FAILED");
+      } else if (result.state === "AWAITING") {
+        setPayState("AWAITING");
+      } else {
+        setPayState("PENDING");
+      }
+    } catch {
+      /* transient network hiccup — the next tick retries */
+    }
+  }, [navigate, orderNumber, state]);
+
   /** Polls the authoritative server state until the payment is confirmed. */
   const watchPayment = useCallback(() => {
     if (timer.current) clearInterval(timer.current);
-    timer.current = setInterval(async () => {
-      try {
-        const result = await state({ data: { orderNumber } });
-        setCheckedAt(new Date());
-        if (result.state === "PAID") {
-          if (timer.current) clearInterval(timer.current);
-          setPayState("PAID");
-          toast.success("Payment verified");
-          setTimeout(() => navigate({ to: "/order-success/$orderNumber", params: { orderNumber } }), 1200);
-        } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
-          if (timer.current) clearInterval(timer.current);
-          setPayState("FAILED");
-        } else if (result.state === "AWAITING") {
-          setPayState("AWAITING");
-        } else {
-          setPayState("PENDING");
-        }
+    timer.current = setInterval(() => void checkNow(), 5000);
+  }, [checkNow]);
 
-      } catch {
-        /* transient network hiccup — keep polling */
-      }
-    }, 5000);
-  }, [navigate, orderNumber, state]);
+  // Instant push from the backend (webhook / gateway poll / admin verification).
+  const live = useOrderRealtime(orderNumber, checkNow);
 
   useEffect(() => {
     const onVisible = () => {
-      if (!document.hidden) {
-        state({ data: { orderNumber } })
-          .then((r) => {
-            setCheckedAt(new Date());
-            if (r.state === "PAID") {
-              setPayState("PAID");
-              toast.success("Payment verified");
-              navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
-            }
-          })
-          .catch(() => undefined);
-      }
+      if (!document.hidden) void checkNow();
     };
     document.addEventListener("visibilitychange", onVisible);
+    void checkNow();
     watchPayment();
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [watchPayment, state, orderNumber, navigate]);
+  }, [watchPayment, checkNow]);
+
+  // Countdown for the payment window.
+  useEffect(() => {
+    if (!expiresAt) { setRemaining(null); return; }
+    const tick = () => setRemaining(Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
 
   useEffect(() => {
     return () => { if (timer.current) clearInterval(timer.current); };
