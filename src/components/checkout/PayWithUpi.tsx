@@ -29,6 +29,11 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [watching, setWatching] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/android|iphone|ipad|ipod/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
@@ -98,8 +103,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     setBusy(app);
     setError(null);
     try {
-      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-      const result = await start({ data: { orderNumber, app, mobile: isMobile } });
+      const result = await start({ data: { orderNumber, app, mobile: true } });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -183,7 +187,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         )}
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      {isMobile && (
+      <div className="mt-6 grid gap-3 grid-cols-3">
         {APPS.map((app) => (
           <button
             key={app.id}
@@ -197,6 +202,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           </button>
         ))}
       </div>
+      )}
 
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-gold" /> Payments are verified with the gateway before your order is
