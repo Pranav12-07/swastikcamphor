@@ -159,6 +159,7 @@ export async function settleOrderPaid(
   }
 
   // Admin notification
+  if (adminClaim)
   try {
     await sendTemplateEmail("new-order-notification", "", {
       templateData: {
