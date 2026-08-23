@@ -37,6 +37,11 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [gateway, setGateway] = useState<boolean | null>(null);
+  const [starting, setStarting] = useState<string | null>(null);
+  const [gatewayQr, setGatewayQr] = useState<string | null>(null);
+  const status = useServerFn(getGatewayStatus);
+  const start = useServerFn(startPayment);
 
 
   const upiUri =
