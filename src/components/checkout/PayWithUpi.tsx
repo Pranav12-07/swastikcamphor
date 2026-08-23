@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Copy, Loader2, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Copy, Loader2, QrCode, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -20,6 +20,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
 
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [payState, setPayState] = useState<"PENDING" | "PAID" | "FAILED">("PENDING");
+  const [checkedAt, setCheckedAt] = useState<Date | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const upiUri =
@@ -41,10 +43,17 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
     timer.current = setInterval(async () => {
       try {
         const result = await state({ data: { orderNumber } });
+        setCheckedAt(new Date());
         if (result.state === "PAID") {
           if (timer.current) clearInterval(timer.current);
-          toast.success("Payment received");
-          navigate({ to: "/order-success/$orderNumber", params: { orderNumber } });
+          setPayState("PAID");
+          toast.success("Payment verified");
+          setTimeout(() => navigate({ to: "/order-success/$orderNumber", params: { orderNumber } }), 1200);
+        } else if (result.state === "FAILED" || result.state === "CANCELLED" || result.state === "EXPIRED") {
+          if (timer.current) clearInterval(timer.current);
+          setPayState("FAILED");
+        } else {
+          setPayState("PENDING");
         }
       } catch {
         /* transient network hiccup — keep polling */
@@ -76,6 +85,42 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         Scan the QR with any UPI app (Google Pay, PhonePe, Paytm, BHIM) or pay to our UPI ID. Your order is confirmed
         once the payment is verified.
       </p>
+
+      <div
+        className={`mt-6 flex items-center gap-3 rounded-xl border p-4 text-sm ${
+          payState === "PAID"
+            ? "border-emerald-500/40 bg-emerald-500/10"
+            : payState === "FAILED"
+              ? "border-destructive/40 bg-destructive/5"
+              : "border-gold/40 bg-muted/30"
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {payState === "PAID" ? (
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+        ) : payState === "FAILED" ? (
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+        ) : (
+          <Loader2 className="h-5 w-5 animate-spin text-gold" />
+        )}
+        <div>
+          <p className="font-medium">
+            {payState === "PAID"
+              ? "Payment verified"
+              : payState === "FAILED"
+                ? "Payment not completed"
+                : "Payment pending — waiting for confirmation"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {payState === "PAID"
+              ? "Taking you to your order confirmation…"
+              : payState === "FAILED"
+                ? "No money was captured. Scan the QR again to retry."
+                : `We check every 5 seconds${checkedAt ? ` • last checked ${checkedAt.toLocaleTimeString()}` : ""}`}
+          </p>
+        </div>
+      </div>
 
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
         <p className="text-sm font-medium">Scan to pay</p>
@@ -117,9 +162,6 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
           Open UPI app to pay
         </a>
 
-        <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for your payment…
-        </p>
       </div>
 
       <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
