@@ -55,3 +55,52 @@ function OrderTrackingPage() {
     </>
   );
 }
+
+/** Branded PDF invoice for a paid order, generated in the browser on demand. */
+function InvoiceButton({ order }: { order: TrackedOrder }) {
+  const [busy, setBusy] = useState(false);
+
+  async function download() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await downloadReceiptPdf({
+        orderNumber: order.order_number,
+        paymentStatus: order.payment_status,
+        paymentMethod: order.payment_provider ?? "UPI",
+        paymentReference: null,
+        customerName: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        address: `${order.address}, ${order.city}, ${order.state} ${order.pincode}`,
+        items: (order.items ?? []).map((i) => ({
+          name: i.name ?? "Item",
+          size: i.size ?? "",
+          qty: Number(i.qty ?? i.quantity ?? 1),
+          price: Number(i.price ?? 0),
+        })),
+        subtotal: Number(order.subtotal),
+        shipping: Number(order.shipping),
+        discount: Number(order.discount),
+        tax: Number(order.tax),
+        total: Number(order.total),
+      });
+    } catch {
+      toast.error("Could not generate the invoice. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={download}
+      disabled={busy}
+      className="mt-6 inline-flex items-center gap-2 rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium disabled:opacity-60"
+    >
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+      Download invoice (PDF)
+    </button>
+  );
+}
