@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,9 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 import { signInWithDetails } from "@/lib/login.functions";
+import { sendWhatsAppOtp, verifyWhatsAppOtp } from "@/lib/whatsapp-auth.functions";
 import { adminMe } from "@/lib/admin.functions";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+
 
 const searchSchema = z.object({
   /** Same-origin path to return to after signing in (e.g. /checkout). */
