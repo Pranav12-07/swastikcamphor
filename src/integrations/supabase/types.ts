@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          phone: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          phone?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          phone?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           button_text: string | null
@@ -1029,6 +1056,7 @@ export type Database = {
         Row: {
           auth_method: string | null
           avatar_url: string | null
+          country_code: string
           created_at: string
           email: string | null
           full_name: string | null
@@ -1036,11 +1064,13 @@ export type Database = {
           is_disabled: boolean
           last_login_at: string | null
           phone: string | null
+          phone_verified: boolean
           updated_at: string
         }
         Insert: {
           auth_method?: string | null
           avatar_url?: string | null
+          country_code?: string
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1048,11 +1078,13 @@ export type Database = {
           is_disabled?: boolean
           last_login_at?: string | null
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
         }
         Update: {
           auth_method?: string | null
           avatar_url?: string | null
+          country_code?: string
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1060,6 +1092,7 @@ export type Database = {
           is_disabled?: boolean
           last_login_at?: string | null
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -1100,6 +1133,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_otp_sessions: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          ip_hash: string | null
+          phone: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_hash?: string | null
+          phone: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_hash?: string | null
+          phone?: string
         }
         Relationships: []
       }
