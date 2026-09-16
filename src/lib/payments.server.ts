@@ -212,7 +212,8 @@ export async function settleOrderPaid(
         discount: Number(order.discount),
         tax: Number(order.tax),
         total: Number(order.total),
-        adminUrl: `${base}/admin/orders`,
+        adminUrl: `${base}/admin/orders/${order.id}`,
+        receiptUrl,
         items,
       },
       idempotencyKey: `order-paid-admin-${order.order_number}`,
@@ -220,6 +221,11 @@ export async function settleOrderPaid(
     });
   } catch (error) {
     console.error("admin order email failed", error);
+    // Release the claim so an admin can resend from the order view.
+    await supabaseAdmin
+      .from("orders")
+      .update({ admin_notification_sent: false })
+      .eq("id", order.id);
   }
 
   try {
