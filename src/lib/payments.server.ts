@@ -159,10 +159,22 @@ export async function settleOrderPaid(
       })) ?? "";
   }
 
+  const tag = `[order-email ${order.order_number}]`;
+  console.log(`${tag} PAYMENT VERIFIED (txn ${info.transactionId ?? "n/a"})`);
+  console.log(`${tag} receipt PDF ${receiptUrl ? "generated" : "MISSING — pdf/link step returned empty"}`);
+
+  const releaseClaim = async (column: "customer_confirmation_sent" | "admin_notification_sent") => {
+    await supabaseAdmin
+      .from("orders")
+      .update(column === "customer_confirmation_sent" ? { customer_confirmation_sent: false } : { admin_notification_sent: false })
+      .eq("id", order.id);
+  };
+
   // Customer confirmation
   if (customerClaim)
   try {
-    await sendTemplateEmail("order-confirmation", order.email, {
+    console.log(`${tag} CUSTOMER EMAIL TRIGGERED -> ${order.email}`);
+    const result = await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
         orderNumber: order.order_number,
         customerName: order.customer_name,
@@ -185,15 +197,25 @@ export async function settleOrderPaid(
       },
       idempotencyKey: `order-paid-customer-${order.order_number}`,
     });
+    if (result.sent) {
+      console.log(`${tag} CUSTOMER EMAIL SENT`);
+    } else {
+      console.error(`${tag} CUSTOMER EMAIL FAILED — ${result.reason}`);
+      await releaseClaim("customer_confirmation_sent");
+    }
   } catch (error) {
-    console.error("customer confirmation email failed", error);
+    console.error(`${tag} CUSTOMER EMAIL FAILED`, error);
+    // Release the claim so the receipt can be resent once sending works.
+    await releaseClaim("customer_confirmation_sent");
   }
 
   // Admin notification — only ever reached after the payment is verified.
   if (adminClaim)
   try {
     const { getAdminEmail } = await import("@/lib/notify.server");
-    await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
+    const adminTo = await getAdminEmail();
+    console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${adminTo}`);
+    const result = await sendTemplateEmail("new-order-notification", adminTo, {
       templateData: {
         orderNumber: order.order_number,
         customerName: order.customer_name,
@@ -219,13 +241,16 @@ export async function settleOrderPaid(
       idempotencyKey: `order-paid-admin-${order.order_number}`,
       replyTo: order.email,
     });
+    if (result.sent) {
+      console.log(`${tag} ADMIN EMAIL SENT`);
+    } else {
+      console.error(`${tag} ADMIN EMAIL FAILED — ${result.reason}`);
+      await releaseClaim("admin_notification_sent");
+    }
   } catch (error) {
-    console.error("admin order email failed", error);
+    console.error(`${tag} ADMIN EMAIL FAILED`, error);
     // Release the claim so an admin can resend from the order view.
-    await supabaseAdmin
-      .from("orders")
-      .update({ admin_notification_sent: false })
-      .eq("id", order.id);
+    await releaseClaim("admin_notification_sent");
   }
 
   try {
