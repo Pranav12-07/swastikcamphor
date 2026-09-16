@@ -120,6 +120,15 @@ const Email = ({
             </Button>
           </Section>
         ) : null}
+        {receiptUrl ? (
+          <Section style={{ marginTop: '12px' }}>
+            <Text style={value}>
+              <a href={receiptUrl} style={{ color: '#6b1220' }}>
+                Download PDF receipt (secure link)
+              </a>
+            </Text>
+          </Section>
+        ) : null}
       </Container>
     </Body>
   </Html>
