@@ -167,7 +167,8 @@ function Checkout() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const raw = Object.fromEntries(form.entries());
-    const parsed = schema.safeParse(raw);
+    // The receipt goes to the signed-in account's email — never a typed one.
+    const parsed = schema.safeParse({ ...raw, email: session?.user?.email ?? raw["email"] });
     if (!parsed.success) {
       const next: Record<string, string> = {};
       parsed.error.issues.forEach((i) => {
