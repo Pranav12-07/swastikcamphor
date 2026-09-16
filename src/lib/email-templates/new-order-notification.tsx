@@ -64,6 +64,7 @@ const Email = ({
   tax = 0,
   total = 0,
   adminUrl = '',
+  receiptUrl = '',
   items = [],
 }: Props) => (
   <Html lang="en" dir="ltr">
