@@ -139,7 +139,7 @@ export const template = {
   subject: (data: Record<string, any>) =>
     `🛒 New Order Received - #${data['orderNumber'] ?? ''} - ${inr(data['total'])}`,
   displayName: 'New order notification',
-  to: 'info@swastikcamphor.in',
+  
   previewData: {
     orderNumber: 'SCLK92X1',
     customerName: 'Ramesh Kumar',
