@@ -118,7 +118,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       _user_id: userId as unknown as string,
       _customer: {
         customer_name: data.customer_name,
-        email: data.email,
+        email: orderEmail,
         phone: data.phone,
         address: data.address,
         city: data.city,
@@ -166,7 +166,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         templateData: {
           orderNumber,
           customerName: data.customer_name,
-          email: data.email,
+          email: orderEmail,
           phone: data.phone,
           address: fullAddress,
           paymentMethod: data.payment_method,
@@ -180,7 +180,7 @@ export const placeOrder = createServerFn({ method: "POST" })
           items,
         },
         idempotencyKey: `new-order-notification-${orderNumber}`,
-        replyTo: data.email,
+        replyTo: orderEmail,
       });
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
@@ -188,7 +188,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-      await sendTemplateEmail("order-confirmation", data.email, {
+      await sendTemplateEmail("order-confirmation", orderEmail, {
         templateData: {
           orderNumber,
           customerName: data.customer_name,
@@ -229,7 +229,7 @@ export const submitUpiReference = createServerFn({ method: "POST" })
       .from("orders")
       .select("id")
       .eq("order_number", data.order_number)
-      .eq("email", data.email)
+      .eq("email", orderEmail)
       .maybeSingle();
     if (findError) throw new Error("We could not verify that order. Please try again.");
     if (!order) throw new Error("We could not find that order.");
