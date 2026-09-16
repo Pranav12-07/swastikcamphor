@@ -188,7 +188,14 @@ function OrderSuccessPage() {
               <h2 className="mt-4 font-display text-2xl">
                 {state === "PAID" ? "Payment Completed" : "Order Confirmed"}
               </h2>
-              <p className="mt-2 text-sm text-muted-foreground">Your order has been placed successfully!</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {state === "PAID"
+                  ? "Payment successful! Your receipt has been sent to your email."
+                  : "Your order has been placed successfully!"}
+              </p>
+              {state === "PAID" && data.email && (
+                <p className="mt-1 text-xs text-muted-foreground">Sent to {data.email}</p>
+              )}
               <dl className="mt-6 grid w-full gap-2 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-gold/30 p-3">
                   <dt className="text-xs uppercase text-muted-foreground">Order ID</dt>

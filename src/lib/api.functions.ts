@@ -101,19 +101,24 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // Derive ownership from the verified bearer token only — never from input.
     let userId: string | null = null;
+    let sessionEmail: string | null = null;
     const authHeader = getRequestHeader("authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (token && token.split(".").length === 3) {
       const { data: userData } = await supabaseAdmin.auth.getUser(token);
       userId = userData?.user?.id ?? null;
+      sessionEmail = userData?.user?.email ?? null;
     }
+    // The receipt always goes to the verified account email (Google or OTP),
+    // never to an address typed into the form.
+    const orderEmail = sessionEmail ?? data.email;
 
     // Server-side pricing + atomic stock reservation.
     const { data: placed, error } = await supabaseAdmin.rpc("place_order", {
       _user_id: userId as unknown as string,
       _customer: {
         customer_name: data.customer_name,
-        email: data.email,
+        email: orderEmail,
         phone: data.phone,
         address: data.address,
         city: data.city,
@@ -161,7 +166,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         templateData: {
           orderNumber,
           customerName: data.customer_name,
-          email: data.email,
+          email: orderEmail,
           phone: data.phone,
           address: fullAddress,
           paymentMethod: data.payment_method,
@@ -175,7 +180,7 @@ export const placeOrder = createServerFn({ method: "POST" })
           items,
         },
         idempotencyKey: `new-order-notification-${orderNumber}`,
-        replyTo: data.email,
+        replyTo: orderEmail,
       });
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
@@ -183,7 +188,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-      await sendTemplateEmail("order-confirmation", data.email, {
+      await sendTemplateEmail("order-confirmation", orderEmail, {
         templateData: {
           orderNumber,
           customerName: data.customer_name,
