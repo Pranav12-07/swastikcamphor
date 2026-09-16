@@ -189,10 +189,11 @@ export async function settleOrderPaid(
     console.error("customer confirmation email failed", error);
   }
 
-  // Admin notification
+  // Admin notification — only ever reached after the payment is verified.
   if (adminClaim)
   try {
-    await sendTemplateEmail("new-order-notification", "", {
+    const { getAdminEmail } = await import("@/lib/notify.server");
+    await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
       templateData: {
         orderNumber: order.order_number,
         customerName: order.customer_name,
