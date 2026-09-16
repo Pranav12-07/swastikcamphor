@@ -204,6 +204,29 @@ function OrderDetailPage() {
                   {sendingInvoice ? "Sending invoice…" : "Email PDF invoice again"}
                 </button>
               )}
+              {order["payment_status"] === "paid" && (
+                <button
+                  disabled={sendingAdminNotice}
+                  onClick={async () => {
+                    setSendingAdminNotice(true);
+                    try {
+                      const res = await resendAdminNotice({ data: { orderId: id } });
+                      toast.success(res.sent ? "Order notification sent to the admin inbox" : "Admin inbox is unsubscribed — email not sent");
+                    } catch {
+                      toast.error("Could not send the admin notification.");
+                    } finally {
+                      setSendingAdminNotice(false);
+                    }
+                  }}
+                  className="mt-2 w-full rounded-md border border-input px-3 py-2 text-sm font-medium disabled:opacity-50"
+                >
+                  {sendingAdminNotice ? "Sending notification…" : "Resend admin order notification"}
+                </button>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Admin notification: {order["admin_notification_sent"] ? "sent" : "not sent"} · Customer receipt:{" "}
+                {order["customer_confirmation_sent"] ? "sent" : "not sent"}
+              </p>
             </Card>
           </div>
         </div>
