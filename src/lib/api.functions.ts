@@ -229,7 +229,7 @@ export const submitUpiReference = createServerFn({ method: "POST" })
       .from("orders")
       .select("id")
       .eq("order_number", data.order_number)
-      .eq("email", orderEmail)
+      .eq("email", data.email)
       .maybeSingle();
     if (findError) throw new Error("We could not verify that order. Please try again.");
     if (!order) throw new Error("We could not find that order.");
