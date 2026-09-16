@@ -39,6 +39,7 @@ interface Props {
   tax?: number
   total?: number
   adminUrl?: string
+  receiptUrl?: string
   items?: OrderItem[]
 }
 
