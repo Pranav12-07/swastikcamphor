@@ -101,12 +101,17 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // Derive ownership from the verified bearer token only — never from input.
     let userId: string | null = null;
+    let sessionEmail: string | null = null;
     const authHeader = getRequestHeader("authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (token && token.split(".").length === 3) {
       const { data: userData } = await supabaseAdmin.auth.getUser(token);
       userId = userData?.user?.id ?? null;
+      sessionEmail = userData?.user?.email ?? null;
     }
+    // The receipt always goes to the verified account email (Google or OTP),
+    // never to an address typed into the form.
+    const orderEmail = sessionEmail ?? data.email;
 
     // Server-side pricing + atomic stock reservation.
     const { data: placed, error } = await supabaseAdmin.rpc("place_order", {
