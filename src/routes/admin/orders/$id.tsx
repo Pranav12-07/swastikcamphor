@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, ErrorState, StatusBadge, TableSkeleton, fmtDate, inr } from "@/components/admin/ui";
 import { adminGetOrder, adminUpdateOrder } from "@/lib/admin.functions";
-import { adminResendInvoice } from "@/lib/payments-admin.functions";
+import { adminResendInvoice, adminResendOrderNotification } from "@/lib/payments-admin.functions";
 
 export const Route = createFileRoute("/admin/orders/$id")({
   ssr: false,
