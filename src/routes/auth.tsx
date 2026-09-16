@@ -101,7 +101,7 @@ function AuthPage() {
       if (sendError) throw new Error(sendError.message);
       setStep("otp");
       setDigits(["", "", "", "", "", ""]);
-      setCooldown(45);
+      setCooldown(60);
       toast.success(resend ? "New code sent to your email." : "Verification code sent to your email.");
       setTimeout(() => boxRefs.current[0]?.focus(), 50);
     } catch (err) {
@@ -132,7 +132,7 @@ function AuthPage() {
       const raw = err instanceof Error ? err.message : "";
       const message = /expired/i.test(raw)
         ? "This code has expired. Please request a new one."
-        : "Incorrect code. Please try again.";
+        : "Invalid OTP. Please try again.";
       setError(message);
       toast.error(message);
       setDigits(["", "", "", "", "", ""]);
