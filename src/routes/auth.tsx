@@ -238,7 +238,7 @@ function AuthPage() {
               </div>
 
               <Button type="submit" disabled={busy} size="lg" variant="outline" className="w-full rounded-full">
-                {busy ? "Sending code…" : "Email me a code"}
+                {busy ? "Sending OTP…" : "Send OTP"}
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
@@ -297,7 +297,7 @@ function AuthPage() {
                 onClick={() => void requestCode(true)}
                 className="text-muted-foreground underline disabled:no-underline disabled:opacity-60"
               >
-                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
               </button>
               <button
                 type="button"
