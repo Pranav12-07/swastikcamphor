@@ -101,7 +101,7 @@ function AuthPage() {
       if (sendError) throw new Error(sendError.message);
       setStep("otp");
       setDigits(["", "", "", "", "", ""]);
-      setCooldown(45);
+      setCooldown(60);
       toast.success(resend ? "New code sent to your email." : "Verification code sent to your email.");
       setTimeout(() => boxRefs.current[0]?.focus(), 50);
     } catch (err) {
@@ -132,7 +132,7 @@ function AuthPage() {
       const raw = err instanceof Error ? err.message : "";
       const message = /expired/i.test(raw)
         ? "This code has expired. Please request a new one."
-        : "Incorrect code. Please try again.";
+        : "Invalid OTP. Please try again.";
       setError(message);
       toast.error(message);
       setDigits(["", "", "", "", "", ""]);
@@ -238,7 +238,7 @@ function AuthPage() {
               </div>
 
               <Button type="submit" disabled={busy} size="lg" variant="outline" className="w-full rounded-full">
-                {busy ? "Sending code…" : "Email me a code"}
+                {busy ? "Sending OTP…" : "Send OTP"}
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
@@ -297,7 +297,7 @@ function AuthPage() {
                 onClick={() => void requestCode(true)}
                 className="text-muted-foreground underline disabled:no-underline disabled:opacity-60"
               >
-                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
               </button>
               <button
                 type="button"
