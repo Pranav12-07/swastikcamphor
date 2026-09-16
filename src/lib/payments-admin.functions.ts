@@ -316,3 +316,87 @@ export const adminResendInvoice = createServerFn({ method: "POST" })
 
     return { sent: result.sent, receiptUrl };
   });
+
+/** Resends the new-order notification to the configured admin inbox (paid orders only). */
+export const adminResendOrderNotification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ orderId: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "orders");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select(
+        "id, order_number, customer_name, email, phone, address, city, state, pincode, items, subtotal, shipping, discount, tax, total, payment_status, payment_provider, payment_id, created_at",
+      )
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (!order) throw new Error("Order not found");
+    if (order.payment_status !== "paid") {
+      throw new Error("The order notification is only sent for verified paid orders.");
+    }
+
+    const fullAddress = `${order.address}, ${order.city}, ${order.state} ${order.pincode}`;
+    const items = (order.items ?? []) as Array<{ name?: string; size?: string; qty?: number; price?: number }>;
+
+    const { storeReceiptPdf } = await import("@/lib/receipt.server");
+    const receiptUrl =
+      (await storeReceiptPdf({
+        orderNumber: order.order_number,
+        paymentStatus: "paid",
+        paymentMethod: order.payment_provider === "cod" ? "Cash on delivery" : "UPI",
+        paymentReference: order.payment_id ?? null,
+        customerName: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        address: fullAddress,
+        items: items.map((it) => ({
+          name: it.name ?? "",
+          size: it.size ?? "",
+          qty: Number(it.qty ?? 0),
+          price: Number(it.price ?? 0),
+        })),
+        subtotal: Number(order.subtotal),
+        shipping: Number(order.shipping),
+        discount: Number(order.discount),
+        tax: Number(order.tax),
+        total: Number(order.total),
+      })) ?? "";
+
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const { getAdminEmail } = await import("@/lib/notify.server");
+    const base = process.env['SITE_URL'] || "https://swastikcamphor.lovable.app";
+    const result = await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
+      templateData: {
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        email: order.email,
+        phone: order.phone,
+        address: order.address,
+        city: order.city,
+        state: order.state,
+        pincode: order.pincode,
+        paymentMethod: order.payment_provider === "cod" ? "cod" : "upi",
+        paymentStatus: "paid",
+        transactionId: order.payment_id ?? "",
+        placedAt: new Date(order.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        subtotal: Number(order.subtotal),
+        shipping: Number(order.shipping),
+        discount: Number(order.discount),
+        tax: Number(order.tax),
+        total: Number(order.total),
+        adminUrl: `${base}/admin/orders/${order.id}`,
+        receiptUrl,
+        items,
+      },
+      idempotencyKey: `order-admin-resend-${order.order_number}-${Date.now()}`,
+      replyTo: order.email,
+    });
+
+    if (result.sent) {
+      await supabaseAdmin.from("orders").update({ admin_notification_sent: true }).eq("id", order.id);
+    }
+    return { sent: result.sent };
+  });
