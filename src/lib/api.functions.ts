@@ -162,7 +162,8 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (data.payment_method === "cod") {
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-      await sendTemplateEmail("new-order-notification", "", {
+      const { getAdminEmail } = await import("@/lib/notify.server");
+      await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
         templateData: {
           orderNumber,
           customerName: data.customer_name,

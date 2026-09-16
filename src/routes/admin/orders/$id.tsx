@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, ErrorState, StatusBadge, TableSkeleton, fmtDate, inr } from "@/components/admin/ui";
 import { adminGetOrder, adminUpdateOrder } from "@/lib/admin.functions";
-import { adminResendInvoice } from "@/lib/payments-admin.functions";
+import { adminResendInvoice, adminResendOrderNotification } from "@/lib/payments-admin.functions";
 
 export const Route = createFileRoute("/admin/orders/$id")({
   ssr: false,
@@ -33,7 +33,9 @@ function OrderDetailPage() {
   const get = useServerFn(adminGetOrder);
   const update = useServerFn(adminUpdateOrder);
   const resendInvoice = useServerFn(adminResendInvoice);
+  const resendAdminNotice = useServerFn(adminResendOrderNotification);
   const [sendingInvoice, setSendingInvoice] = useState(false);
+  const [sendingAdminNotice, setSendingAdminNotice] = useState(false);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
   const [tracking, setTracking] = useState("");
   const [courier, setCourier] = useState("");
@@ -202,6 +204,29 @@ function OrderDetailPage() {
                   {sendingInvoice ? "Sending invoice…" : "Email PDF invoice again"}
                 </button>
               )}
+              {order["payment_status"] === "paid" && (
+                <button
+                  disabled={sendingAdminNotice}
+                  onClick={async () => {
+                    setSendingAdminNotice(true);
+                    try {
+                      const res = await resendAdminNotice({ data: { orderId: id } });
+                      toast.success(res.sent ? "Order notification sent to the admin inbox" : "Admin inbox is unsubscribed — email not sent");
+                    } catch {
+                      toast.error("Could not send the admin notification.");
+                    } finally {
+                      setSendingAdminNotice(false);
+                    }
+                  }}
+                  className="mt-2 w-full rounded-md border border-input px-3 py-2 text-sm font-medium disabled:opacity-50"
+                >
+                  {sendingAdminNotice ? "Sending notification…" : "Resend admin order notification"}
+                </button>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Admin notification: {order["admin_notification_sent"] ? "sent" : "not sent"} · Customer receipt:{" "}
+                {order["customer_confirmation_sent"] ? "sent" : "not sent"}
+              </p>
             </Card>
           </div>
         </div>
