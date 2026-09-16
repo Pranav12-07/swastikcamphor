@@ -58,7 +58,7 @@ export const socialLinks: SocialPlatform[] = [
 export const marketplaces = [
   { id: "amazon", label: "Amazon", url: "https://www.amazon.in/s?k=swastik+camphor" },
   { id: "flipkart", label: "Flipkart Minutes", url: "https://www.flipkart.com/search?q=swastik+camphor&as=on&as-show=on&marketplace=HYPERLOCAL&otracker=AS_Query_HistoryAutoSuggest_1_4_na_na_na&otracker1=AS_Query_HistoryAutoSuggest_1_4_na_na_na&as-pos=1&as-type=HISTORY&suggestionId=swastik+camphor&requestId=aeaaa9c4-a055-4509-94c6-d4b498a2fe1e&as-searchtext=swas&pageUID=1789574348544" },
-  { id: "jiomart", label: "JioMart", url: "https://www.jiomart.com/search/swastik%20camphor" },
+  
 ];
 
 export const mainNav = [
