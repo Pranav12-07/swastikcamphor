@@ -276,7 +276,20 @@ function Checkout() {
               </div>
             </fieldset>
           )}
-          {fields.map((f) => (
+          {session?.user?.email && (
+            <div className="sm:col-span-2">
+              <span className="text-sm font-medium">Email</span>
+              <p className="mt-1.5 w-full rounded-xl border border-gold/40 bg-muted/40 px-4 py-2.5 text-sm">
+                {session.user.email}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your receipt will be sent to this address from your signed-in account.
+              </p>
+            </div>
+          )}
+          {fields
+            .filter((f) => !(f.name === "email" && session?.user?.email))
+            .map((f) => (
             <div key={f.name} className={f.name === "address" ? "sm:col-span-2" : ""}>
               <label htmlFor={f.name} className="text-sm font-medium">
                 {f.label}
