@@ -33,7 +33,9 @@ function OrderDetailPage() {
   const get = useServerFn(adminGetOrder);
   const update = useServerFn(adminUpdateOrder);
   const resendInvoice = useServerFn(adminResendInvoice);
+  const resendAdminNotice = useServerFn(adminResendOrderNotification);
   const [sendingInvoice, setSendingInvoice] = useState(false);
+  const [sendingAdminNotice, setSendingAdminNotice] = useState(false);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
   const [tracking, setTracking] = useState("");
   const [courier, setCourier] = useState("");
