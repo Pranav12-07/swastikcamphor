@@ -315,17 +315,63 @@ function Checkout() {
             </label>
           )}
 
-          <div className="sm:col-span-2 rounded-xl border border-gold/40 bg-card/50 p-4 text-sm">
-            <p className="font-medium">Payment method</p>
-            <p className="mt-1 text-muted-foreground">UPI QR — secure, instant, verified by the gateway.</p>
-          </div>
+          <fieldset className="sm:col-span-2">
+            <legend className="text-sm font-medium">Payment method</legend>
+            <div className="mt-2 grid gap-2">
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                  method === "upi" ? "border-primary bg-primary/5" : "border-gold/40"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="upi"
+                  className="mt-1 accent-primary"
+                  checked={method === "upi"}
+                  onChange={() => setMethod("upi")}
+                />
+                <span>
+                  <span className="font-medium">Pay now with UPI / PhonePe</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Google Pay, PhonePe, Paytm or any UPI app — secure and verified by the gateway.
+                  </span>
+                </span>
+              </label>
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                  method === "cod" ? "border-primary bg-primary/5" : "border-gold/40"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="cod"
+                  className="mt-1 accent-primary"
+                  checked={method === "cod"}
+                  onChange={() => setMethod("cod")}
+                />
+                <span>
+                  <span className="font-medium">Cash on delivery</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Pay in cash when your order reaches your doorstep.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
           <button
             type="submit"
             disabled={busy}
             className="sm:col-span-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
           >
-            {busy ? "Placing order…" : `Continue to UPI payment • ${formatINR(cart.total)}`}
+            {busy
+              ? "Placing order…"
+              : method === "cod"
+                ? `Place order (Cash on delivery) • ${formatINR(cart.total)}`
+                : `Continue to UPI payment • ${formatINR(cart.total)}`}
           </button>
+
         </form>
 
         <aside className="card-premium h-fit p-6">
