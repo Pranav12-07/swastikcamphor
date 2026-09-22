@@ -1,47 +1,117 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: reads LOVABLE_API_KEY and GOOGLE_MAIL_API_KEY. Never import from client components.
+//
+// Sending now goes through the connected Gmail account via the Lovable connector
+// gateway. Gmail only delivers from the connected account's own address; the
+// display name shown to recipients is "Swastik Camphor".
 
-// Configuration baked in at scaffold time
-const SITE_NAME = "swastikcamphor"
-// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
-// It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.swastikcamphor.in"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "notify.swastikcamphor.in"
+const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_mail/gmail/v1'
+const DISPLAY_NAME = 'Swastik Camphor'
 
 export type SendTemplateEmailResult =
   | { sent: true }
-  | { sent: false; reason: 'recipient_suppressed' }
+  | { sent: false; reason: 'recipient_suppressed' | 'send_failed' }
 
 export interface SendTemplateEmailOptions {
   templateData?: Record<string, any>
-  /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
+  /** Kept for API compatibility; Gmail sending is direct and needs no dedupe key. */
   idempotencyKey?: string
   replyTo?: string
 }
 
+function gatewayHeaders(): Record<string, string> {
+  const apiKey = process.env['LOVABLE_API_KEY']
+  const connKey = process.env['GOOGLE_MAIL_API_KEY']
+  if (!apiKey || !connKey) {
+    throw new Error(
+      'Gmail sending is not configured — LOVABLE_API_KEY or GOOGLE_MAIL_API_KEY is missing. Link the Gmail connection first.'
+    )
+  }
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    'X-Connection-Api-Key': connKey,
+  }
+}
+
+let cachedSenderAddress: string | null = null
+
+/** Resolves the connected Gmail account's address (cached per server instance). */
+async function getSenderAddress(): Promise<string> {
+  if (cachedSenderAddress) return cachedSenderAddress
+  const res = await fetch(`${GATEWAY_URL}/users/me/profile`, {
+    headers: gatewayHeaders(),
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    console.error(`Gmail profile lookup failed [${res.status}]: ${body}`)
+    throw new Error(`Gmail profile lookup failed [${res.status}]: ${body}`)
+  }
+  const data = (await res.json()) as { emailAddress?: string }
+  if (!data.emailAddress) {
+    throw new Error('Gmail profile lookup returned no email address')
+  }
+  cachedSenderAddress = data.emailAddress
+  return cachedSenderAddress
+}
+
+const b64url = (s: string) =>
+  btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(''))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+/** RFC 2047 encodes non-ASCII subject/display-name values. */
+const header = (v: string) =>
+  /^[\x00-\x7F]*$/.test(v) ? v : `=?UTF-8?B?${b64url(v).replace(/-/, '+').replace(/_/, '/')}?=`
+
+interface RawEmailInput {
+  fromAddress: string
+  to: string
+  replyTo: string | undefined
+  subject: string
+  html: string
+  text: string
+}
+
+function buildRawEmail({ fromAddress, to, replyTo, subject, html, text }: RawEmailInput): string {
+  const boundary = `swastik-${crypto.randomUUID().replace(/-/g, '')}`
+  const message = [
+    `From: ${DISPLAY_NAME} <${fromAddress}>`,
+    `To: ${to}`,
+    ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
+    `Subject: ${header(subject)}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    text,
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    html,
+    `--${boundary}--`,
+    '',
+  ].join('\r\n')
+  return b64url(message)
+}
+
 /**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
+ * Renders a registered template and sends it through the connected Gmail
+ * account via the connector gateway. Any failure throws so callers can log
+ * the reason and release their retry claims.
  */
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
   options: SendTemplateEmailOptions = {}
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env['LOVABLE_API_KEY']
-  if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
-  }
-
   const template = TEMPLATES[templateName]
   if (!template) {
     throw new Error(
@@ -65,27 +135,32 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-      },
-      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
-    }
-    throw error
+  const fromAddress = await getSenderAddress()
+  const raw = buildRawEmail({
+    fromAddress,
+    to: recipient,
+    replyTo: options.replyTo,
+    subject,
+    html,
+    text,
+  })
+
+  const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+    method: 'POST',
+    headers: { ...gatewayHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw }),
+  })
+
+  if (!res.ok) {
+    const errorBody = await res.text()
+    console.error(`Gmail send failed [${res.status}]: ${errorBody}`)
+    throw new Error(`Gmail send failed [${res.status}]: ${errorBody}`)
+  }
+
+  const data = (await res.json().catch(() => ({}))) as { id?: string; error?: { message?: string } }
+  if (data.error) {
+    console.error(`Gmail send rejected: ${data.error.message}`)
+    throw new Error(`Gmail send rejected: ${data.error.message}`)
   }
 
   return { sent: true }
