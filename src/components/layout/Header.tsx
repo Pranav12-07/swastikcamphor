@@ -8,6 +8,7 @@ import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -67,6 +68,7 @@ export function Header() {
           ))}
         </nav>
 
+        <TooltipProvider delayDuration={250}>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (
             <Link
@@ -78,28 +80,43 @@ export function Header() {
           )}
           {session ? (
             <>
-              <Link
-                to="/wishlist"
-                aria-label="My wishlist"
-                className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:grid sm:h-10 sm:w-10"
-              >
-                <Heart className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <Link
-                to="/account"
-                aria-label="My account"
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
-              >
-                <User className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <button
-                type="button"
-                onClick={signOut}
-                aria-label="Sign out"
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    to="/wishlist"
+                    aria-label="My wishlist"
+                    className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:grid sm:h-10 sm:w-10"
+                  >
+                    <Heart className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Wishlist</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    to="/account"
+                    aria-label="My account"
+                    className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
+                  >
+                    <User className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">My account</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    aria-label="Sign out"
+                    className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Sign out</TooltipContent>
+              </Tooltip>
             </>
           ) : (
             <Link
@@ -109,18 +126,23 @@ export function Header() {
               Sign in
             </Link>
           )}
-          <Link
-            to="/cart"
-            aria-label={`Cart with ${count} product${count === 1 ? "" : "s"}`}
-            className="relative grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
-          >
-            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-            {count > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[0.65rem] font-semibold text-primary-foreground">
-                {count}
-              </span>
-            )}
-          </Link>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to="/cart"
+                aria-label={`Cart with ${count} product${count === 1 ? "" : "s"}`}
+                className="relative grid h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 sm:h-10 sm:w-10"
+              >
+                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                {count > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[0.65rem] font-semibold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Cart</TooltipContent>
+          </Tooltip>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -131,6 +153,7 @@ export function Header() {
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
+        </TooltipProvider>
       </div>
 
       {open && (
