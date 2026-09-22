@@ -6,3 +6,5 @@
 - [x] Rewire src/lib/email-templates/send-email.ts to send via Gmail connector gateway
 - [x] Verified end-to-end with a live test send (delivered to inbox)
 - [x] Restyle checkout payment panel with clear PhonePe branding and trust signals
+- [x] Add hover names to customer header icons
+- [x] Redesign customer order emails in the branded Swastik confirmation style
