@@ -52,8 +52,6 @@ export const socialLinks: SocialPlatform[] = [
     url: "https://www.instagram.com/swastik_camphor/",
     brandColor: "#E1306C",
   },
-  { id: "linkedin", label: "LinkedIn", url: null, comingSoon: true, brandColor: "#0A66C2" },
-  { id: "x", label: "X (Twitter)", url: null, comingSoon: true, brandColor: "#111111" },
 ];
 
 export const marketplaces = [
