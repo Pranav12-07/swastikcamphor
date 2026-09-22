@@ -129,21 +129,7 @@ function Checkout() {
             </p>
           </div>
           <PayWithUpi orderNumber={orderNumber} amount={placed.total} />
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              to="/orders/$orderNumber"
-              params={{ orderNumber }}
-              className="inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground"
-            >
-              Track this order
-            </Link>
-            <Link
-              to="/shop"
-              className="inline-flex rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium"
-            >
-              Continue shopping
-            </Link>
-          </div>
+
         </div>
       </>
     );
