@@ -59,6 +59,8 @@ function Checkout() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>("new");
   const [saveAddress, setSaveAddress] = useState(true);
+  const [method, setMethod] = useState<"upi" | "cod">("upi");
+
 
   useEffect(() => {
     if (!session) return;
@@ -181,8 +183,9 @@ function Checkout() {
           discount: cart.discount,
           total: cart.total,
           coupon_code: cart.coupon,
-          payment_method: "upi",
+          payment_method: method,
         },
+
       });
       if (session && saveAddress && !chosen) {
         await saveMyAddress({
