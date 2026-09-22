@@ -439,7 +439,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
       </div>
       )}
 
-      {!gateway && payState !== "PAID" && (
+      {gateway === false && payState !== "PAID" && (
         <form onSubmit={sendReference} className="mt-6 rounded-2xl border border-gold/30 bg-muted/20 p-5 text-left">
           <label htmlFor="upi-reference" className="text-sm font-medium">
             Already paid? Share your UPI reference
