@@ -25,9 +25,19 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
 
   return (
     <article
-      className="card-premium reveal group flex flex-col overflow-hidden"
+      className="card-premium reveal group relative flex cursor-pointer flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
       style={{ transitionDelay: `${index * 80}ms` }}
     >
+      {/* Whole-card click target — buttons below sit above it and are unaffected. */}
+      <Link
+        to="/products/$slug"
+        params={{ slug: product.slug }}
+        aria-label={`View details for ${product.name}`}
+        className="absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <span className="sr-only">View {product.name}</span>
+      </Link>
+
       <div className="relative aspect-4/3 overflow-hidden">
         <img
           src={product.image}
@@ -40,20 +50,20 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </span>
         <button
           type="button"
-          onClick={onWishlist}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void onWishlist();
+          }}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           aria-pressed={saved}
-          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur transition-transform hover:scale-110"
+          className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur transition-transform hover:scale-110"
         >
           <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </button>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-xl">
-          <Link to="/products/$slug" params={{ slug: product.slug }} className="hover:text-primary">
-            {product.name}
-          </Link>
-        </h3>
+        <h3 className="font-display text-xl transition-colors group-hover:text-primary">{product.name}</h3>
         <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{product.short}</p>
         <ul className="mt-3 flex flex-wrap gap-1.5">
           {product.bestFor.map((tag) => (
@@ -69,22 +79,20 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </p>
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               add(product.slug);
               toast.success(`${product.name} added to cart`);
             }}
-            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
+            className="relative z-20 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
           >
             Add to cart
           </button>
         </div>
-        <Link
-          to="/products/$slug"
-          params={{ slug: product.slug }}
-          className="mt-3 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
+        <span className="mt-3 text-sm text-muted-foreground underline underline-offset-4 group-hover:text-foreground">
           View product details
-        </Link>
+        </span>
       </div>
     </article>
   );
