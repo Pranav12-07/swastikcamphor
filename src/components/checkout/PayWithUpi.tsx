@@ -309,6 +309,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         </div>
 
       </div>
+      )}
+
 
       {gateway && payState !== "PAID" && (
         <section className="mt-6 overflow-hidden rounded-2xl border border-phonepe/25 bg-phonepe-surface p-5 shadow-sm sm:p-6" aria-label="PhonePe secure payment">
