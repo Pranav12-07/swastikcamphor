@@ -358,7 +358,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         </section>
       )}
 
-      {(!gateway || gatewayQr) && (
+      {(gateway === false || gatewayQr) && (
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
         {!gateway && (
           <>
