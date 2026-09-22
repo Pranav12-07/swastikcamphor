@@ -70,7 +70,7 @@ const header = (v: string) =>
 interface RawEmailInput {
   fromAddress: string
   to: string
-  replyTo?: string
+  replyTo: string | undefined
   subject: string
   html: string
   text: string
