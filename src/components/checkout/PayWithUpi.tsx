@@ -259,6 +259,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         once the payment is verified.
       </p>
 
+      {payState !== "PENDING" && (
       <div
         className={`mt-6 flex items-center gap-3 rounded-xl border p-4 text-sm ${
           payState === "PAID"
@@ -270,6 +271,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         role="status"
         aria-live="polite"
       >
+
         {payState === "PAID" ? (
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
         ) : payState === "FAILED" ? (
