@@ -59,6 +59,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-phonepe: var(--phonepe);
+  --color-phonepe-foreground: var(--phonepe-foreground);
+  --color-phonepe-surface: var(--phonepe-surface);
 }
 
 :root {
@@ -104,6 +107,9 @@
   --shadow-soft: 0 10px 30px -12px oklch(0.3 0.09 28 / 0.25);
   --shadow-lift: 0 24px 60px -24px oklch(0.3 0.09 28 / 0.4);
   --glass: oklch(0.99 0.008 85 / 0.72);
+  --phonepe: oklch(0.43 0.2 302);
+  --phonepe-foreground: oklch(0.99 0.004 300);
+  --phonepe-surface: oklch(0.975 0.025 300);
 }
 
 .dark {
@@ -134,6 +140,9 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  --phonepe: oklch(0.72 0.15 302);
+  --phonepe-foreground: oklch(0.19 0.045 300);
+  --phonepe-surface: oklch(0.26 0.055 302);
   --sidebar: oklch(0.23 0.04 30);
   --sidebar-foreground: oklch(0.96 0.015 85);
   --sidebar-primary: oklch(0.79 0.128 78);

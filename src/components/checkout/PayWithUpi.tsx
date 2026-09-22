@@ -8,6 +8,7 @@ import { getGatewayStatus, getPaymentState, startPayment, submitUpiReference } f
 import { formatINR } from "@/data/products";
 import { upi } from "@/config/site";
 import { useOrderRealtime } from "@/hooks/use-order-realtime";
+import { Button } from "@/components/ui/button";
 
 
 const UPI_APPS = [
@@ -308,26 +309,49 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
       </div>
 
       {gateway && payState !== "PAID" && (
-        <div className="mt-6 rounded-2xl border border-gold/50 bg-card p-5 text-center">
-          <p className="text-sm font-medium">Pay securely — confirmed automatically</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Powered by PhonePe Payment Gateway. Your order updates the moment the bank confirms.
-          </p>
-          <button
+        <section className="mt-6 overflow-hidden rounded-2xl border border-phonepe/25 bg-phonepe-surface p-5 shadow-sm sm:p-6" aria-label="PhonePe secure payment">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-phonepe text-xl font-bold text-phonepe-foreground" aria-hidden="true">
+                पे
+              </span>
+              <div className="text-left">
+                <p className="text-2xl font-bold text-phonepe">PhonePe</p>
+                <p className="text-sm font-semibold text-muted-foreground">UPI GATEWAY</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-phonepe sm:max-w-32">
+              <ShieldCheck className="h-6 w-6 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-semibold leading-tight">Safe &amp; secure transactions</span>
+            </div>
+          </div>
+
+          <div className="mt-5 text-left">
+            <p className="text-base font-semibold text-foreground">Continue UPI payment through PhonePe Gateway.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Pay securely using PhonePe or any supported UPI app.</p>
+          </div>
+
+          <Button
             type="button"
             onClick={() => void payViaGateway("any")}
             disabled={starting !== null}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
+            size="lg"
+            className="mt-5 h-12 w-full rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:bg-primary/90"
           >
             {starting === "any" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-            Pay {formatINR(amount)} securely
-          </button>
-          <p className="mt-3 text-xs text-muted-foreground">
-            You'll see the live PhonePe QR and UPI options on the secure payment page.
+            Continue to UPI payment · {formatINR(amount)}
+          </Button>
+
+          <p className="mt-3 text-center text-xs font-medium text-muted-foreground">
+            Pay with PhonePe&nbsp;&nbsp; | &nbsp;&nbsp;Fast&nbsp;&nbsp; · &nbsp;&nbsp;Secure&nbsp;&nbsp; · &nbsp;&nbsp;Trusted
           </p>
+          <div className="mt-4 flex items-center justify-center gap-2 border-t border-phonepe/15 pt-4 text-phonepe">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-phonepe text-xs font-bold text-phonepe-foreground" aria-hidden="true">पे</span>
+            <span className="text-xs font-semibold">Powered by PhonePe UPI Gateway</span>
+          </div>
 
           {appError && <p className="mt-2 text-xs text-destructive">{appError}</p>}
-        </div>
+        </section>
       )}
 
       {(!gateway || gatewayQr) && (
