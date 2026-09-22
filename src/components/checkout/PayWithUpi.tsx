@@ -259,6 +259,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         once the payment is verified.
       </p>
 
+      {payState !== "PENDING" && (
       <div
         className={`mt-6 flex items-center gap-3 rounded-xl border p-4 text-sm ${
           payState === "PAID"
@@ -270,6 +271,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         role="status"
         aria-live="polite"
       >
+
         {payState === "PAID" ? (
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
         ) : payState === "FAILED" ? (
@@ -307,6 +309,8 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         </div>
 
       </div>
+      )}
+
 
       {gateway && payState !== "PAID" && (
         <section className="mt-6 overflow-hidden rounded-2xl border border-phonepe/25 bg-phonepe-surface p-5 shadow-sm sm:p-6" aria-label="PhonePe secure payment">
@@ -354,7 +358,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
         </section>
       )}
 
-      {(!gateway || gatewayQr) && (
+      {(gateway === false || gatewayQr) && (
       <div className="mt-6 rounded-2xl border border-gold/40 bg-card p-5 text-center">
         {!gateway && (
           <>
@@ -435,7 +439,7 @@ export function PayWithUpi({ orderNumber, amount }: { orderNumber: string; amoun
       </div>
       )}
 
-      {!gateway && payState !== "PAID" && (
+      {gateway === false && payState !== "PAID" && (
         <form onSubmit={sendReference} className="mt-6 rounded-2xl border border-gold/30 bg-muted/20 p-5 text-left">
           <label htmlFor="upi-reference" className="text-sm font-medium">
             Already paid? Share your UPI reference

@@ -185,17 +185,20 @@ function OrderSuccessPage() {
             {state === "PAID" && <Confetti />}
             <div className="card-premium flex flex-col items-center p-8 text-center">
               <SuccessCheck />
-              <h2 className="mt-4 font-display text-2xl">
-                {state === "PAID" ? "Payment Completed" : "Order Confirmed"}
-              </h2>
+              <h2 className="mt-4 font-display text-2xl">Thank you for your order 🙏</h2>
+
               <p className="mt-2 text-sm text-muted-foreground">
                 {state === "PAID"
-                  ? "Payment successful! Your receipt has been sent to your email."
-                  : "Your order has been placed successfully!"}
+                  ? "Your payment is complete and your receipt has been emailed to you. We are packing your camphor with care and will dispatch it shortly."
+                  : "Your order is confirmed. Please keep the exact amount ready — we are packing your camphor with care and will dispatch it shortly."}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                We truly appreciate you choosing Swastik Camphor for your pooja.
               </p>
               {state === "PAID" && data.email && (
-                <p className="mt-1 text-xs text-muted-foreground">Sent to {data.email}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Receipt sent to {data.email}</p>
               )}
+
               <dl className="mt-6 grid w-full gap-2 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-gold/30 p-3">
                   <dt className="text-xs uppercase text-muted-foreground">Order ID</dt>
