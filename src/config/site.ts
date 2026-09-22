@@ -12,13 +12,13 @@ export const site = {
     state: "Telangana, India",
     full: "8-1-40/189, Samatha Colony, Shaikpet, Hyderabad, Telangana, 500008",
   },
-  geo: { lat: 17.436849, lng: 78.366946 },
+  geo: { lat: 17.4059, lng: 78.3922 },
   mapsUrl:
-    "https://www.google.com/maps?ll=17.436849,78.366946&z=10&t=m&hl=en-IN&gl=US&mapclient=embed&q=8-1-40/189,+Samatha+Colony,+Shaikpet,+Hyderabad-500008",
+    "https://www.google.com/maps/search/?api=1&query=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008",
   directionsUrl:
-    "https://www.google.com/maps/dir/?api=1&destination=17.436849,78.366946&destination_place_id=Swastik+Camphor",
+    "https://www.google.com/maps/dir/?api=1&destination=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008",
   mapEmbedUrl:
-    "https://www.google.com/maps?q=8-1-40/189,+Samatha+Colony,+Shaikpet,+Hyderabad-500008&ll=17.436849,78.366946&z=15&output=embed&hl=en-IN",
+    "https://www.google.com/maps?q=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008&z=16&output=embed&hl=en-IN",
 } as const;
 
 /**
