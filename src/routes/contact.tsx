@@ -21,7 +21,7 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Contact Swastik Camphor at Plot 185, Shaikpet, Hyderabad – 500008. Call +91 7416886881, email info@swastikcamphor.in, or send us a message online.",
+          "Contact Swastik Camphor at 8-1-40/189, Samatha Colony, Shaikpet, Hyderabad, Telangana 500008. Call +91 7416886881, email info@swastikcamphor.in, or send us a message online.",
       },
       { property: "og:title", content: "Contact Swastik Camphor" },
       {
