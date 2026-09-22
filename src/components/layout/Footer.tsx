@@ -93,7 +93,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-gold/20 px-4 py-5 text-center text-xs text-muted-foreground md:px-8">
-        © {new Date().getFullYear()} {site.name}. All rights reserved.
+        © {new Date().getFullYear()} {site.legalName}. All rights reserved.
       </div>
     </footer>
   );

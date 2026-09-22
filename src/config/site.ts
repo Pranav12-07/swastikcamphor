@@ -1,23 +1,24 @@
 export const site = {
   name: "Swastik Camphor",
+  legalName: "VIJAYASREE CAMPHOR INDUSTRIES",
   tagline: "Purity in every tablet",
   email: "info@swastikcamphor.in",
   phone: "+91 7416886881",
   phoneHref: "+917416886881",
   whatsapp: "917416886881",
   address: {
-    line1: "Plot 185, Shaikpet",
-    line2: "Hyderabad – 500008",
+    line1: "8-1-40/189, Samatha Colony",
+    line2: "Shaikpet, Hyderabad – 500008",
     state: "Telangana, India",
-    full: "Plot 185, Shaikpet, Hyderabad – 500008, Telangana, India",
+    full: "8-1-40/189, Samatha Colony, Shaikpet, Hyderabad, Telangana, 500008",
   },
   geo: { lat: 17.436849, lng: 78.366946 },
   mapsUrl:
-    "https://www.google.com/maps?ll=17.436849,78.366946&z=10&t=m&hl=en-IN&gl=US&mapclient=embed&q=Plot+185,+Shaikpet,+Hyderabad-500008",
+    "https://www.google.com/maps?ll=17.436849,78.366946&z=10&t=m&hl=en-IN&gl=US&mapclient=embed&q=8-1-40/189,+Samatha+Colony,+Shaikpet,+Hyderabad-500008",
   directionsUrl:
     "https://www.google.com/maps/dir/?api=1&destination=17.436849,78.366946&destination_place_id=Swastik+Camphor",
   mapEmbedUrl:
-    "https://www.google.com/maps?q=Plot+185,+Shaikpet,+Hyderabad-500008&ll=17.436849,78.366946&z=15&output=embed&hl=en-IN",
+    "https://www.google.com/maps?q=8-1-40/189,+Samatha+Colony,+Shaikpet,+Hyderabad-500008&ll=17.436849,78.366946&z=15&output=embed&hl=en-IN",
 } as const;
 
 /**
