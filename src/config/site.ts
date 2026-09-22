@@ -18,7 +18,7 @@ export const site = {
   directionsUrl:
     "https://www.google.com/maps/dir/?api=1&destination=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008",
   mapEmbedUrl:
-    "https://www.google.com/maps?q=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008&z=16&output=embed&hl=en-IN",
+    "https://maps.google.com/maps?q=8-1-40%2F189%2C+Samatha+Colony%2C+Shaikpet%2C+Hyderabad%2C+Telangana+500008&z=16&ie=UTF8&output=embed&hl=en-IN&gl=in",
 } as const;
 
 /**
