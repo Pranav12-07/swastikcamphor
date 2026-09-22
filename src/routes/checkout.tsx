@@ -203,8 +203,13 @@ function Checkout() {
       }
       // Totals come back from the server — it is the pricing authority.
       // The cart is only cleared once the payment is verified (order-success page).
+      if (method === "cod") {
+        navigate({ to: "/order-success/$orderNumber", params: { orderNumber: result.orderNumber } });
+        return;
+      }
       setPlaced({ email: parsed.data.email, total: result.total });
       setOrderNumber(result.orderNumber);
+
     } catch (err) {
       toast.error(
         err instanceof Error && err.message && err.message.length < 140
