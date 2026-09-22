@@ -20,6 +20,8 @@ export const Route = createFileRoute("/checkout")({
       { name: "description", content: "Complete your Swastik Camphor order with secure delivery details." },
       { property: "og:title", content: "Checkout — Swastik Camphor" },
       { property: "og:description", content: "Complete your pure camphor order." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Checkout,
