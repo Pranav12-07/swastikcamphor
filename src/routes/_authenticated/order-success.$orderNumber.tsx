@@ -185,9 +185,8 @@ function OrderSuccessPage() {
             {state === "PAID" && <Confetti />}
             <div className="card-premium flex flex-col items-center p-8 text-center">
               <SuccessCheck />
-              <h2 className="mt-4 font-display text-2xl">
-                {state === "PAID" ? "Thank you for your order 🙏" : "Thank you for your order 🙏"}
-              </h2>
+              <h2 className="mt-4 font-display text-2xl">Thank you for your order 🙏</h2>
+
               <p className="mt-2 text-sm text-muted-foreground">
                 {state === "PAID"
                   ? "Your payment is complete and your receipt has been emailed to you. We are packing your camphor with care and will dispatch it shortly."
