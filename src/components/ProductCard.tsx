@@ -64,6 +64,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       </div>
       <div className="flex flex-1 flex-col p-5">
         <h3 className="font-display text-xl transition-colors group-hover:text-primary">{product.name}</h3>
+        {typeof product.rating === "number" && product.rating > 0 && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <StarRating rating={product.rating} className="text-sm" />
+            <span className="text-xs text-muted-foreground">{product.rating.toFixed(1)}</span>
+          </div>
+        )}
         <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{product.short}</p>
         <ul className="mt-3 flex flex-wrap gap-1.5">
           {product.bestFor.map((tag) => (
