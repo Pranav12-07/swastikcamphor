@@ -214,10 +214,10 @@ export async function settleOrderPaid(
     console.error(`${tag} CUSTOMER EMAIL FAILED`, error);
     // Release the claim so the receipt can be resent once sending works.
     await releaseClaim("customer_confirmation_sent");
-  }
+  } };
 
   // Admin notification — only ever reached after the payment is verified.
-  if (adminClaim) try {
+  const adminTask = async () => { if (!adminClaim) return; try {
     const { sendAdminTemplateEmail, getAdminEmails } = await import("@/lib/notify.server");
     console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${(await getAdminEmails()).join(", ")}`);
     const result = await sendAdminTemplateEmail("new-order-notification", {
