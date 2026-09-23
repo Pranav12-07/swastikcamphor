@@ -59,36 +59,109 @@ async function expect(conn: Conn, codes: number[], step: string): Promise<string
  * Sends one already-built message. `body` must be the full RFC 5322 message
  * (headers + blank line + body) using CRLF line endings.
  */
+/** Opens a TLS connection: Cloudflare sockets in the Worker, node:tls locally. */
+async function openConn(
+  host: string,
+  port: number
+): Promise<{ conn: Conn; close: () => Promise<void> }> {
+  const socketsModule = 'cloudflare:sockets'
+  try {
+    const { connect } = (await import(/* @vite-ignore */ socketsModule)) as {
+      connect: (
+        address: { hostname: string; port: number },
+        options?: { secureTransport?: string; allowHalfOpen?: boolean }
+      ) => any
+    }
+    const socket = connect(
+      { hostname: host, port },
+      { secureTransport: 'on', allowHalfOpen: false }
+    )
+    const writer = socket.writable.getWriter()
+    const reader = socket.readable.getReader()
+    return {
+      conn: {
+        async write(s) {
+          await writer.write(enc.encode(s))
+        },
+        async read() {
+          const { value, done } = await reader.read()
+          if (done || !value) throw new Error('SMTP connection closed unexpectedly')
+          return dec.decode(value)
+        },
+      },
+      close: async () => {
+        try {
+          reader.releaseLock()
+          writer.releaseLock()
+          await socket.close()
+        } catch {
+          /* already closed */
+        }
+      },
+    }
+  } catch {
+    // Dev/Node runtime: cloudflare:sockets is unavailable.
+    const tlsModule = 'node:tls'
+    const tls = (await import(/* @vite-ignore */ tlsModule)) as typeof import('node:tls')
+    const socket = await new Promise<import('node:tls').TLSSocket>((resolve, reject) => {
+      const s = tls.connect({ host, port, servername: host }, () => resolve(s))
+      s.once('error', reject)
+    })
+    socket.setEncoding('utf8')
+    const queue: string[] = []
+    let waiter: ((v: string) => void) | null = null
+    let failure: Error | null = null
+    socket.on('data', (chunk: string) => {
+      if (waiter) {
+        const w = waiter
+        waiter = null
+        w(chunk)
+      } else queue.push(chunk)
+    })
+    socket.on('error', (e: Error) => {
+      failure = e
+    })
+    socket.on('close', () => {
+      failure = failure ?? new Error('SMTP connection closed unexpectedly')
+    })
+    return {
+      conn: {
+        async write(s) {
+          await new Promise<void>((resolve, reject) =>
+            socket.write(s, (err) => (err ? reject(err) : resolve()))
+          )
+        },
+        async read() {
+          if (queue.length) return queue.shift() as string
+          if (failure) throw failure
+          return new Promise<string>((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('SMTP read timed out')), 20000)
+            waiter = (v) => {
+              clearTimeout(timer)
+              resolve(v)
+            }
+          })
+        },
+      },
+      close: async () => {
+        try {
+          socket.destroy()
+        } catch {
+          /* already closed */
+        }
+      },
+    }
+  }
+}
+
 export async function smtpSend(params: {
   config: SmtpConfig
   from: string
   to: string
   message: string
 }): Promise<void> {
-  const socketsModule = 'cloudflare:sockets'
-  const { connect } = (await import(/* @vite-ignore */ socketsModule)) as {
-    connect: (
-      address: { hostname: string; port: number },
-      options?: { secureTransport?: string; allowHalfOpen?: boolean }
-    ) => any
-  }
-  const socket = connect(
-    { hostname: params.config.host, port: params.config.port },
-    { secureTransport: 'on', allowHalfOpen: false }
-  )
+  const { conn, close } = await openConn(params.config.host, params.config.port)
 
-  const writer = socket.writable.getWriter()
-  const reader = socket.readable.getReader()
-  const conn: Conn = {
-    async write(s) {
-      await writer.write(enc.encode(s))
-    },
-    async read() {
-      const { value, done } = await reader.read()
-      if (done || !value) throw new Error('SMTP connection closed unexpectedly')
-      return dec.decode(value)
-    },
-  }
 
   try {
     await expect(conn, [220], 'greeting')
