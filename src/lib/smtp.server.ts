@@ -71,9 +71,10 @@ async function openConn(
   host: string,
   port: number
 ): Promise<{ conn: Conn; close: () => Promise<void> }> {
-  const socketsModule = 'cloudflare:sockets'
   try {
-    const { connect } = (await import(/* @vite-ignore */ socketsModule)) as {
+    // Literal specifier: the Worker bundler must see this at build time —
+    // a variable specifier cannot be resolved at runtime inside the Worker.
+    const { connect } = (await import('cloudflare:sockets')) as unknown as {
       connect: (
         address: { hostname: string; port: number },
         options?: { secureTransport?: string; allowHalfOpen?: boolean }
