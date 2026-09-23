@@ -69,8 +69,9 @@ async function expect(conn: Conn, codes: number[], step: string): Promise<string
 /** Opens a TLS connection: Cloudflare sockets in the Worker, node:tls locally. */
 async function openConn(
   host: string,
-  port: number
-): Promise<{ conn: Conn; close: () => Promise<void> }> {
+  port: number,
+  mode: 'tls' | 'starttls' = 'tls'
+): Promise<{ conn: Conn; close: () => Promise<void>; upgrade?: () => Promise<void> }> {
   try {
     // Literal specifier: the Worker bundler must see this at build time —
     // a variable specifier cannot be resolved at runtime inside the Worker.
@@ -80,13 +81,13 @@ async function openConn(
         options?: { secureTransport?: string; allowHalfOpen?: boolean }
       ) => any
     }
-    const socket = connect(
+    let socket = connect(
       { hostname: host, port },
-      { secureTransport: 'on', allowHalfOpen: false }
+      { secureTransport: mode === 'tls' ? 'on' : 'starttls', allowHalfOpen: false }
     )
     await withTimeout(socket.opened, 'connection')
-    const writer = socket.writable.getWriter()
-    const reader = socket.readable.getReader()
+    let writer = socket.writable.getWriter()
+    let reader = socket.readable.getReader()
     return {
       conn: {
         async write(s) {
@@ -98,6 +99,16 @@ async function openConn(
           return dec.decode(value)
         },
       },
+      upgrade:
+        mode === 'starttls'
+          ? async () => {
+              reader.releaseLock()
+              writer.releaseLock()
+              socket = socket.startTls()
+              writer = socket.writable.getWriter()
+              reader = socket.readable.getReader()
+            }
+          : undefined,
       close: async () => {
         try {
           reader.releaseLock()
