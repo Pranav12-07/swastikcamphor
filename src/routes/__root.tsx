@@ -20,6 +20,7 @@ import { AmbientAudio } from "@/components/AmbientAudio";
 import { CartProvider } from "@/lib/cart";
 import { CatalogProvider } from "@/lib/catalog";
 import { AuthProvider } from "@/lib/auth";
+import { LanguageProvider } from "@/lib/i18n";
 import { CamphorIntro, INTRO_ENABLED } from "@/components/intro/CamphorIntro";
 import { Toaster } from "@/components/ui/sonner";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
