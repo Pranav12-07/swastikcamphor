@@ -71,43 +71,47 @@ export async function settleOrderPaid(
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const order = await getOrderByNumber(orderNumber);
   if (!order) return false;
-  if (order.payment_status === "paid") return false;
+  let transitioned = false;
 
-  // Conditional update = the idempotency lock. Concurrent callers get 0 rows.
-  const { data: updated } = await supabaseAdmin
-    .from("orders")
-    .update({
-      payment_status: "paid",
-      status: order.status === "pending" || order.status === "placed" ? "confirmed" : order.status,
-      payment_provider: info.provider ?? "phonepe",
-      payment_method: info.provider === "cod" ? "cod" : "upi",
-      payment_id: info.transactionId ?? null,
-      paid_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", order.id)
-    .neq("payment_status", "paid")
-    .select("id");
-  if (!updated || updated.length === 0) return false;
+  if (order.payment_status !== "paid") {
+    // Conditional update = the payment idempotency lock. Concurrent callers get 0 rows.
+    const { data: updated } = await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: "paid",
+        status: order.status === "pending" || order.status === "placed" ? "confirmed" : order.status,
+        payment_provider: info.provider ?? "phonepe",
+        payment_method: info.provider === "cod" ? "cod" : "upi",
+        payment_id: info.transactionId ?? null,
+        paid_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .neq("payment_status", "paid")
+      .select("id");
+    transitioned = Boolean(updated && updated.length > 0);
+  }
 
   const items = await orderItems(order.id);
   const fullAddress = `${order.address}, ${order.city}, ${order.state} - ${order.pincode}`;
   const placedAt = istNow();
   const base = info.siteUrl?.replace(/\/$/, "") ?? "https://swastikcamphor.lovable.app";
 
-  await supabaseAdmin.from("order_events").insert({
-    order_id: order.id,
-    status: "confirmed",
-    note: `Payment verified${info.transactionId ? ` (txn ${info.transactionId})` : ""}`,
-  });
-
-  if (order.user_id) {
-    await supabaseAdmin.from("customer_notifications").insert({
-      user_id: order.user_id,
-      title: `Payment received for order ${order.order_number}`,
-      body: `We have received your payment. Your order is confirmed and being packed.`,
-      link: `/orders/${order.order_number}`,
+  if (transitioned) {
+    await supabaseAdmin.from("order_events").insert({
+      order_id: order.id,
+      status: "confirmed",
+      note: `Payment verified${info.transactionId ? ` (txn ${info.transactionId})` : ""}`,
     });
+
+    if (order.user_id) {
+      await supabaseAdmin.from("customer_notifications").insert({
+        user_id: order.user_id,
+        title: `Payment received for order ${order.order_number}`,
+        body: `We have received your payment. Your order is confirmed and being packed.`,
+        link: `/orders/${order.order_number}`,
+      });
+    }
   }
 
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -128,6 +132,10 @@ export async function settleOrderPaid(
   };
   const customerClaim = await claimEmail("customer_confirmation_sent");
   const adminClaim = await claimEmail("admin_notification_sent");
+
+  // A later status check reaches this path again after a temporary mail failure.
+  // If both delivery flags are already set, there is nothing left to retry.
+  if (!customerClaim && !adminClaim) return transitioned;
 
   // Branded PDF receipt, rendered server-side and hosted behind a signed link.
   // Always generated on settlement (even if the email was already claimed) so
@@ -171,8 +179,7 @@ export async function settleOrderPaid(
   };
 
   // Customer confirmation
-  if (customerClaim)
-  try {
+  if (customerClaim) try {
     console.log(`${tag} CUSTOMER EMAIL TRIGGERED -> ${order.email}`);
     const result = await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
@@ -211,7 +218,7 @@ export async function settleOrderPaid(
 
   // Admin notification — only ever reached after the payment is verified.
   if (adminClaim)
-  try {
+  if (transitioned) try {
     const { getAdminEmail } = await import("@/lib/notify.server");
     const adminTo = await getAdminEmail();
     console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${adminTo}`);
@@ -266,7 +273,7 @@ export async function settleOrderPaid(
     console.error("admin notification failed", error);
   }
 
-  return true;
+  return transitioned;
 }
 
 /** Failed / cancelled / expired payment: never confirm, release reserved stock once. */
