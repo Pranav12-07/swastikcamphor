@@ -1,82 +1,47 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
+import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
 
-// Server-only. Order mail is sent only through the shop mailbox. Gmail is
-// deliberately not a fallback because Gmail rewrites an unverified From header
-// to the connected account's address.
-const DISPLAY_NAME = 'Swastik Camphor'
-const SHOP_EMAIL = 'shop@online.swastikcamphor.in'
+// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+
+// Configuration baked in at scaffold time
+const SITE_NAME = "Swastik Camphor Connect"
+// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
+// It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
+const SENDER_DOMAIN = "notify.swastikcamphor.in"
+// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
+// Can be the root domain when display_from_root is enabled — this is cosmetic only.
+const FROM_DOMAIN = "swastikcamphor.in"
 
 export type SendTemplateEmailResult =
   | { sent: true }
-  | { sent: false; reason: 'recipient_suppressed' | 'send_failed' }
+  | { sent: false; reason: 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
   templateData?: Record<string, any>
-  /** Kept for API compatibility; delivery claims are managed by the order flow. */
+  /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
   replyTo?: string
 }
 
-const base64 = (s: string) =>
-  btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(''))
-
-const b64url = (s: string) =>
-  base64(s)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
-
-/** RFC 2047 encodes non-ASCII subject/display-name values. */
-const header = (v: string) =>
-  /^[\x20-\x7E]*$/.test(v) ? v : `=?UTF-8?B?${base64(v)}?=`
-
-interface RawEmailInput {
-  fromAddress: string
-  to: string
-  replyTo: string | undefined
-  subject: string
-  html: string
-  text: string
-}
-
-function buildMessage({ fromAddress, to, replyTo, subject, html, text }: RawEmailInput): string {
-  const boundary = `swastik-${crypto.randomUUID().replace(/-/g, '')}`
-  const message = [
-    `From: ${DISPLAY_NAME} <${fromAddress}>`,
-    `To: ${to}`,
-    ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
-    `Subject: ${header(subject)}`,
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    text,
-    `--${boundary}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    html,
-    `--${boundary}--`,
-    '',
-  ].join('\r\n')
-  return message
-}
-
 /**
- * Renders a registered template and sends it from the business mailbox
- * (shop@online.swastikcamphor.in on Hostinger). There is intentionally no Gmail
- * fallback: an SMTP failure must be retried rather than sent from a personal account.
+ * Renders a registered template and sends it through Lovable's managed email
+ * API. Suppression, retries, and rate limits are enforced by Lovable
+ * server-side. A suppressed recipient is an expected outcome
+ * ({ sent: false }); any other failure throws — EmailAPIError exposes
+ * .code and .status for branching.
  */
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
   options: SendTemplateEmailOptions = {}
 ): Promise<SendTemplateEmailResult> {
+  const apiKey = process.env['LOVABLE_API_KEY']
+  if (!apiKey) {
+    throw new Error('LOVABLE_API_KEY is not configured')
+  }
+
   const template = TEMPLATES[templateName]
   if (!template) {
     throw new Error(
@@ -100,35 +65,28 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  // Shop-only delivery. Never derive the envelope sender from the customer,
-  // an admin account, or any environment variable.
-  const { getSmtpConfig, smtpSend } = await import('@/lib/smtp.server')
-  const smtp = getSmtpConfig()
-  if (!smtp) {
-    console.error(`[order-email-provider] blocked: SMTP_EMAIL_PASSWORD missing; provider=none; from=${SHOP_EMAIL}`)
-    throw new Error('Shop email delivery is not configured')
-  }
-
-  const message = buildMessage({
-    fromAddress: SHOP_EMAIL,
-    to: recipient,
-    replyTo: options.replyTo ?? SHOP_EMAIL,
-    subject,
-    html,
-    text,
-  })
-  console.log(`[order-email-provider] sending provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`)
   try {
-    await Promise.race([
-      smtpSend({ config: smtp, from: SHOP_EMAIL, to: recipient, message }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
-      ),
-    ])
+    await sendLovableEmail(
+      {
+        to: recipient,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html,
+        text,
+        purpose: 'transactional',
+        label: templateName,
+        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
+        reply_to: options.replyTo,
+      },
+      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
+    )
   } catch (error) {
-    console.error(`[order-email-provider] failed provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`, error)
+    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
+      return { sent: false, reason: 'recipient_suppressed' }
+    }
     throw error
   }
-  console.log(`[order-email-provider] accepted provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`)
+
   return { sent: true }
 }
