@@ -77,6 +77,10 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     seo_h1: g("seo_h1"),
     seo_subtitle: g("seo_subtitle"),
   });
+  const [adminRating, setAdminRating] = useState<number | null>(
+    initial?.["admin_rating"] != null ? Number(initial["admin_rating"]) : null,
+  );
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   const csv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
