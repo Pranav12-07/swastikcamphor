@@ -14,6 +14,7 @@ export type Product = {
   sizes: string[];
   benefits: string[];
   bestFor: string[];
+  rating?: number | null;
 };
 
 export const products: Product[] = [

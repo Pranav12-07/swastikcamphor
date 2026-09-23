@@ -39,7 +39,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,is_featured,is_bestseller,stock_quantity",
+          "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,is_featured,is_bestseller,stock_quantity,admin_rating",
         )
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
