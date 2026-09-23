@@ -9,4 +9,6 @@
 - [x] Add hover names to customer header icons
 - [x] Redesign customer order emails in the branded Swastik confirmation style
 - [x] Admin product star rating (admin sets 1-5 stars; shown read-only on product card and details page)
-- [ ] Email sender switch to info@swastikcamphor.in via Hostinger (waiting on fresh mailbox password)
+- [x] Send all store emails from shop@online.swastikcamphor.in via Hostinger
+- [x] Fix customer confirmation markup and center the confirmation tick
+- [x] Send complete customer, delivery, payment, item, and total details to admin users
