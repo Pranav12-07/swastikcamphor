@@ -99,13 +99,14 @@ function buildMessage({ fromAddress, to, replyTo, subject, html, text }: RawEmai
     `--${boundary}--`,
     '',
   ].join('\r\n')
-  return b64url(message)
+  return message
 }
 
 /**
- * Renders a registered template and sends it through the connected Gmail
- * account via the connector gateway. Any failure throws so callers can log
- * the reason and release their retry claims.
+ * Renders a registered template and sends it from the business mailbox
+ * (info@swastikcamphor.in on Hostinger) when SMTP credentials are configured,
+ * otherwise through the connected Gmail account. Any failure throws so callers
+ * can log the reason and release their retry claims.
  */
 export async function sendTemplateEmail(
   templateName: string,
