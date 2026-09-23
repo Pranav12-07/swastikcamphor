@@ -160,6 +160,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     // Emails for prepaid orders are sent only after the gateway verifies the
     // payment (see settleOrderPaid). COD orders are confirmed immediately.
     if (data.payment_method === "cod") {
+    const adminMail = (async () => {
     try {
       const { sendAdminTemplateEmail } = await import("@/lib/notify.server");
       await sendAdminTemplateEmail("new-order-notification", {
