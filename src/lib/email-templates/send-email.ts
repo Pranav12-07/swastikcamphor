@@ -167,12 +167,16 @@ export async function sendTemplateEmail(
     }
   }
 
-  const fromAddress = await getSenderAddress()
+  // Fallback path: send through the connected Gmail account, but present the
+  // shop mailbox as the sender. Gmail honors this From once
+  // shop@online.swastikcamphor.in is added as a verified "Send mail as" alias
+  // on the connected account; until then Gmail substitutes the account address.
+  const fromAddress = SHOP_EMAIL
   const raw = b64url(
     buildMessage({
       fromAddress,
       to: recipient,
-      replyTo: options.replyTo,
+      replyTo: options.replyTo ?? SHOP_EMAIL,
       subject,
       html,
       text,
