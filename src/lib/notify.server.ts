@@ -4,7 +4,7 @@
  * (visible at /admin/notifications) and is emailed to the configured admin inbox.
  */
 
-const FALLBACK_ADMIN_EMAIL = "info@swastikcamphor.in";
+const FALLBACK_ADMIN_EMAIL = "shop@online.swastikcamphor.in";
 
 export type AdminEvent = {
   type: string;
