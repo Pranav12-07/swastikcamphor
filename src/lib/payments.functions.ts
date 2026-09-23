@@ -204,6 +204,17 @@ export const getPaymentState = createServerFn({ method: "POST" })
       }
     }
 
+    // Payment may already be marked paid even when a temporary mail outage made
+    // the first confirmation fail. Re-enter settlement so its atomic email flags
+    // can claim and retry only the missing customer/admin message.
+    if (paymentStatus === "paid") {
+      await settleOrderPaid(order.order_number, {
+        transactionId,
+        provider: payment?.gateway ?? order.payment_status,
+        siteUrl: origin,
+      });
+    }
+
     const fresh = await getOrderByNumber(order.order_number);
     const finalStatus = fresh?.payment_status ?? paymentStatus;
 
