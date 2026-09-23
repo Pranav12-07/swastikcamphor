@@ -8,3 +8,5 @@
 - [x] Restyle checkout payment panel with clear PhonePe branding and trust signals
 - [x] Add hover names to customer header icons
 - [x] Redesign customer order emails in the branded Swastik confirmation style
+- [ ] Admin product star rating (admin sets 1-5 stars; shown read-only on product card and details page)
+- [ ] Email sender switch to info@swastikcamphor.in via Hostinger (waiting on fresh mailbox password)
