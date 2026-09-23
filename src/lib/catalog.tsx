@@ -103,9 +103,3 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
-
-export function useCatalog() {
-  const ctx = useContext(CatalogContext);
-  if (!ctx) throw new Error("useCatalog must be used inside CatalogProvider");
-  return ctx;
-}

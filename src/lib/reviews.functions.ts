@@ -11,7 +11,7 @@ export type Review = {
 };
 
 const submitSchema = z.object({
-  product_slug: z.string().trim().min(2).max(60),
+  product_slug: z.string().trim().min(2).max(200),
   name: z.string().trim().min(2).max(60),
   rating: z.number().int().min(1).max(5),
   comment: z.string().trim().min(5).max(1000),
@@ -19,7 +19,7 @@ const submitSchema = z.object({
 
 /** Public: approved reviews for one product. */
 export const listReviews = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ slug: z.string().max(60) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ slug: z.string().max(200) }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
