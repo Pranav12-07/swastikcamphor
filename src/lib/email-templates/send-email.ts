@@ -153,17 +153,20 @@ export async function sendTemplateEmail(
       html,
       text,
     })
-    try {
-      await Promise.race([
-        smtpSend({ config: smtp, from: smtp.user, to: recipient, message }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
-        ),
-      ])
-      return { sent: true }
-    } catch (error) {
-      console.error('Hostinger SMTP unavailable; retrying through connected Gmail', error)
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        await Promise.race([
+          smtpSend({ config: smtp, from: smtp.user, to: recipient, message }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
+          ),
+        ])
+        return { sent: true }
+      } catch (error) {
+        console.error(`Hostinger SMTP attempt ${attempt} failed`, error)
+      }
     }
+    console.error('Hostinger SMTP unavailable after retry; using connected Gmail')
   }
 
   const fromAddress = await getSenderAddress()
