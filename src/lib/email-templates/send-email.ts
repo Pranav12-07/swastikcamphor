@@ -76,7 +76,7 @@ interface RawEmailInput {
   text: string
 }
 
-function buildRawEmail({ fromAddress, to, replyTo, subject, html, text }: RawEmailInput): string {
+function buildMessage({ fromAddress, to, replyTo, subject, html, text }: RawEmailInput): string {
   const boundary = `swastik-${crypto.randomUUID().replace(/-/g, '')}`
   const message = [
     `From: ${DISPLAY_NAME} <${fromAddress}>`,
