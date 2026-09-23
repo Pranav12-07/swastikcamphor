@@ -12,4 +12,3 @@
 - [x] Send all store emails from shop@online.swastikcamphor.in via Hostinger
 - [x] Fix customer confirmation markup and center the confirmation tick
 - [x] Send complete customer, delivery, payment, item, and total details to admin users
-- [x] Retry customer confirmations through Hostinger before automatic Gmail fallback
