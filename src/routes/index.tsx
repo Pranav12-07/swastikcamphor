@@ -55,6 +55,9 @@ const values = [
 function Index() {
   const posts = Route.useLoaderData().slice(0, 3);
   const { products } = useCatalog();
+  const homeProducts = [...products].sort(
+    (a, b) => Number(b.rating != null) - Number(a.rating != null),
+  );
   const heroBanners = useBanners("hero");
   const banner = heroBanners[0];
   useReveal();
@@ -159,7 +162,7 @@ function Index() {
           </Link>
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((p, i) => (
+          {homeProducts.map((p, i) => (
             <ProductCard key={p.slug} product={p} index={i} />
           ))}
         </div>
