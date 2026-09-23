@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
+import { StarRating } from "@/components/StarRating";
 import { getPublicProduct } from "@/lib/products.functions";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
 import { site } from "@/config/site";
