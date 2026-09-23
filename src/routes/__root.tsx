@@ -182,6 +182,7 @@ function RootComponent() {
       </CartProvider>
       </CatalogProvider>
       </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
