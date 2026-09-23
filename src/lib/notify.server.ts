@@ -107,7 +107,7 @@ export async function getAdminEmails(): Promise<string[]> {
 export async function sendAdminTemplateEmail(
   template: string,
   options: { templateData: Record<string, unknown>; idempotencyKey: string; replyTo?: string },
-): Promise<{ sent: boolean; reason?: string }> {
+): Promise<{ sent: boolean; reason?: string | undefined }> {
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const recipients = await getAdminEmails();
   let sent = false;
