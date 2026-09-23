@@ -365,10 +365,9 @@ export const adminResendOrderNotification = createServerFn({ method: "POST" })
         total: Number(order.total),
       })) ?? "";
 
-    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const { getAdminEmail } = await import("@/lib/notify.server");
+    const { sendAdminTemplateEmail } = await import("@/lib/notify.server");
     const base = process.env['SITE_URL'] || "https://swastikcamphor.lovable.app";
-    const result = await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
+    const result = await sendAdminTemplateEmail("new-order-notification", {
       templateData: {
         orderNumber: order.order_number,
         customerName: order.customer_name,
