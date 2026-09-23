@@ -183,13 +183,46 @@ export async function smtpSend(params: {
   to: string
   message: string
 }): Promise<void> {
-  const { conn, close } = await openConn(params.config.host, params.config.port)
+  // Some hosts block outbound 465; fall back to the submission ports.
+  const attempts: Array<{ port: number; mode: 'tls' | 'starttls' }> = [
+    { port: params.config.port, mode: params.config.port === 587 ? 'starttls' : 'tls' },
+    { port: 587, mode: 'starttls' },
+    { port: 2525, mode: 'starttls' },
+  ].filter((a, i, all) => all.findIndex((b) => b.port === a.port) === i)
 
+  let lastError: unknown
+  for (const attempt of attempts) {
+    try {
+      await smtpSendOnce(params, attempt.port, attempt.mode)
+      return
+    } catch (error) {
+      lastError = error
+      console.error(`[smtp] attempt failed port=${attempt.port} mode=${attempt.mode}`, error)
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('SMTP send failed')
+}
+
+async function smtpSendOnce(
+  params: { config: SmtpConfig; from: string; to: string; message: string },
+  port: number,
+  mode: 'tls' | 'starttls'
+): Promise<void> {
+  const { conn, close, upgrade } = await openConn(params.config.host, port, mode)
 
   try {
     await expect(conn, [220], 'greeting')
     await conn.write(`EHLO swastikcamphor.in\r\n`)
     await expect(conn, [250], 'EHLO')
+
+    if (upgrade) {
+      await conn.write('STARTTLS\r\n')
+      await expect(conn, [220], 'STARTTLS')
+      await upgrade()
+      await conn.write(`EHLO swastikcamphor.in\r\n`)
+      await expect(conn, [250], 'EHLO (TLS)')
+    }
+
 
     await conn.write('AUTH LOGIN\r\n')
     await expect(conn, [334], 'AUTH')
