@@ -137,6 +137,8 @@ export async function sendTemplateEmail(
       : template.subject
 
   // Preferred path: send from the business mailbox over Hostinger SMTP.
+  // If Hostinger is temporarily unreachable, immediately use the connected
+  // Gmail sender rather than leaving a paid order without confirmation.
   const { getSmtpConfig, smtpSend } = await import('@/lib/smtp.server')
   const smtp = getSmtpConfig()
   if (smtp) {
@@ -148,8 +150,17 @@ export async function sendTemplateEmail(
       html,
       text,
     })
-    await smtpSend({ config: smtp, from: smtp.user, to: recipient, message })
-    return { sent: true }
+    try {
+      await Promise.race([
+        smtpSend({ config: smtp, from: smtp.user, to: recipient, message }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
+        ),
+      ])
+      return { sent: true }
+    } catch (error) {
+      console.error('Hostinger SMTP unavailable; retrying through connected Gmail', error)
+    }
   }
 
   const fromAddress = await getSenderAddress()

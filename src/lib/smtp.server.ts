@@ -33,6 +33,13 @@ function b64(s: string): string {
   return btoa(Array.from(enc.encode(s), (b) => String.fromCharCode(b)).join(''))
 }
 
+function withTimeout<T>(promise: Promise<T>, label: string, ms = 12_000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`SMTP ${label} timed out`)), ms)),
+  ])
+}
+
 interface Conn {
   write(s: string): Promise<void>
   read(): Promise<string>
@@ -103,10 +110,13 @@ async function openConn(
     // Dev/Node runtime: cloudflare:sockets is unavailable.
     const tlsModule = 'node:tls'
     const tls = (await import(/* @vite-ignore */ tlsModule)) as typeof import('node:tls')
-    const socket = await new Promise<import('node:tls').TLSSocket>((resolve, reject) => {
-      const s = tls.connect({ host, port, servername: host }, () => resolve(s))
-      s.once('error', reject)
-    })
+    const socket = await withTimeout(
+      new Promise<import('node:tls').TLSSocket>((resolve, reject) => {
+        const s = tls.connect({ host, port, servername: host }, () => resolve(s))
+        s.once('error', reject)
+      }),
+      'connection',
+    )
     socket.setEncoding('utf8')
     const queue: string[] = []
     let waiter: ((v: string) => void) | null = null
