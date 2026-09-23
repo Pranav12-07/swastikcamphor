@@ -62,12 +62,18 @@ const Email = ({
           <Text style={brandSub}>CAMPHOR</Text>
           <Text style={brandPromise}>100% Purity, 100% Positivity</Text>
         </Section>
-        <Section style={successPanel}>
-          <Text style={successMark}>✓</Text>
-          <Heading style={h1}>Order Confirmed!</Heading>
-          <Text style={greeting}>Thank you for your purchase, <strong>{customerName}</strong></Text>
-          <Text style={value}>Your order has been successfully placed{paymentMethod === 'cod' ? '.' : ' and your payment has been received.'}</Text>
-        </Section>
+        <table align="center" width="100%" border={0} cellPadding="0" cellSpacing="0" role="presentation" style={successPanel}>
+          <tbody>
+            <tr>
+              <td align="center" style={successCell}>
+                <Text style={successMark}>✓</Text>
+                <Heading style={h1}>Order Confirmed!</Heading>
+                <Text style={greeting}>Thank you for your purchase, <strong>{customerName}</strong></Text>
+                <Text style={centeredValue}>Your order has been successfully placed{paymentMethod === 'cod' ? ' with Cash on Delivery.' : ' and your payment has been received.'}</Text>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <Section style={summaryPanel}>
           <Row>
             <Column style={summaryColumn}>
@@ -183,8 +189,9 @@ const brandHeader = { textAlign: 'center' as const, padding: '8px 0 20px' }
 const brand = { color: '#8d0b1b', fontFamily: 'Georgia, serif', fontSize: '38px', fontWeight: 'bold' as const, lineHeight: '1', margin: '0' }
 const brandSub = { color: '#8d0b1b', fontSize: '13px', fontWeight: 'bold' as const, letterSpacing: '4px', margin: '5px 0' }
 const brandPromise = { color: '#a36d21', fontSize: '11px', letterSpacing: '1px', margin: '7px 0 0' }
-const successPanel = { backgroundColor: '#fff4f3', border: '1px solid #f1ddda', borderRadius: '10px', padding: '24px', textAlign: 'center' as const }
-const successMark = { backgroundColor: '#218c4a', borderRadius: '999px', color: '#ffffff', display: 'inline-block', fontSize: '26px', fontWeight: 'bold' as const, height: '42px', lineHeight: '42px', margin: '0 0 9px', width: '42px' }
+const successPanel = { backgroundColor: '#fff4f3', border: '1px solid #f1ddda', borderRadius: '10px', width: '100%' }
+const successCell = { padding: '24px', textAlign: 'center' as const }
+const successMark = { backgroundColor: '#218c4a', borderRadius: '999px', color: '#ffffff', display: 'inline-block', fontSize: '26px', fontWeight: 'bold' as const, height: '42px', lineHeight: '42px', margin: '0 auto 9px', textAlign: 'center' as const, width: '42px' }
 const h1 = { fontFamily: 'Georgia, serif', fontSize: '28px', color: '#8d0b1b', margin: '0 0 6px' }
 const greeting = { color: '#8d0b1b', fontFamily: 'Georgia, serif', fontSize: '18px', margin: '0 0 7px' }
 const summaryPanel = { backgroundColor: '#ffffff', border: '1px solid #eadfd4', borderRadius: '9px', marginTop: '12px', padding: '15px' }
@@ -201,6 +208,7 @@ const mutedInline = { color: '#6e7480', fontSize: '12px' }
 const hr = { borderColor: '#eadfd4', margin: '12px 0' }
 const label = { fontSize: '11px', fontWeight: 'bold' as const, letterSpacing: '1.5px', color: '#8d0b1b', margin: '0 0 10px' }
 const value = { fontSize: '13px', color: '#17233a', lineHeight: '1.55', margin: '0 0 4px' }
+const centeredValue = { ...value, textAlign: 'center' as const }
 const tableHead = { backgroundColor: '#f8f6f3' }
 const tableLabel = { color: '#596170', fontSize: '10px', fontWeight: 'bold' as const, margin: '7px 5px' }
 const productColumn = { padding: '0 5px', width: '65%' }

@@ -57,15 +57,18 @@ async function getSenderAddress(): Promise<string> {
   return cachedSenderAddress
 }
 
-const b64url = (s: string) =>
+const base64 = (s: string) =>
   btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(''))
+
+const b64url = (s: string) =>
+  base64(s)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
 
 /** RFC 2047 encodes non-ASCII subject/display-name values. */
 const header = (v: string) =>
-  /^[\x00-\x7F]*$/.test(v) ? v : `=?UTF-8?B?${b64url(v).replace(/-/, '+').replace(/_/, '/')}?=`
+  /^[\x20-\x7E]*$/.test(v) ? v : `=?UTF-8?B?${base64(v)}?=`
 
 interface RawEmailInput {
   fromAddress: string
