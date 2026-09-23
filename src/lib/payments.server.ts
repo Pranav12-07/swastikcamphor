@@ -179,7 +179,7 @@ export async function settleOrderPaid(
   };
 
   // Customer confirmation
-  if (customerClaim) try {
+  const customerTask = async () => { if (!customerClaim) return; try {
     console.log(`${tag} CUSTOMER EMAIL TRIGGERED -> ${order.email}`);
     const result = await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
