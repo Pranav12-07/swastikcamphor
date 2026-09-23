@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
+import { StarRating } from "@/components/StarRating";
 import { formatINR } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
@@ -63,6 +64,12 @@ function Products() {
                   {product.name}
                 </Link>
               </h2>
+              {typeof product.rating === "number" && product.rating > 0 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <StarRating rating={product.rating} />
+                  <span className="text-sm text-muted-foreground">{product.rating.toFixed(1)}</span>
+                </div>
+              )}
               <div className="gold-rule mt-3 w-16" />
               <p className="mt-4 leading-relaxed text-muted-foreground">{product.description}</p>
               <ul className="mt-5 space-y-2 text-sm">
