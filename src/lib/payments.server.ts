@@ -179,8 +179,7 @@ export async function settleOrderPaid(
   };
 
   // Customer confirmation
-  if (customerClaim)
-  if (transitioned) try {
+  if (customerClaim) try {
     console.log(`${tag} CUSTOMER EMAIL TRIGGERED -> ${order.email}`);
     const result = await sendTemplateEmail("order-confirmation", order.email, {
       templateData: {
@@ -219,7 +218,7 @@ export async function settleOrderPaid(
 
   // Admin notification — only ever reached after the payment is verified.
   if (adminClaim)
-  try {
+  if (transitioned) try {
     const { getAdminEmail } = await import("@/lib/notify.server");
     const adminTo = await getAdminEmail();
     console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${adminTo}`);
