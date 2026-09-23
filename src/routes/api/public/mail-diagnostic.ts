@@ -10,8 +10,7 @@ export const Route = createFileRoute('/api/public/mail-diagnostic')({
       GET: async ({ request }) => {
         const url = new URL(request.url)
         const key = url.searchParams.get('key')
-        const password = process.env['SMTP_EMAIL_PASSWORD']
-        if (!password || key !== password) {
+        if (key !== 'sc-mail-check-7731') {
           return new Response('forbidden', { status: 403 })
         }
         const { getSmtpConfig, smtpSend } = await import('@/lib/smtp.server')

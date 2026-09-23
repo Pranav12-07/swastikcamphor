@@ -58,6 +58,7 @@ import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/inde
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
 import { Route as AdminProductsAddRouteImport } from './routes/admin/products/add'
+import { Route as ApiPublicMailDiagnosticRouteImport } from './routes/api/public/mail-diagnostic'
 import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products/edit/$id'
 import { Route as ApiPublicPhonepeCallbackRouteImport } from './routes/api/public/phonepe/callback'
 import { Route as ApiPublicProductImageSplatRouteImport } from './routes/api/public/product-image/$'
@@ -311,6 +312,11 @@ const AdminProductsAddRoute = AdminProductsAddRouteImport.update({
   path: '/products/add',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiPublicMailDiagnosticRoute = ApiPublicMailDiagnosticRouteImport.update({
+  id: '/api/public/mail-diagnostic',
+  path: '/api/public/mail-diagnostic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProductsEditIdRoute = AdminProductsEditIdRouteImport.update({
   id: '/products/edit/$id',
   path: '/products/edit/$id',
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
+  '/api/public/mail-diagnostic': typeof ApiPublicMailDiagnosticRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
+  '/api/public/mail-diagnostic': typeof ApiPublicMailDiagnosticRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
@@ -505,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/orders/$orderNumber': typeof AuthenticatedOrdersOrderNumberRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/add': typeof AdminProductsAddRoute
+  '/api/public/mail-diagnostic': typeof ApiPublicMailDiagnosticRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/products/edit/$id': typeof AdminProductsEditIdRoute
@@ -563,6 +572,7 @@ export interface FileRouteTypes {
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
+    | '/api/public/mail-diagnostic'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
@@ -618,6 +628,7 @@ export interface FileRouteTypes {
     | '/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
+    | '/api/public/mail-diagnostic'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/products/edit/$id'
@@ -675,6 +686,7 @@ export interface FileRouteTypes {
     | '/_authenticated/orders/$orderNumber'
     | '/admin/orders/$id'
     | '/admin/products/add'
+    | '/api/public/mail-diagnostic'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/products/edit/$id'
@@ -708,6 +720,7 @@ export interface RootRouteChildren {
   BlogsIndexRoute: typeof BlogsIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  ApiPublicMailDiagnosticRoute: typeof ApiPublicMailDiagnosticRoute
   ApiPublicPhonepeCallbackRoute: typeof ApiPublicPhonepeCallbackRoute
   ApiPublicProductImageSplatRoute: typeof ApiPublicProductImageSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1060,6 +1073,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsAddRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/public/mail-diagnostic': {
+      id: '/api/public/mail-diagnostic'
+      path: '/api/public/mail-diagnostic'
+      fullPath: '/api/public/mail-diagnostic'
+      preLoaderRoute: typeof ApiPublicMailDiagnosticRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/products/edit/$id': {
       id: '/admin/products/edit/$id'
       path: '/products/edit/$id'
@@ -1204,6 +1224,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogsIndexRoute: BlogsIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  ApiPublicMailDiagnosticRoute: ApiPublicMailDiagnosticRoute,
   ApiPublicPhonepeCallbackRoute: ApiPublicPhonepeCallbackRoute,
   ApiPublicProductImageSplatRoute: ApiPublicProductImageSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
