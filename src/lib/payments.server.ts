@@ -219,10 +219,9 @@ export async function settleOrderPaid(
   // Admin notification — only ever reached after the payment is verified.
   if (adminClaim)
   if (transitioned) try {
-    const { getAdminEmail } = await import("@/lib/notify.server");
-    const adminTo = await getAdminEmail();
-    console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${adminTo}`);
-    const result = await sendTemplateEmail("new-order-notification", adminTo, {
+    const { sendAdminTemplateEmail, getAdminEmails } = await import("@/lib/notify.server");
+    console.log(`${tag} ADMIN EMAIL TRIGGERED -> ${(await getAdminEmails()).join(", ")}`);
+    const result = await sendAdminTemplateEmail("new-order-notification", {
       templateData: {
         orderNumber: order.order_number,
         customerName: order.customer_name,
