@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { translations } from "@/lib/translations";
 
 export type Language = "en" | "te" | "hi";
 
@@ -11,7 +12,7 @@ export const LANGUAGES: { code: Language; label: string; short: string }[] = [
 const STORAGE_KEY = "swastik-lang";
 
 /** English source string -> translation. Missing keys fall back to English. */
-const dictionary: Record<Exclude<Language, "en">, Record<string, string>> = {
+const legacyDictionary: Record<Exclude<Language, "en">, Record<string, string>> = {
   te: {
     // Navigation
     "Home": "హోమ్",
@@ -123,6 +124,64 @@ const dictionary: Record<Exclude<Language, "en">, Record<string, string>> = {
   },
 };
 
+const dictionary: Record<Exclude<Language, "en">, Record<string, string>> = {
+  te: { ...legacyDictionary.te, ...translations.te },
+  hi: { ...legacyDictionary.hi, ...translations.hi },
+};
+
+const reverseDictionary = Object.fromEntries(
+  Object.values(dictionary).flatMap((entries) => Object.entries(entries).map(([source, translated]) => [translated, source])),
+) as Record<string, string>;
+
+const translatedAttributes = ["placeholder", "title", "aria-label"] as const;
+
+function sourceText(value: string) {
+  return reverseDictionary[value] ?? value;
+}
+
+function translateVisibleText(value: string, lang: Language) {
+  if (lang === "en") return sourceText(value);
+  const entries = dictionary[lang];
+  const exact = entries[sourceText(value)];
+  if (exact) return exact;
+
+  // Handles labels containing customer data, prices, counts, product names or IDs.
+  let output = value;
+  for (const [translated, source] of Object.entries(reverseDictionary).sort((a, b) => b[0].length - a[0].length)) {
+    if (output.includes(translated)) output = output.replaceAll(translated, source);
+  }
+  for (const [source, translated] of Object.entries(entries).sort((a, b) => b[0].length - a[0].length)) {
+    if (source.length >= 4 && output.includes(source)) output = output.replaceAll(source, translated);
+  }
+  return output;
+}
+
+function translateCustomerDocument(lang: Language) {
+  if (typeof document === "undefined" || window.location.pathname.startsWith("/admin")) return;
+  document.documentElement.lang = lang;
+  const root = document.querySelector("main")?.parentElement ?? document.body;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    const parent = node.parentElement;
+    if (parent && !["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
+      const raw = node.textContent ?? "";
+      const trimmed = raw.trim();
+      if (trimmed) {
+        const next = translateVisibleText(trimmed, lang);
+        if (next !== trimmed) node.textContent = raw.replace(trimmed, next);
+      }
+    }
+    node = walker.nextNode();
+  }
+  root.querySelectorAll<HTMLElement>("[placeholder], [title], [aria-label]").forEach((element) => {
+    translatedAttributes.forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (value) element.setAttribute(attribute, translateVisibleText(value, lang));
+    });
+  });
+}
+
 type Ctx = { lang: Language; setLang: (l: Language) => void; t: (s: string) => string };
 
 const LanguageContext = createContext<Ctx | null>(null);
@@ -138,6 +197,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       /* storage unavailable */
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    let translating = false;
+    const apply = () => {
+      if (translating) return;
+      translating = true;
+      translateCustomerDocument(lang);
+      translating = false;
+    };
+    apply();
+    const observer = new MutationObserver(() => queueMicrotask(apply));
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [lang]);
 
   const setLang = useCallback((next: Language) => {
     setLangState(next);
