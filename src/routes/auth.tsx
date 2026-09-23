@@ -138,7 +138,9 @@ function AuthPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Back to home
+          <Link to="/" className="underline">
+            Back to home
+          </Link>
         </p>
       </section>
     </>
