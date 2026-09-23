@@ -104,7 +104,7 @@ function buildMessage({ fromAddress, to, replyTo, subject, html, text }: RawEmai
 
 /**
  * Renders a registered template and sends it from the business mailbox
- * (info@swastikcamphor.in on Hostinger) when SMTP credentials are configured,
+ * (shop@online.swastikcamphor.in on Hostinger) when SMTP credentials are configured,
  * otherwise through the connected Gmail account. Any failure throws so callers
  * can log the reason and release their retry claims.
  */

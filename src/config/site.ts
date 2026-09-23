@@ -2,7 +2,7 @@ export const site = {
   name: "Swastik Camphor",
   legalName: "VIJAYASREE CAMPHOR INDUSTRIES",
   tagline: "Purity in every tablet",
-  email: "info@swastikcamphor.in",
+  email: "shop@online.swastikcamphor.in",
   phone: "+91 7416886881",
   phoneHref: "+917416886881",
   whatsapp: "917416886881",

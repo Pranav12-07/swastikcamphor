@@ -15,7 +15,7 @@ export interface SmtpConfig {
 }
 
 export function getSmtpConfig(): SmtpConfig | null {
-  const user = process.env['SMTP_EMAIL_USER'] || 'info@swastikcamphor.in'
+  const user = process.env['SMTP_EMAIL_USER'] || 'shop@online.swastikcamphor.in'
   const password = process.env['SMTP_EMAIL_PASSWORD']
   if (!password) return null
   return {

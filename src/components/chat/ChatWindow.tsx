@@ -51,7 +51,7 @@ export function ChatWindow({
       setError(
         e.message.includes("429")
           ? "Too many messages right now — please try again in a moment."
-          : "Sorry, the assistant is unavailable right now. Please email info@swastikcamphor.in.",
+          : "Sorry, the assistant is unavailable right now. Please email shop@online.swastikcamphor.in.",
       ),
   });
 
