@@ -153,6 +153,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
       <AuthProvider>
       <CatalogProvider>
       <CartProvider>
