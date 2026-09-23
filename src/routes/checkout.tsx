@@ -10,6 +10,7 @@ import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
+import phonepeLogo from "@/assets/phonepe.png";
 
 
 export const Route = createFileRoute("/checkout")({
@@ -331,8 +332,18 @@ function Checkout() {
                   checked={method === "upi"}
                   onChange={() => setMethod("upi")}
                 />
-                <span>
-                  <span className="font-medium">Pay now with UPI / PhonePe</span>
+                <span className="flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">Pay now with UPI / PhonePe</span>
+                    <img
+                      src={phonepeLogo}
+                      alt="PhonePe"
+                      loading="lazy"
+                      width={40}
+                      height={40}
+                      className="h-5 w-5 rounded-full object-contain"
+                    />
+                  </span>
                   <span className="block text-xs text-muted-foreground">
                     Google Pay, PhonePe, Paytm or any UPI app — secure and verified by the gateway.
                   </span>
