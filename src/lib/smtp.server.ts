@@ -189,12 +189,6 @@ export async function smtpSend(params: {
 
     await conn.write('QUIT\r\n')
   } finally {
-    try {
-      reader.releaseLock()
-      writer.releaseLock()
-      await socket.close()
-    } catch {
-      /* socket already closed */
-    }
+    await close()
   }
 }
