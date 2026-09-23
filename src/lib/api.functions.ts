@@ -190,7 +190,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
     }
+    })();
 
+    const customerMail = (async () => {
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("order-confirmation", orderEmail, {
