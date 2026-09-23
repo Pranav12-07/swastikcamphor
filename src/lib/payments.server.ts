@@ -256,7 +256,11 @@ export async function settleOrderPaid(
     console.error(`${tag} ADMIN EMAIL FAILED`, error);
     // Release the claim so an admin can resend from the order view.
     await releaseClaim("admin_notification_sent");
-  }
+  } };
+
+  // Both mails go out at the same time so the customer is not kept waiting.
+  await Promise.all([customerTask(), adminTask()]);
+
 
   try {
     const { notifyAdmin } = await import("@/lib/notify.server");
