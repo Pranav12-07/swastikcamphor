@@ -949,6 +949,7 @@ export type Database = {
       }
       products: {
         Row: {
+          admin_rating: number | null
           category: string | null
           compare_at_price: number | null
           cost_price: number | null
@@ -983,6 +984,7 @@ export type Database = {
           weight_grams: number | null
         }
         Insert: {
+          admin_rating?: number | null
           category?: string | null
           compare_at_price?: number | null
           cost_price?: number | null
@@ -1017,6 +1019,7 @@ export type Database = {
           weight_grams?: number | null
         }
         Update: {
+          admin_rating?: number | null
           category?: string | null
           compare_at_price?: number | null
           cost_price?: number | null

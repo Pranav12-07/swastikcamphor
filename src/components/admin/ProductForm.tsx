@@ -77,6 +77,10 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     seo_h1: g("seo_h1"),
     seo_subtitle: g("seo_subtitle"),
   });
+  const [adminRating, setAdminRating] = useState<number | null>(
+    initial?.["admin_rating"] != null ? Number(initial["admin_rating"]) : null,
+  );
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   const csv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
@@ -116,6 +120,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         is_featured: form.is_featured,
         is_bestseller: form.is_bestseller,
         is_new_arrival: form.is_new_arrival,
+        admin_rating: adminRating,
         seo_title: form.seo_title || `${form.name} | Buy Online | Swastik Camphor`,
         seo_description:
           form.seo_description ||
@@ -185,6 +190,47 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         </div>
       </Card>
 
+
+      <Card>
+        <h2 className="font-semibold">Product Rating</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Show a star rating on the product card and product page. Customers cannot change it.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-1" onMouseLeave={() => setHoverRating(null)}>
+            {[1, 2, 3, 4, 5].map((i) => {
+              const shown = hoverRating ?? adminRating ?? 0;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Set rating to ${i} star${i > 1 ? "s" : ""}`}
+                  aria-pressed={adminRating === i}
+                  onMouseEnter={() => setHoverRating(i)}
+                  onClick={() => setAdminRating(i)}
+                  className={`text-3xl leading-none transition-transform hover:scale-110 ${
+                    i <= shown ? "text-gold" : "text-muted-foreground/30"
+                  }`}
+                >
+                  ★
+                </button>
+              );
+            })}
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {adminRating ? `${adminRating} of 5` : "No rating set"}
+          </span>
+          {adminRating != null && (
+            <button
+              type="button"
+              onClick={() => setAdminRating(null)}
+              className="rounded-md border border-input px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+            >
+              Clear rating
+            </button>
+          )}
+        </div>
+      </Card>
 
       <Card>
         <h2 className="font-semibold">Visibility</h2>
