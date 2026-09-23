@@ -185,9 +185,9 @@ export async function smtpSend(params: {
 }): Promise<void> {
   // Some hosts block outbound 465; fall back to the submission ports.
   const attempts: Array<{ port: number; mode: 'tls' | 'starttls' }> = [
-    { port: params.config.port, mode: params.config.port === 587 ? 'starttls' : 'tls' },
-    { port: 587, mode: 'starttls' },
-    { port: 2525, mode: 'starttls' },
+    { port: params.config.port, mode: params.config.port === 587 ? 'starttls' as const : 'tls' as const },
+    { port: 587, mode: 'starttls' as const },
+    { port: 2525, mode: 'starttls' as const },
   ].filter((a, i, all) => all.findIndex((b) => b.port === a.port) === i)
 
   let lastError: unknown
