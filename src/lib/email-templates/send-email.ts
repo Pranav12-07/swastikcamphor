@@ -37,27 +37,6 @@ function gatewayHeaders(): Record<string, string> {
   }
 }
 
-let cachedSenderAddress: string | null = null
-
-/** Resolves the connected Gmail account's address (cached per server instance). */
-async function getSenderAddress(): Promise<string> {
-  if (cachedSenderAddress) return cachedSenderAddress
-  const res = await fetch(`${GATEWAY_URL}/users/me/profile`, {
-    headers: gatewayHeaders(),
-  })
-  if (!res.ok) {
-    const body = await res.text()
-    console.error(`Gmail profile lookup failed [${res.status}]: ${body}`)
-    throw new Error(`Gmail profile lookup failed [${res.status}]: ${body}`)
-  }
-  const data = (await res.json()) as { emailAddress?: string }
-  if (!data.emailAddress) {
-    throw new Error('Gmail profile lookup returned no email address')
-  }
-  cachedSenderAddress = data.emailAddress
-  return cachedSenderAddress
-}
-
 const base64 = (s: string) =>
   btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(''))
 
