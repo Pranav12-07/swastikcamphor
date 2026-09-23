@@ -58,6 +58,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         bestFor: row.features?.length ? row.features : row.category ? [row.category] : [],
         category: row.category ?? null,
         stock: Number(row.stock_quantity ?? 0),
+        rating: row.admin_rating != null ? Number(row.admin_rating) : null,
       }));
     },
   });

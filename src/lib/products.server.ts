@@ -17,6 +17,7 @@ export type PublicProduct = {
   seo_description: string | null;
   image_alt: string | null;
   gallery: string[];
+  rating: number | null;
 };
 
 export const PRODUCT_SELECT =
