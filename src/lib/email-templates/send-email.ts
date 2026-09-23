@@ -166,7 +166,6 @@ export async function sendTemplateEmail(
 
   const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
     method: 'POST',
-    method: 'POST',
     headers: { ...gatewayHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ raw }),
   })
