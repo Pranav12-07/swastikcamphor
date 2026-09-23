@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { TraditionVideo } from "@/components/TraditionVideo";
 
 import { useCatalog } from "@/lib/catalog";
+import { useI18n } from "@/lib/i18n";
 import { marketplaces, site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
 import { useBanners } from "@/hooks/use-banners";
@@ -55,6 +56,7 @@ const values = [
 function Index() {
   const posts = Route.useLoaderData().slice(0, 3);
   const { products } = useCatalog();
+  const { t } = useI18n();
   const homeProducts = [...products].sort(
     (a, b) => Number(b.rating != null) - Number(a.rating != null),
   );
@@ -107,21 +109,21 @@ function Index() {
                 href={banner.link_url}
                 className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
               >
-                {banner.button_text || "Shop Now"}
+                {banner.button_text || t("Shop Now")}
               </a>
             ) : (
               <Link
                 to="/shop"
                 className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
               >
-                Shop Now
+                {t("Shop Now")}
               </Link>
             )}
             <Link
               to="/products"
               className="rounded-full border border-gold/60 px-7 py-3 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15"
             >
-              Explore Products
+              {t("Explore Products")}
             </Link>
           </div>
         </div>
@@ -137,8 +139,8 @@ function Index() {
           {values.map((v, i) => (
             <div key={v.title} className="card-premium reveal reveal-zoom p-6" style={{ transitionDelay: `${i * 110}ms` }}>
               <v.icon className="h-6 w-6 text-accent transition-transform duration-500 group-hover:scale-110" aria-hidden="true" />
-              <h2 className="mt-4 font-display text-lg">{v.title}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{v.text}</p>
+              <h2 className="mt-4 font-display text-lg">{t(v.title)}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{t(v.text)}</p>
             </div>
 
           ))}
@@ -152,13 +154,13 @@ function Index() {
       <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
         <div className="reveal flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Our range</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">Camphor for every ritual</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Our range")}</p>
+            <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
             <div className="gold-rule rule-animate mt-4 w-20" />
 
           </div>
           <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
-            View all products →
+            {t("View all products →")}
           </Link>
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -179,8 +181,8 @@ function Index() {
             />
           </div>
           <div className="reveal reveal-right">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">About us</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">Rooted in tradition, refined by quality</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("About us")}</p>
+            <h2 className="mt-2 text-3xl md:text-4xl">{t("Rooted in tradition, refined by quality")}</h2>
             <div className="gold-rule rule-animate mt-4 w-20" />
 
             <p className="mt-5 leading-relaxed text-muted-foreground">
@@ -192,7 +194,7 @@ function Index() {
               to="/about"
               className="mt-6 inline-flex rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15"
             >
-              Read our story
+              {t("Read our story")}
             </Link>
           </div>
         </div>
@@ -202,10 +204,10 @@ function Index() {
         <div className="card-premium reveal grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 p-8 sm:flex sm:justify-between">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 font-display text-2xl">
-              <Sparkle className="h-5 w-5 text-accent" aria-hidden="true" /> Also available online
+              <Sparkle className="h-5 w-5 text-accent" aria-hidden="true" /> {t("Also available online")}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Find Swastik Camphor on your favourite marketplace.
+              {t("Find Swastik Camphor on your favourite marketplace.")}
             </p>
           </div>
           <ul className="flex shrink-0 flex-wrap gap-2">
@@ -227,7 +229,7 @@ function Index() {
 
       {posts.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
-          <h2 className="reveal font-display text-3xl">Latest camphor guides</h2>
+          <h2 className="reveal font-display text-3xl">{t("Latest camphor guides")}</h2>
           <div className="gold-rule mt-3 w-16" />
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {posts.map((post, i) => (
@@ -255,7 +257,7 @@ function Index() {
             ))}
           </div>
           <Link to="/blogs" className="mt-8 inline-flex rounded-full border border-gold/50 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent/15">
-            Read all guides
+            {t("Read all guides")}
           </Link>
         </section>
       )}
