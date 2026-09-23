@@ -9,12 +9,15 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/lib/i18n";
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { count } = useCart();
   const { session, isAdmin } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -63,19 +66,20 @@ export function Header() {
               activeOptions={{ exact: item.to === "/" }}
               className="rounded-full px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent/15 hover:text-foreground data-[status=active]:bg-accent/20 data-[status=active]:text-foreground"
             >
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
         </nav>
 
         <TooltipProvider delayDuration={250}>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <LanguageSwitcher />
           {isAdmin && (
             <Link
               to="/admin"
               className="inline-flex rounded-full border border-gold/40 px-2.5 py-2 text-[0.7rem] font-medium transition-colors hover:bg-accent/15 sm:px-3 sm:text-xs"
             >
-              Admin
+              {t("Admin")}
             </Link>
           )}
           {session ? (
@@ -90,7 +94,7 @@ export function Header() {
                     <Heart className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Wishlist</TooltipContent>
+                <TooltipContent side="bottom">{t("Wishlist")}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -102,7 +106,7 @@ export function Header() {
                     <User className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">My account</TooltipContent>
+                <TooltipContent side="bottom">{t("My account")}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -115,7 +119,7 @@ export function Header() {
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Sign out</TooltipContent>
+                <TooltipContent side="bottom">{t("Sign out")}</TooltipContent>
               </Tooltip>
             </>
           ) : (
@@ -123,7 +127,7 @@ export function Header() {
               to="/auth"
               className="rounded-full border border-gold/40 px-2.5 py-2 text-[0.7rem] font-medium transition-colors hover:bg-accent/15 sm:px-3 sm:text-xs"
             >
-              Sign in
+              {t("Sign in")}
             </Link>
           )}
           <Tooltip>
@@ -141,7 +145,7 @@ export function Header() {
                 )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Cart</TooltipContent>
+            <TooltipContent side="bottom">{t("Cart")}</TooltipContent>
           </Tooltip>
           <button
             type="button"
@@ -165,7 +169,7 @@ export function Header() {
               onClick={() => setOpen(false)}
               className="block border-b border-border/60 py-3 text-sm font-medium text-foreground/90 last:border-0"
             >
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
         </nav>
