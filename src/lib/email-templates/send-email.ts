@@ -6,13 +6,15 @@ import { TEMPLATES } from './registry'
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
 
 // Configuration baked in at scaffold time
-const SITE_NAME = "Swastik Camphor Connect"
+const SITE_NAME = 'Swastik Camphor'
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.swastikcamphor.in"
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
 const FROM_DOMAIN = "swastikcamphor.in"
+const SHOP_EMAIL = 'shop@online.swastikcamphor.in'
+const FROM_HEADER = `${SITE_NAME} <${SHOP_EMAIL}>`
 
 export type SendTemplateEmailResult =
   | { sent: true }
@@ -66,10 +68,11 @@ export async function sendTemplateEmail(
       : template.subject
 
   try {
+    console.log(`[order-email-provider] sending provider=lovable-email from=${SHOP_EMAIL} to=${recipient}`)
     await sendLovableEmail(
       {
         to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        from: FROM_HEADER,
         sender_domain: SENDER_DOMAIN,
         subject,
         html,
@@ -77,14 +80,16 @@ export async function sendTemplateEmail(
         purpose: 'transactional',
         label: templateName,
         idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        reply_to: options.replyTo,
+        reply_to: options.replyTo ?? SHOP_EMAIL,
       },
       { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
     )
+    console.log(`[order-email-provider] accepted provider=lovable-email from=${SHOP_EMAIL} to=${recipient}`)
   } catch (error) {
     if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
       return { sent: false, reason: 'recipient_suppressed' }
     }
+    console.error(`[order-email-provider] failed provider=lovable-email from=${SHOP_EMAIL} to=${recipient}`, error)
     throw error
   }
 
