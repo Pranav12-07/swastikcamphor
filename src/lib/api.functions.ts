@@ -217,6 +217,10 @@ export const placeOrder = createServerFn({ method: "POST" })
     } catch (emailError) {
       console.error("Customer confirmation email failed", emailError);
     }
+    })();
+
+    // Send both mails at once so order placement is not slowed down.
+    await Promise.all([adminMail, customerMail]);
     }
 
     return {
