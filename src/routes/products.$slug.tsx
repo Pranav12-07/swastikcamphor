@@ -126,10 +126,17 @@ function ProductDetail() {
             </span>
           </div>
 
-          {reviewStats && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Rated {reviewStats.average} / 5 from {reviewStats.count} verified reviews
-            </p>
+          {typeof product.rating === "number" && product.rating > 0 ? (
+            <div className="mt-3 flex items-center gap-2">
+              <StarRating rating={product.rating} />
+              <span className="text-sm text-muted-foreground">{product.rating.toFixed(1)} / 5</span>
+            </div>
+          ) : (
+            reviewStats && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Rated {reviewStats.average} / 5 from {reviewStats.count} verified reviews
+              </p>
+            )
           )}
 
           {product.benefits.length > 0 && (

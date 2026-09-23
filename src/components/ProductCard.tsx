@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { formatINR, type Product } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { StarRating } from "@/components/StarRating";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { add } = useCart();
