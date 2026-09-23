@@ -258,8 +258,10 @@ export async function settleOrderPaid(
     await releaseClaim("admin_notification_sent");
   } };
 
-  // Both mails go out at the same time so the customer is not kept waiting.
-  await Promise.all([customerTask(), adminTask()]);
+  // Hostinger permits only a small number of concurrent mailbox connections.
+  // Always deliver the customer's paid-order confirmation first, then notify admins.
+  await customerTask();
+  await adminTask();
 
 
   try {

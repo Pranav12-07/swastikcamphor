@@ -114,7 +114,7 @@ export async function getAdminEmails(): Promise<string[]> {
   return out;
 }
 
-/** Sends one template to every admin recipient in parallel; sent=true if any delivery worked. */
+/** Sends one template to every admin recipient; sent=true if any delivery worked. */
 export async function sendAdminTemplateEmail(
   template: string,
   options: { templateData: Record<string, unknown>; idempotencyKey: string; replyTo?: string },
@@ -124,24 +124,20 @@ export async function sendAdminTemplateEmail(
   let sent = false;
   let reason: string | undefined;
 
-  const results = await Promise.allSettled(
-    recipients.map(async (to) =>
+  for (const to of recipients) {
+    try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sendTemplateEmail as any)(template, to, {
+      const result = await (sendTemplateEmail as any)(template, to, {
         ...options,
         idempotencyKey: `${options.idempotencyKey}-${to}`,
-      }),
-    ),
-  );
-  results.forEach((res, i) => {
-    if (res.status === "fulfilled") {
-      if (res.value?.sent) sent = true;
-      else reason = res.value?.reason ?? reason;
-    } else {
-      reason = res.reason instanceof Error ? res.reason.message : String(res.reason);
-      console.error(`admin email to ${recipients[i]} failed`, res.reason);
+      });
+      if (result?.sent) sent = true;
+      else reason = result?.reason ?? reason;
+    } catch (error) {
+      reason = error instanceof Error ? error.message : String(error);
+      console.error(`admin email to ${to} failed`, error);
     }
-  });
+  }
 
   if (recipients.length === 0) reason = "no admin recipients";
   return { sent, reason };
