@@ -150,7 +150,7 @@ export async function buildReceiptDoc(data: ReceiptData) {
     { maxWidth: right - left },
   );
   y += 26;
-  doc.text("Thank you for shopping with Swastik Camphor — info@swastikcamphor.in", left, y);
+  doc.text("Thank you for shopping with Swastik Camphor — shop@online.swastikcamphor.in", left, y);
 
   return doc;
 }
