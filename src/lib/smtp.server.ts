@@ -69,8 +69,9 @@ async function expect(conn: Conn, codes: number[], step: string): Promise<string
 /** Opens a TLS connection: Cloudflare sockets in the Worker, node:tls locally. */
 async function openConn(
   host: string,
-  port: number
-): Promise<{ conn: Conn; close: () => Promise<void> }> {
+  port: number,
+  mode: 'tls' | 'starttls' = 'tls'
+): Promise<{ conn: Conn; close: () => Promise<void>; upgrade?: (() => Promise<void>) | undefined }> {
   try {
     // Literal specifier: the Worker bundler must see this at build time —
     // a variable specifier cannot be resolved at runtime inside the Worker.
@@ -80,13 +81,13 @@ async function openConn(
         options?: { secureTransport?: string; allowHalfOpen?: boolean }
       ) => any
     }
-    const socket = connect(
+    let socket = connect(
       { hostname: host, port },
-      { secureTransport: 'on', allowHalfOpen: false }
+      { secureTransport: mode === 'tls' ? 'on' : 'starttls', allowHalfOpen: false }
     )
     await withTimeout(socket.opened, 'connection')
-    const writer = socket.writable.getWriter()
-    const reader = socket.readable.getReader()
+    let writer = socket.writable.getWriter()
+    let reader = socket.readable.getReader()
     return {
       conn: {
         async write(s) {
@@ -98,6 +99,16 @@ async function openConn(
           return dec.decode(value)
         },
       },
+      upgrade:
+        mode === 'starttls'
+          ? async () => {
+              reader.releaseLock()
+              writer.releaseLock()
+              socket = socket.startTls()
+              writer = socket.writable.getWriter()
+              reader = socket.readable.getReader()
+            }
+          : undefined,
       close: async () => {
         try {
           reader.releaseLock()
@@ -172,13 +183,46 @@ export async function smtpSend(params: {
   to: string
   message: string
 }): Promise<void> {
-  const { conn, close } = await openConn(params.config.host, params.config.port)
+  // Some hosts block outbound 465; fall back to the submission ports.
+  const attempts: Array<{ port: number; mode: 'tls' | 'starttls' }> = [
+    { port: params.config.port, mode: params.config.port === 587 ? 'starttls' as const : 'tls' as const },
+    { port: 587, mode: 'starttls' as const },
+    { port: 2525, mode: 'starttls' as const },
+  ].filter((a, i, all) => all.findIndex((b) => b.port === a.port) === i)
 
+  let lastError: unknown
+  for (const attempt of attempts) {
+    try {
+      await smtpSendOnce(params, attempt.port, attempt.mode)
+      return
+    } catch (error) {
+      lastError = error
+      console.error(`[smtp] attempt failed port=${attempt.port} mode=${attempt.mode}`, error)
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('SMTP send failed')
+}
+
+async function smtpSendOnce(
+  params: { config: SmtpConfig; from: string; to: string; message: string },
+  port: number,
+  mode: 'tls' | 'starttls'
+): Promise<void> {
+  const { conn, close, upgrade } = await openConn(params.config.host, port, mode)
 
   try {
     await expect(conn, [220], 'greeting')
     await conn.write(`EHLO swastikcamphor.in\r\n`)
     await expect(conn, [250], 'EHLO')
+
+    if (upgrade) {
+      await conn.write('STARTTLS\r\n')
+      await expect(conn, [220], 'STARTTLS')
+      await upgrade()
+      await conn.write(`EHLO swastikcamphor.in\r\n`)
+      await expect(conn, [250], 'EHLO (TLS)')
+    }
+
 
     await conn.write('AUTH LOGIN\r\n')
     await expect(conn, [334], 'AUTH')
