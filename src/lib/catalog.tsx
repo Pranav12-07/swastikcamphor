@@ -1,28 +1,18 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { products as fallbackProducts, type Product } from "@/data/products";
+import { products as fallbackProducts } from "@/data/products";
+import {
+  CatalogContext,
+  useCatalog,
+  type CatalogCategory,
+  type CatalogCoupon,
+  type CatalogProduct,
+  type CatalogValue,
+} from "@/lib/catalog-context";
 
-export type CatalogProduct = Product & { category: string | null; stock: number };
-export type CatalogCategory = { slug: string; name: string; image_url: string | null };
-
-export type CatalogCoupon = {
-  code: string;
-  discount_type: string;
-  discount_value: number;
-  min_order_amount: number;
-  max_discount: number | null;
-};
-
-type CatalogValue = {
-  products: CatalogProduct[];
-  categories: CatalogCategory[];
-  coupons: CatalogCoupon[];
-  getProduct: (slug: string) => CatalogProduct | undefined;
-  loading: boolean;
-};
-
-const CatalogContext = createContext<CatalogValue | null>(null);
+export { useCatalog };
+export type { CatalogCategory, CatalogCoupon, CatalogProduct, CatalogValue };
 
 const staticImage = (slug: string) => fallbackProducts.find((p) => p.slug === slug)?.image;
 
