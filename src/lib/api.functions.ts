@@ -160,6 +160,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     // Emails for prepaid orders are sent only after the gateway verifies the
     // payment (see settleOrderPaid). COD orders are confirmed immediately.
     if (data.payment_method === "cod") {
+    const adminMail = (async () => {
     try {
       const { sendAdminTemplateEmail } = await import("@/lib/notify.server");
       await sendAdminTemplateEmail("new-order-notification", {
@@ -189,7 +190,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     } catch (emailError) {
       console.error("Order notification email failed", emailError);
     }
+    })();
 
+    const customerMail = (async () => {
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("order-confirmation", orderEmail, {
@@ -214,6 +217,10 @@ export const placeOrder = createServerFn({ method: "POST" })
     } catch (emailError) {
       console.error("Customer confirmation email failed", emailError);
     }
+    })();
+
+    // Send both mails at once so order placement is not slowed down.
+    await Promise.all([adminMail, customerMail]);
     }
 
     return {

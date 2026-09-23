@@ -80,7 +80,12 @@ export async function getAdminEmail(): Promise<string> {
  * Every address that should receive store/order mail:
  * the configured shop inbox plus the account email of every admin user.
  */
+let adminEmailsCache: { at: number; list: string[] } | null = null;
+
 export async function getAdminEmails(): Promise<string[]> {
+  if (adminEmailsCache && Date.now() - adminEmailsCache.at < 5 * 60_000) {
+    return adminEmailsCache.list;
+  }
   const recipients = new Set<string>();
   const configured = await adminEmail();
   if (configured) recipients.add(configured.toLowerCase());
@@ -104,10 +109,12 @@ export async function getAdminEmails(): Promise<string[]> {
     console.error("admin recipient lookup failed", error);
   }
 
-  return [...recipients];
+  const out = [...recipients];
+  adminEmailsCache = { at: Date.now(), list: out };
+  return out;
 }
 
-/** Sends one template to every admin recipient; resolves sent=true if any delivery worked. */
+/** Sends one template to every admin recipient in parallel; sent=true if any delivery worked. */
 export async function sendAdminTemplateEmail(
   template: string,
   options: { templateData: Record<string, unknown>; idempotencyKey: string; replyTo?: string },
@@ -116,20 +123,26 @@ export async function sendAdminTemplateEmail(
   const recipients = await getAdminEmails();
   let sent = false;
   let reason: string | undefined;
-  for (const to of recipients) {
-    try {
+
+  const results = await Promise.allSettled(
+    recipients.map(async (to) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (sendTemplateEmail as any)(template, to, {
+      (sendTemplateEmail as any)(template, to, {
         ...options,
         idempotencyKey: `${options.idempotencyKey}-${to}`,
-      });
-      if (result?.sent) sent = true;
-      else reason = result?.reason ?? reason;
-    } catch (error) {
-      reason = error instanceof Error ? error.message : String(error);
-      console.error(`admin email to ${to} failed`, error);
+      }),
+    ),
+  );
+  results.forEach((res, i) => {
+    if (res.status === "fulfilled") {
+      if (res.value?.sent) sent = true;
+      else reason = res.value?.reason ?? reason;
+    } else {
+      reason = res.reason instanceof Error ? res.reason.message : String(res.reason);
+      console.error(`admin email to ${recipients[i]} failed`, res.reason);
     }
-  }
+  });
+
   if (recipients.length === 0) reason = "no admin recipients";
   return { sent, reason };
 }
