@@ -65,7 +65,13 @@ export async function smtpSend(params: {
   to: string
   message: string
 }): Promise<void> {
-  const { connect } = await import('cloudflare:sockets')
+  const socketsModule = 'cloudflare:sockets'
+  const { connect } = (await import(/* @vite-ignore */ socketsModule)) as {
+    connect: (
+      address: { hostname: string; port: number },
+      options?: { secureTransport?: string; allowHalfOpen?: boolean }
+    ) => any
+  }
   const socket = connect(
     { hostname: params.config.host, port: params.config.port },
     { secureTransport: 'on', allowHalfOpen: false }
