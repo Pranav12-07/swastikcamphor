@@ -92,10 +92,11 @@ export async function getAdminEmails(): Promise<string[]> {
 
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Every staff role receives order mail — only plain customers are excluded.
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin");
+      .select("user_id, role")
+      .in("role", ["admin", "super_admin", "product_manager", "order_manager", "support_staff"]);
     const ids = new Set((roles ?? []).map((r) => r.user_id as string));
     if (ids.size > 0) {
       const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
