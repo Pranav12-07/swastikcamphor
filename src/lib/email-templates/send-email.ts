@@ -10,6 +10,7 @@ import { TEMPLATES } from './registry'
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_mail/gmail/v1'
 const DISPLAY_NAME = 'Swastik Camphor'
+const SHOP_EMAIL = 'shop@online.swastikcamphor.in'
 
 export type SendTemplateEmailResult =
   | { sent: true }
