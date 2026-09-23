@@ -136,17 +136,36 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
+  // Preferred path: send from the business mailbox over Hostinger SMTP.
+  const { getSmtpConfig, smtpSend } = await import('@/lib/smtp.server')
+  const smtp = getSmtpConfig()
+  if (smtp) {
+    const message = buildMessage({
+      fromAddress: smtp.user,
+      to: recipient,
+      replyTo: options.replyTo,
+      subject,
+      html,
+      text,
+    })
+    await smtpSend({ config: smtp, from: smtp.user, to: recipient, message })
+    return { sent: true }
+  }
+
   const fromAddress = await getSenderAddress()
-  const raw = buildRawEmail({
-    fromAddress,
-    to: recipient,
-    replyTo: options.replyTo,
-    subject,
-    html,
-    text,
-  })
+  const raw = b64url(
+    buildMessage({
+      fromAddress,
+      to: recipient,
+      replyTo: options.replyTo,
+      subject,
+      html,
+      text,
+    })
+  )
 
   const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+    method: 'POST',
     method: 'POST',
     headers: { ...gatewayHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ raw }),
