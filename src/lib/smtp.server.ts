@@ -71,7 +71,7 @@ async function openConn(
   host: string,
   port: number,
   mode: 'tls' | 'starttls' = 'tls'
-): Promise<{ conn: Conn; close: () => Promise<void>; upgrade?: () => Promise<void> }> {
+): Promise<{ conn: Conn; close: () => Promise<void>; upgrade?: (() => Promise<void>) | undefined }> {
   try {
     // Literal specifier: the Worker bundler must see this at build time —
     // a variable specifier cannot be resolved at runtime inside the Worker.
