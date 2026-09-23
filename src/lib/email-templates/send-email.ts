@@ -2,13 +2,9 @@ import * as React from 'react'
 import { render } from '@react-email/render'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY and GOOGLE_MAIL_API_KEY. Never import from client components.
-//
-// Sending now goes through the connected Gmail account via the Lovable connector
-// gateway. Gmail only delivers from the connected account's own address; the
-// display name shown to recipients is "Swastik Camphor".
-
-const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_mail/gmail/v1'
+// Server-only. Order mail is sent only through the shop mailbox. Gmail is
+// deliberately not a fallback because Gmail rewrites an unverified From header
+// to the connected account's address.
 const DISPLAY_NAME = 'Swastik Camphor'
 const SHOP_EMAIL = 'shop@online.swastikcamphor.in'
 
@@ -18,23 +14,9 @@ export type SendTemplateEmailResult =
 
 export interface SendTemplateEmailOptions {
   templateData?: Record<string, any>
-  /** Kept for API compatibility; Gmail sending is direct and needs no dedupe key. */
+  /** Kept for API compatibility; delivery claims are managed by the order flow. */
   idempotencyKey?: string
   replyTo?: string
-}
-
-function gatewayHeaders(): Record<string, string> {
-  const apiKey = process.env['LOVABLE_API_KEY']
-  const connKey = process.env['GOOGLE_MAIL_API_KEY']
-  if (!apiKey || !connKey) {
-    throw new Error(
-      'Gmail sending is not configured — LOVABLE_API_KEY or GOOGLE_MAIL_API_KEY is missing. Link the Gmail connection first.'
-    )
-  }
-  return {
-    Authorization: `Bearer ${apiKey}`,
-    'X-Connection-Api-Key': connKey,
-  }
 }
 
 const base64 = (s: string) =>
@@ -87,9 +69,8 @@ function buildMessage({ fromAddress, to, replyTo, subject, html, text }: RawEmai
 
 /**
  * Renders a registered template and sends it from the business mailbox
- * (shop@online.swastikcamphor.in on Hostinger) when SMTP credentials are configured,
- * otherwise through the connected Gmail account. Any failure throws so callers
- * can log the reason and release their retry claims.
+ * (shop@online.swastikcamphor.in on Hostinger). There is intentionally no Gmail
+ * fallback: an SMTP failure must be retried rather than sent from a personal account.
  */
 export async function sendTemplateEmail(
   templateName: string,
@@ -119,66 +100,35 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  // Preferred path: send from the business mailbox over Hostinger SMTP.
-  // If Hostinger is temporarily unreachable, immediately use the connected
-  // Gmail sender rather than leaving a paid order without confirmation.
+  // Shop-only delivery. Never derive the envelope sender from the customer,
+  // an admin account, or any environment variable.
   const { getSmtpConfig, smtpSend } = await import('@/lib/smtp.server')
   const smtp = getSmtpConfig()
-  if (smtp) {
-    const message = buildMessage({
-      fromAddress: smtp.user,
-      to: recipient,
-      replyTo: options.replyTo,
-      subject,
-      html,
-      text,
-    })
-    try {
-      await Promise.race([
-        smtpSend({ config: smtp, from: smtp.user, to: recipient, message }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
-        ),
-      ])
-      return { sent: true }
-    } catch (error) {
-      console.error('Hostinger SMTP unavailable; retrying through connected Gmail', error)
-    }
+  if (!smtp) {
+    console.error(`[order-email-provider] blocked: SMTP_EMAIL_PASSWORD missing; provider=none; from=${SHOP_EMAIL}`)
+    throw new Error('Shop email delivery is not configured')
   }
 
-  // Fallback path: send through the connected Gmail account, but present the
-  // shop mailbox as the sender. Gmail honors this From once
-  // shop@online.swastikcamphor.in is added as a verified "Send mail as" alias
-  // on the connected account; until then Gmail substitutes the account address.
-  const fromAddress = SHOP_EMAIL
-  const raw = b64url(
-    buildMessage({
-      fromAddress,
-      to: recipient,
-      replyTo: options.replyTo ?? SHOP_EMAIL,
-      subject,
-      html,
-      text,
-    })
-  )
-
-  const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
-    method: 'POST',
-    headers: { ...gatewayHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ raw }),
+  const message = buildMessage({
+    fromAddress: SHOP_EMAIL,
+    to: recipient,
+    replyTo: options.replyTo ?? SHOP_EMAIL,
+    subject,
+    html,
+    text,
   })
-
-  if (!res.ok) {
-    const errorBody = await res.text()
-    console.error(`Gmail send failed [${res.status}]: ${errorBody}`)
-    throw new Error(`Gmail send failed [${res.status}]: ${errorBody}`)
+  console.log(`[order-email-provider] sending provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`)
+  try {
+    await Promise.race([
+      smtpSend({ config: smtp, from: SHOP_EMAIL, to: recipient, message }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Hostinger SMTP send timed out')), 20_000)
+      ),
+    ])
+  } catch (error) {
+    console.error(`[order-email-provider] failed provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`, error)
+    throw error
   }
-
-  const data = (await res.json().catch(() => ({}))) as { id?: string; error?: { message?: string } }
-  if (data.error) {
-    console.error(`Gmail send rejected: ${data.error.message}`)
-    throw new Error(`Gmail send rejected: ${data.error.message}`)
-  }
-
+  console.log(`[order-email-provider] accepted provider=hostinger-smtp from=${SHOP_EMAIL} to=${recipient}`)
   return { sent: true }
 }
