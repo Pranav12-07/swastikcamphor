@@ -72,7 +72,7 @@ const Email = ({
     <Preview>{`New order ${orderNumber} — ${inr(total)}`}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>🛒 New order received</Heading>
+        <Heading style={h1}>New order received</Heading>
         <Text style={muted}>
           Order #{orderNumber}
           {placedAt ? ` • ${placedAt} IST` : ''}
@@ -137,7 +137,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `🛒 New Order Received - #${data['orderNumber'] ?? ''} - ${inr(data['total'])}`,
+    `New Order Received - #${data['orderNumber'] ?? ''} - ${inr(data['total'])}`,
   displayName: 'New order notification',
   
   previewData: {

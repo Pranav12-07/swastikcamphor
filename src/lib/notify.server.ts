@@ -14,6 +14,8 @@ export type AdminEvent = {
   /** Prevents duplicate mails for the same logical event. */
   idempotencyKey?: string;
   details?: Record<string, string | number | boolean | null | undefined>;
+  /** Keep the dashboard notification without sending a second, abbreviated email. */
+  sendEmail?: boolean;
 };
 
 async function adminEmail(): Promise<string> {
@@ -47,6 +49,8 @@ export async function notifyAdmin(event: AdminEvent): Promise<void> {
   } catch (error) {
     console.error("admin notification insert failed", error);
   }
+
+  if (event.sendEmail === false) return;
 
   try {
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
