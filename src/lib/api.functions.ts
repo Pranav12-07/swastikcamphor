@@ -161,9 +161,8 @@ export const placeOrder = createServerFn({ method: "POST" })
     // payment (see settleOrderPaid). COD orders are confirmed immediately.
     if (data.payment_method === "cod") {
     try {
-      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-      const { getAdminEmail } = await import("@/lib/notify.server");
-      await sendTemplateEmail("new-order-notification", await getAdminEmail(), {
+      const { sendAdminTemplateEmail } = await import("@/lib/notify.server");
+      await sendAdminTemplateEmail("new-order-notification", {
         templateData: {
           orderNumber,
           customerName: data.customer_name,
