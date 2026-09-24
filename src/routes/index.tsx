@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
+import heroDiyaLoopWebm from "@/assets/hero-diya-loop.webm.asset.json";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { TraditionVideo } from "@/components/TraditionVideo";
@@ -84,6 +85,7 @@ function Index() {
             poster={hero}
             aria-label="A gently flickering camphor flame in a brass diya"
           >
+            <source src={heroDiyaLoopWebm.url} type="video/webm" />
             <source src={heroDiyaLoop.url} type="video/mp4" />
           </video>
         )}
