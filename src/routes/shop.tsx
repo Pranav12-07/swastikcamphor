@@ -29,6 +29,10 @@ function Shop() {
   useReveal();
   const { products, categories } = useCatalog();
   const [active, setActive] = useState("All");
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c) setActive(c);
+  }, []);
   const [sort, setSort] = useState<"popular" | "low" | "high">("popular");
 
   const filters = useMemo(
