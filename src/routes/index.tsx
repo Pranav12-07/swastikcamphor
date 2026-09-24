@@ -7,6 +7,7 @@ import heroDiyaLoopWebm from "@/assets/hero-diya-loop.webm.asset.json";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { TraditionVideo } from "@/components/TraditionVideo";
+import { PromoCarousel } from "@/components/PromoCarousel";
 
 import { useCatalog } from "@/lib/catalog";
 import { useI18n } from "@/lib/i18n";
@@ -150,6 +151,8 @@ function Index() {
           aria-hidden="true"
         />
       </section>
+
+      <PromoCarousel />
 
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

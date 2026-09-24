@@ -961,3 +961,73 @@ export const adminDeleteBlog = createServerFn({ method: "POST" })
     await notifyAdmin({ type: "blog.deleted", title: "Blog deleted", link: "/admin/blogs", details: { blog_id: data.id } });
     return { ok: true as const };
   });
+
+// ---------------------------------- promotional posters ----------------------------------
+const promoSchema = z.object({
+  id: uuid.optional(),
+  title: z.string().trim().min(2).max(120),
+  description: z.string().trim().max(300).nullable().default(null),
+  image_url: z.string().trim().min(1).max(500),
+  button_text: z.string().trim().max(40).nullable().default(null),
+  destination_type: z.enum(["none", "product", "category", "offer", "url"]).default("none"),
+  destination_value: z.string().trim().max(500).nullable().default(null),
+  display_order: z.number().int().min(0).max(9999).default(0),
+  is_active: z.boolean().default(true),
+  start_date: z.string().nullable().default(null),
+  end_date: z.string().nullable().default(null),
+}).refine((v) => !v.start_date || !v.end_date || new Date(v.end_date) >= new Date(v.start_date), { message: "End date must be after start date", path: ["end_date"] })
+  .refine((v) => v.destination_type === "none" || !!v.destination_value, { message: "Destination is required", path: ["destination_value"] });
+
+export const adminListPromoBanners = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("promotional_banners").select("*").order("display_order").order("created_at");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminSavePromoBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => promoSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { id, ...fields } = data;
+    if (fields.destination_type === "none") fields.destination_value = null;
+    const q = id ? supabaseAdmin.from("promotional_banners").update(fields).eq("id", id) : supabaseAdmin.from("promotional_banners").insert(fields);
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: id ? "promo_banner.updated" : "promo_banner.created", entity: "promo_banner", entityId: id });
+    return { ok: true as const };
+  });
+
+export const adminDeletePromoBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: uuid }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("promotional_banners").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit({ actorId: context.userId, action: "promo_banner.deleted", entity: "promo_banner", entityId: data.id });
+    return { ok: true as const };
+  });
+
+export const adminReorderPromoBanners = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ ids: z.array(uuid).max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertPerm } = await import("@/lib/admin-guard.server");
+    await assertPerm(context.supabase as never, context.userId, "marketing");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    for (const [i, id] of data.ids.entries()) {
+      const { error } = await supabaseAdmin.from("promotional_banners").update({ display_order: i }).eq("id", id);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true as const };
+  });

@@ -1103,6 +1103,54 @@ export type Database = {
         }
         Relationships: []
       }
+      promotional_banners: {
+        Row: {
+          button_text: string | null
+          created_at: string
+          description: string | null
+          destination_type: string
+          destination_value: string | null
+          display_order: number
+          end_date: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          start_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          button_text?: string | null
+          created_at?: string
+          description?: string | null
+          destination_type?: string
+          destination_value?: string | null
+          display_order?: number
+          end_date?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          start_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string
+          description?: string | null
+          destination_type?: string
+          destination_value?: string | null
+          display_order?: number
+          end_date?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           key: string

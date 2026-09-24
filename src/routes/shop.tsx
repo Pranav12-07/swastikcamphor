@@ -1,6 +1,6 @@
 import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/catalog";
@@ -29,6 +29,10 @@ function Shop() {
   useReveal();
   const { products, categories } = useCatalog();
   const [active, setActive] = useState("All");
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c) setActive(c);
+  }, []);
   const [sort, setSort] = useState<"popular" | "low" | "high">("popular");
 
   const filters = useMemo(

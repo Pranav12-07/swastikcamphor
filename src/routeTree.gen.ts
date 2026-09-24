@@ -41,6 +41,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminMessagesRouteImport } from './routes/admin/messages'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminPostersRouteImport } from './routes/admin/posters'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -224,6 +225,11 @@ const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   path: '/payments',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPostersRoute = AdminPostersRouteImport.update({
+  id: '/posters',
+  path: '/posters',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminProfileRoute = AdminProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -376,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/posters': typeof AdminPostersRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -431,6 +438,7 @@ export interface FileRoutesByTo {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/posters': typeof AdminPostersRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -489,6 +497,7 @@ export interface FileRoutesById {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/posters': typeof AdminPostersRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/payments'
+    | '/admin/posters'
     | '/admin/profile'
     | '/admin/reviews'
     | '/admin/settings'
@@ -602,6 +612,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/payments'
+    | '/admin/posters'
     | '/admin/profile'
     | '/admin/reviews'
     | '/admin/settings'
@@ -659,6 +670,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/payments'
+    | '/admin/posters'
     | '/admin/profile'
     | '/admin/reviews'
     | '/admin/settings'
@@ -941,6 +953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPaymentsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/posters': {
+      id: '/admin/posters'
+      path: '/posters'
+      fullPath: '/admin/posters'
+      preLoaderRoute: typeof AdminPostersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/profile': {
       id: '/admin/profile'
       path: '/profile'
@@ -1138,6 +1157,7 @@ interface AdminRouteRouteChildren {
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminPostersRoute: typeof AdminPostersRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -1165,6 +1185,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminPostersRoute: AdminPostersRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
