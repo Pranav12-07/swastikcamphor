@@ -89,9 +89,14 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           ))}
         </ul>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="font-display text-lg">
-            {formatINR(product.price)}{" "}
-            <span className="text-sm text-muted-foreground line-through">{formatINR(product.mrp)}</span>
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-display text-lg">
+            <span>{formatINR(product.price)}</span>
+            {product.mrp > product.price && (
+              <>
+                <span className="text-sm text-muted-foreground line-through">{formatINR(product.mrp)}</span>
+                <span className="font-body text-xs font-bold text-primary">{discount}% OFF</span>
+              </>
+            )}
           </p>
           <button
             type="button"
