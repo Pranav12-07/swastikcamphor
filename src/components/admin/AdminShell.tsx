@@ -32,6 +32,7 @@ const NAV: Array<{ to: string; label: string; icon: typeof Package; area: Area }
   { to: "/admin/reviews", label: "Reviews", icon: Star, area: "reviews" },
   { to: "/admin/shipping", label: "Shipping", icon: Truck, area: "settings" },
   { to: "/admin/homepage", label: "Homepage", icon: ImageIcon, area: "marketing" },
+  { to: "/admin/posters", label: "Promo Posters", icon: ImageIcon, area: "marketing" },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, area: "dashboard" },
   { to: "/admin/notifications", label: "Notifications", icon: Bell, area: "dashboard" },
   { to: "/admin/emails", label: "Email Management", icon: Mail, area: "settings" },
