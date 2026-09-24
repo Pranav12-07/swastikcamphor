@@ -116,7 +116,7 @@ function ProductDetail() {
         <ProductGallery images={product.gallery?.length ? product.gallery : [product.image]} name={product.name} />
 
         <div>
-          <h1 className="font-display text-3xl md:text-4xl">{product.name}</h1>
+          <h1 className="font-body text-3xl font-semibold md:text-4xl">{product.name}</h1>
           <div className="gold-rule mt-3 w-16" />
           <p className="mt-4 leading-relaxed text-muted-foreground">{product.description || product.short}</p>
 
