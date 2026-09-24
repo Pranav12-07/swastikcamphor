@@ -1,0 +1,4 @@
+ALTER TABLE public.promotional_banners ADD COLUMN media_type text NOT NULL DEFAULT 'image' CHECK (media_type IN ('image','video'));
+CREATE POLICY "Staff upload promo media" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'promo-media' AND private.is_staff(auth.uid()));
+CREATE POLICY "Staff read promo media" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'promo-media' AND private.is_staff(auth.uid()));
+CREATE POLICY "Staff delete promo media" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'promo-media' AND private.is_staff(auth.uid()));
