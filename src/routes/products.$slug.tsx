@@ -230,7 +230,7 @@ function ProductDetail() {
                   className="aspect-4/3 w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="p-5">
-                  <h3 className="font-display text-lg">{item.name}</h3>
+                  <h3 className="font-body text-lg font-semibold">{item.name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{formatINR(item.price)}</p>
                 </div>
               </Link>
