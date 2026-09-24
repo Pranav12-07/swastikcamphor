@@ -2,6 +2,7 @@ import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
+import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { TraditionVideo } from "@/components/TraditionVideo";
@@ -67,11 +68,25 @@ function Index() {
   return (
     <>
       <section className="relative isolate overflow-hidden">
-        <img
-          src={banner?.image_url || hero}
-          alt="A camphor flame glowing above pure camphor tablets during aarti"
-          className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover"
-        />
+        {banner?.image_url ? (
+          <img
+            src={banner.image_url}
+            alt="A camphor flame glowing above pure camphor tablets during aarti"
+            className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover"
+          />
+        ) : (
+          <video
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={hero}
+            aria-label="A gently flickering camphor flame in a brass diya"
+          >
+            <source src={heroDiyaLoop.url} type="video/mp4" />
+          </video>
+        )}
 
         <div
           className="absolute inset-0 -z-10"
