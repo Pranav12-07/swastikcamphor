@@ -74,12 +74,12 @@ async function uploadVideo(file: File, onProgress: (pct: number) => void): Promi
   const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
   const safe = file.name.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "video";
   const path = `videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}.${ext}`;
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/promo-media/${path}`;
+  const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/promo-media/${path}`;
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+    xhr.setRequestHeader("apikey", import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY']);
     xhr.setRequestHeader("Content-Type", file.type);
     xhr.setRequestHeader("cache-control", "31536000");
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
