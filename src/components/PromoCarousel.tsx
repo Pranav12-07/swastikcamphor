@@ -8,6 +8,7 @@ export type PromoBanner = {
   title: string;
   description: string | null;
   image_url: string;
+  media_type?: "image" | "video";
   button_text: string | null;
   destination_type: "none" | "product" | "category" | "offer" | "url";
   destination_value: string | null;
@@ -79,6 +80,19 @@ export function PromoCarouselView({ banners }: { banners: PromoBanner[] }) {
             const external = href ? /^https?:\/\//i.test(href) : false;
             const inner = (
               <div className="relative aspect-[16/9] w-full sm:aspect-[21/8]">
+                {b.media_type === "video" ? (
+                  <video
+                    src={b.image_url}
+                    aria-label={b.title}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload={i === 0 ? "auto" : "metadata"}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={() => setBroken((s) => new Set(s).add(b.id))}
+                  />
+                ) : (
                 <img
                   src={b.image_url}
                   alt={b.title}
@@ -88,6 +102,7 @@ export function PromoCarouselView({ banners }: { banners: PromoBanner[] }) {
                   className="absolute inset-0 h-full w-full object-cover"
                   onError={() => setBroken((s) => new Set(s).add(b.id))}
                 />
+                )}
                 {(b.description || b.button_text) && (
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/70 to-transparent p-4 sm:p-8">
                     <p className="font-display text-lg text-background sm:text-3xl">{b.title}</p>
@@ -172,7 +187,7 @@ export function PromoCarousel() {
     const load = async () => {
       const { data, error } = await supabase
         .from("promotional_banners")
-        .select("id,title,description,image_url,button_text,destination_type,destination_value")
+        .select("id,title,description,image_url,media_type,button_text,destination_type,destination_value")
         .order("display_order")
         .order("created_at");
       if (!cancelled && !error && data) setBanners(data as PromoBanner[]);
