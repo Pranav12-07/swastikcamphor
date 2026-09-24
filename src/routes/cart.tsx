@@ -54,7 +54,7 @@ function CartPage() {
                       loading="lazy"
                     />
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate font-display text-lg">{product.name}</h2>
+                      <h2 className="truncate font-body text-lg font-semibold">{product.name}</h2>
                       <p className="text-sm text-muted-foreground">Size: {line.size}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1 rounded-full border border-gold/40">

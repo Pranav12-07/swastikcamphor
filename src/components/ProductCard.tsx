@@ -72,7 +72,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </button>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-2xl leading-snug transition-colors group-hover:text-primary">{product.name}</h3>
+        <h3 className="font-body text-2xl font-semibold leading-snug transition-colors group-hover:text-primary">{product.name}</h3>
         {typeof product.rating === "number" && product.rating > 0 && (
           <div className="mt-1.5 flex items-center gap-2">
             <StarRating rating={product.rating} className="text-sm" />

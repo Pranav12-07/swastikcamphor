@@ -116,7 +116,7 @@ function ProductDetail() {
         <ProductGallery images={product.gallery?.length ? product.gallery : [product.image]} name={product.name} />
 
         <div>
-          <h1 className="font-display text-3xl md:text-4xl">{product.name}</h1>
+          <h1 className="font-body text-3xl font-semibold md:text-4xl">{product.name}</h1>
           <div className="gold-rule mt-3 w-16" />
           <p className="mt-4 leading-relaxed text-muted-foreground">{product.description || product.short}</p>
 
@@ -230,7 +230,7 @@ function ProductDetail() {
                   className="aspect-4/3 w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="p-5">
-                  <h3 className="font-display text-lg">{item.name}</h3>
+                  <h3 className="font-body text-lg font-semibold">{item.name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{formatINR(item.price)}</p>
                 </div>
               </Link>
