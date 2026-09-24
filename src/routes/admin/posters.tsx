@@ -9,6 +9,7 @@ import { Card, ErrorState, TableSkeleton } from "@/components/admin/ui";
 import { optimize } from "@/components/admin/ImageUploader";
 import { PromoCarouselView, type PromoBanner } from "@/components/PromoCarousel";
 import { useCatalog } from "@/lib/catalog";
+import { supabase } from "@/integrations/supabase/client";
 import {
   adminDeletePromoBanner,
   adminListPromoBanners,
@@ -45,6 +46,7 @@ type Form = {
   title: string;
   description: string;
   image_url: string;
+  media_type: "image" | "video";
   button_text: string;
   destination_type: PromoBanner["destination_type"];
   destination_value: string;
@@ -55,11 +57,38 @@ type Form = {
 };
 
 const empty: Form = {
-  title: "", description: "", image_url: "", button_text: "", destination_type: "none",
+  title: "", description: "", image_url: "", media_type: "image", button_text: "", destination_type: "none",
   destination_value: "", display_order: 0, is_active: true, start_date: "", end_date: "",
 };
 
 const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
+const VIDEO_ACCEPT = ["video/mp4", "video/webm", "video/quicktime"];
+const MAX_VIDEO = 50 * 1024 * 1024;
+
+async function uploadVideo(file: File, onProgress: (pct: number) => void): Promise<string> {
+  if (!VIDEO_ACCEPT.includes(file.type)) throw new Error(`${file.name}: only MP4, WebM or MOV videos allowed`);
+  if (file.size > MAX_VIDEO) throw new Error(`${file.name} is larger than 50 MB`);
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("Please sign in again");
+  const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
+  const safe = file.name.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "video";
+  const path = `videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}.${ext}`;
+  const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/promo-media/${path}`;
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("apikey", import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY']);
+    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader("cache-control", "31536000");
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
+    xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new Error("Video upload failed")));
+    xhr.onerror = () => reject(new Error("Network error during video upload"));
+    xhr.send(file);
+  });
+  return `/api/public/promo-media/${path}`;
+}
 
 function status(b: Row): { label: string; cls: string } {
   const now = Date.now();
@@ -96,7 +125,15 @@ function PostersPage() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin-promo-banners"] });
 
-  async function uploadFile(file: File): Promise<string> {
+  async function uploadFile(file: File, label = ""): Promise<{ url: string; type: "image" | "video" }> {
+    if (file.type.startsWith("video/")) {
+      const url = await uploadVideo(file, (pct) => setProgress(`${label}Uploading video… ${pct}%`));
+      return { url, type: "video" };
+    }
+    return { url: await uploadImage(file), type: "image" };
+  }
+
+  async function uploadImage(file: File): Promise<string> {
     if (!ACCEPT.includes(file.type)) throw new Error(`${file.name}: only JPG, PNG or WebP allowed`);
     if (file.size > 10 * 1024 * 1024) throw new Error(`${file.name} is larger than 10 MB`);
     const payload = await optimize(file, 2000);
@@ -110,8 +147,8 @@ function PostersPage() {
     try {
       if (files.length === 1 && !form.image_url) {
         setProgress("Optimising & uploading… 50%");
-        const url = await uploadFile(files[0]!);
-        setForm((f) => ({ ...f, image_url: url, title: f.title || files[0]!.name.replace(/\.[^.]+$/, "") }));
+        const { url, type } = await uploadFile(files[0]!);
+        setForm((f) => ({ ...f, image_url: url, media_type: type, title: f.title || files[0]!.name.replace(/\.[^.]+$/, "") }));
         toast.success("Poster uploaded — fill details and save");
       } else {
         // Bulk upload: each file becomes an inactive draft poster.
@@ -120,8 +157,9 @@ function PostersPage() {
         for (const file of files) {
           setProgress(`Uploading ${done + 1} of ${files.length}… ${Math.round((done / files.length) * 100)}%`);
           try {
-            const url = await uploadFile(file);
+            const { url, type } = await uploadFile(file, `${done + 1}/${files.length} · `);
             await save({ data: {
+              media_type: type,
               title: file.name.replace(/\.[^.]+$/, "").slice(0, 120).padEnd(2, " "),
               description: null, image_url: url, button_text: null, destination_type: "none",
               destination_value: null, display_order: order++, is_active: false, start_date: null, end_date: null,
@@ -153,6 +191,7 @@ function PostersPage() {
         title: form.title,
         description: form.description || null,
         image_url: form.image_url,
+        media_type: form.media_type,
         button_text: form.button_text || null,
         destination_type: form.destination_type,
         destination_value: form.destination_value || null,
@@ -175,7 +214,7 @@ function PostersPage() {
   async function toggle(b: Row) {
     try {
       await save({ data: {
-        id: b.id, title: b.title, description: b.description, image_url: b.image_url, button_text: b.button_text,
+        id: b.id, title: b.title, description: b.description, image_url: b.image_url, media_type: b.media_type ?? "image", button_text: b.button_text,
         destination_type: b.destination_type, destination_value: b.destination_value, display_order: b.display_order,
         is_active: !b.is_active, start_date: b.start_date, end_date: b.end_date,
       } });
@@ -196,7 +235,7 @@ function PostersPage() {
 
   const live = rows.filter((b) => status(b).label === "Active");
   const previewForm: PromoBanner[] = form.image_url
-    ? [{ id: "preview", title: form.title || "Poster title", description: form.description || null, image_url: form.image_url, button_text: form.button_text || null, destination_type: "none", destination_value: null }]
+    ? [{ id: "preview", title: form.title || "Poster title", description: form.description || null, image_url: form.image_url, media_type: form.media_type, button_text: form.button_text || null, destination_type: "none", destination_value: null }]
     : [];
 
   return (
@@ -228,7 +267,7 @@ function PostersPage() {
                     className={`flex flex-wrap items-center gap-3 rounded-lg border border-border p-2 ${dragId === b.id ? "opacity-50" : ""}`}
                   >
                     <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" aria-hidden />
-                    <img src={b.image_url} alt="" className="h-14 w-28 rounded object-cover" />
+                    {b.media_type === "video" ? <video src={b.image_url} muted preload="metadata" className="h-14 w-28 rounded object-cover" /> : <img src={b.image_url} alt="" className="h-14 w-28 rounded object-cover" />}
                     <div className="min-w-40 flex-1">
                       <p className="font-medium">{b.title}</p>
                       <p className="text-xs text-muted-foreground">
@@ -238,7 +277,7 @@ function PostersPage() {
                     </div>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>{s.label}</span>
                     <button onClick={() => toggle(b)} className="rounded border border-input px-2 py-1 text-xs">{b.is_active ? "Deactivate" : "Activate"}</button>
-                    <button aria-label="Edit poster" onClick={() => { setForm({ id: b.id, title: b.title, description: b.description ?? "", image_url: b.image_url, button_text: b.button_text ?? "", destination_type: b.destination_type, destination_value: b.destination_value ?? "", display_order: b.display_order, is_active: b.is_active, start_date: toLocal(b.start_date), end_date: toLocal(b.end_date) }); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="rounded border border-input p-1.5"><Pencil className="h-3.5 w-3.5" /></button>
+                    <button aria-label="Edit poster" onClick={() => { setForm({ id: b.id, title: b.title, description: b.description ?? "", image_url: b.image_url, media_type: b.media_type ?? "image", button_text: b.button_text ?? "", destination_type: b.destination_type, destination_value: b.destination_value ?? "", display_order: b.display_order, is_active: b.is_active, start_date: toLocal(b.start_date), end_date: toLocal(b.end_date) }); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="rounded border border-input p-1.5"><Pencil className="h-3.5 w-3.5" /></button>
                     <button aria-label="Delete poster" onClick={async () => { if (!confirm("Delete this poster?")) return; try { await del({ data: { id: b.id } }); await refresh(); toast.success("Poster deleted"); } catch { toast.error("Could not delete"); } }} className="rounded border border-destructive/40 p-1.5 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                   </li>
                 );
@@ -259,16 +298,16 @@ function PostersPage() {
               {form.image_url ? (
                 <div className="space-y-2">
                   <div className="-mx-4"><PromoCarouselView banners={previewForm} /></div>
-                  <button type="button" onClick={() => setForm({ ...form, image_url: "" })} className="text-xs text-destructive underline">Replace image</button>
+                  <button type="button" onClick={() => setForm({ ...form, image_url: "", media_type: "image" })} className="text-xs text-destructive underline">Replace image</button>
                 </div>
               ) : (
                 <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className="flex w-full flex-col items-center gap-1 py-4 text-muted-foreground">
                   {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-                  <span>{progress ?? "Click or drop image(s) — JPG, PNG, WebP. Recommended 2100×800."}</span>
+                  <span>{progress ?? "Click or drop images or videos — JPG, PNG, WebP, MP4, WebM, MOV (video up to 50 MB). Recommended 2100×800."}</span>
                   <span className="text-xs">Select several files to bulk-add drafts.</span>
                 </button>
               )}
-              <input ref={fileRef} type="file" accept={ACCEPT.join(",")} multiple hidden onChange={(e) => onFiles(Array.from(e.target.files ?? []))} />
+              <input ref={fileRef} type="file" accept={[...ACCEPT, ...VIDEO_ACCEPT].join(",")} multiple hidden onChange={(e) => onFiles(Array.from(e.target.files ?? []))} />
             </div>
 
             <input required minLength={2} maxLength={120} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Poster title" className={input} />

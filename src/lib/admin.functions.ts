@@ -968,6 +968,7 @@ const promoSchema = z.object({
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(300).nullable().default(null),
   image_url: z.string().trim().min(1).max(500),
+  media_type: z.enum(["image", "video"]).default("image"),
   button_text: z.string().trim().max(40).nullable().default(null),
   destination_type: z.enum(["none", "product", "category", "offer", "url"]).default("none"),
   destination_value: z.string().trim().max(500).nullable().default(null),
