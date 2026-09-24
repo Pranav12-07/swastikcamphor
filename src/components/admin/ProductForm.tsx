@@ -80,6 +80,9 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
   const [adminRating, setAdminRating] = useState<number | null>(
     initial?.["admin_rating"] != null ? Number(initial["admin_rating"]) : null,
   );
+  const [adminRatingCount, setAdminRatingCount] = useState(
+    String(n("admin_rating_count")),
+  );
   const [hoverRating, setHoverRating] = useState<number | null>(null);
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
@@ -121,6 +124,7 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         is_bestseller: form.is_bestseller,
         is_new_arrival: form.is_new_arrival,
         admin_rating: adminRating,
+        admin_rating_count: Number(adminRatingCount || 0),
         seo_title: form.seo_title || `${form.name} | Buy Online | Swastik Camphor`,
         seo_description:
           form.seo_description ||
@@ -229,6 +233,20 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
               Clear rating
             </button>
           )}
+        </div>
+        <div className="mt-4 max-w-xs">
+          <Field label="Number of ratings" hint="Displayed beside the stars on product cards and product pages.">
+            <input
+              className={input}
+              type="number"
+              min={0}
+              max={10000000}
+              step={1}
+              value={adminRatingCount}
+              onChange={(e) => setAdminRatingCount(e.target.value)}
+              inputMode="numeric"
+            />
+          </Field>
         </div>
       </Card>
 

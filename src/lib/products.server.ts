@@ -18,10 +18,11 @@ export type PublicProduct = {
   image_alt: string | null;
   gallery: string[];
   rating: number | null;
+  ratingCount: number;
 };
 
 export const PRODUCT_SELECT =
-  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating";
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count";
 
 type Row = Record<string, unknown>;
 
@@ -67,6 +68,7 @@ export function mapProductRow(row: Row): PublicProduct {
     seo_description: (row["seo_description"] as string | null) ?? null,
     image_alt: null,
     rating: row["admin_rating"] == null ? null : Number(row["admin_rating"]),
+    ratingCount: Number(row["admin_rating_count"] ?? 0),
     gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
   };
 }

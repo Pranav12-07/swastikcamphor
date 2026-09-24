@@ -10,6 +10,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const { add } = useCart();
   const wishlist = useWishlist();
   const saved = wishlist.has(product.slug);
+  const discount = product.mrp > product.price
+    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    : 0;
 
   async function onWishlist() {
     if (!wishlist.signedIn) {
@@ -49,6 +52,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-[0.65rem] uppercase tracking-widest text-primary-foreground">
           100% Pure
         </span>
+        {discount > 0 && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground shadow-sm">
+            {discount}% OFF
+          </span>
+        )}
         <button
           type="button"
           onClick={(e) => {
@@ -64,11 +72,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </button>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-xl transition-colors group-hover:text-primary">{product.name}</h3>
+        <h3 className="font-display text-2xl leading-snug transition-colors group-hover:text-primary">{product.name}</h3>
         {typeof product.rating === "number" && product.rating > 0 && (
           <div className="mt-1.5 flex items-center gap-2">
             <StarRating rating={product.rating} className="text-sm" />
             <span className="text-xs text-muted-foreground">{product.rating.toFixed(1)}</span>
+            <span className="text-xs text-muted-foreground">({(product.ratingCount ?? 0).toLocaleString("en-IN")})</span>
           </div>
         )}
         <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{product.short}</p>
