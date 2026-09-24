@@ -950,6 +950,7 @@ export type Database = {
       products: {
         Row: {
           admin_rating: number | null
+          admin_rating_count: number
           category: string | null
           compare_at_price: number | null
           cost_price: number | null
@@ -985,6 +986,7 @@ export type Database = {
         }
         Insert: {
           admin_rating?: number | null
+          admin_rating_count?: number
           category?: string | null
           compare_at_price?: number | null
           cost_price?: number | null
@@ -1020,6 +1022,7 @@ export type Database = {
         }
         Update: {
           admin_rating?: number | null
+          admin_rating_count?: number
           category?: string | null
           compare_at_price?: number | null
           cost_price?: number | null
