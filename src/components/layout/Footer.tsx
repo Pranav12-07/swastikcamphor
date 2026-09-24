@@ -15,8 +15,8 @@ export function Footer() {
             <img
               src={logoAsset.url}
               alt="Swastik Camphor logo"
-              className="h-14 w-14 shrink-0 rounded-full object-contain"
-              width={56}
+              className="h-14 w-auto shrink-0 object-contain"
+              width={97}
               height={56}
             />
           </div>
