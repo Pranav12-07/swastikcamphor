@@ -86,6 +86,9 @@ function ProductDetail() {
   useReveal();
 
   const inStock = product.stock > 0;
+  const discount = product.mrp > product.price
+    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    : 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-16">
@@ -122,6 +125,11 @@ function ProductDetail() {
             {product.mrp > product.price && (
               <span className="text-muted-foreground line-through">{formatINR(product.mrp)}</span>
             )}
+            {discount > 0 && (
+              <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
+                {discount}% OFF
+              </span>
+            )}
             <span className={`text-sm ${inStock ? "text-emerald-600" : "text-destructive"}`}>
               {inStock ? "In stock" : "Out of stock"}
             </span>
@@ -131,6 +139,7 @@ function ProductDetail() {
             <div className="mt-3 flex items-center gap-2">
               <StarRating rating={product.rating} />
               <span className="text-sm text-muted-foreground">{product.rating.toFixed(1)} / 5</span>
+              <span className="text-sm text-muted-foreground">({product.ratingCount.toLocaleString("en-IN")} ratings)</span>
             </div>
           ) : (
             reviewStats && (

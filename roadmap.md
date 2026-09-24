@@ -6,3 +6,4 @@
 - [x] Verify English, Telugu and Hindi customer experiences
 - [x] Trace the published order-email path and remove the personal Gmail fallback
 - [ ] Verify a newly published live order is accepted from shop@online.swastikcamphor.in
+- [x] Add product discount badges, premium product-title styling, and admin-controlled rating counts

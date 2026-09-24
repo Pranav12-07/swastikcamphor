@@ -118,6 +118,7 @@ const productSchema = z.object({
   is_bestseller: z.boolean().default(false),
   is_new_arrival: z.boolean().default(false),
   admin_rating: z.number().min(1).max(5).nullable().default(null),
+  admin_rating_count: z.number().int().min(0).max(10000000).default(0),
   seo_title: z.string().trim().max(150).nullable().default(null),
   seo_description: z.string().trim().max(300).nullable().default(null),
   seo_keywords: z.string().trim().max(300).nullable().default(null),
