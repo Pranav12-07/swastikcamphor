@@ -145,7 +145,7 @@ function PostersPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.image_url) return toast.error("Please upload a poster image");
+    if (!form.image_url) { toast.error("Please upload a poster image"); return; }
     setBusy(true);
     try {
       await save({ data: {
