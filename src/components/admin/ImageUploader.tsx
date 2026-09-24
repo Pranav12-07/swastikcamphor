@@ -8,9 +8,9 @@ const ACCEPT = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_EDGE = 1600;
 
-async function optimize(file: File): Promise<{ data: string; contentType: "image/webp" | "image/jpeg" | "image/png"; filename: string }> {
+export async function optimize(file: File, maxEdge = MAX_EDGE): Promise<{ data: string; contentType: "image/webp" | "image/jpeg" | "image/png"; filename: string }> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const w = Math.max(1, Math.round(bitmap.width * scale));
   const h = Math.max(1, Math.round(bitmap.height * scale));
   const canvas = document.createElement("canvas");
