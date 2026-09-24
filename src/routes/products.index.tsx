@@ -84,7 +84,7 @@ function Products() {
                 Available in: <span className="text-foreground">{product.sizes.join(" • ")}</span>
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <span className="font-display text-2xl">{formatINR(product.price)}</span>
+                <span className="text-2xl font-semibold">{formatINR(product.price)}</span>
                 <button
                   type="button"
                   onClick={() => {
