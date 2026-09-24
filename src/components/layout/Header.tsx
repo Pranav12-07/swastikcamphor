@@ -47,12 +47,12 @@ export function Header() {
           <img
             src={logoAsset.url}
             alt="Swastik Camphor — pure camphor manufacturer since 1968"
-            className="h-9 w-auto shrink-0 object-contain sm:h-11"
+            className="h-10 w-auto shrink-0 object-contain sm:h-12"
             width={188}
             height={92}
           />
             <span className="block truncate" style={{ fontFamily: '"Playfair Display", serif' }}>
-              <span className="block truncate text-base leading-tight text-foreground lg:text-lg">
+              <span className="block truncate text-lg leading-tight text-foreground lg:text-xl">
                 {site.name}
               </span>
             </span>
