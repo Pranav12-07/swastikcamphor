@@ -121,12 +121,12 @@ function ProductDetail() {
           <p className="mt-4 leading-relaxed text-muted-foreground">{product.description || product.short}</p>
 
           <div className="mt-6 flex flex-wrap items-baseline gap-3">
-            <span className="font-display text-3xl">{formatINR(product.price)}</span>
+            <span className="text-3xl font-semibold">{formatINR(product.price)}</span>
             {product.mrp > product.price && (
               <span className="text-muted-foreground line-through">{formatINR(product.mrp)}</span>
             )}
             {discount > 0 && (
-              <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
+              <span className="rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-accent-foreground">
                 {discount}% OFF
               </span>
             )}

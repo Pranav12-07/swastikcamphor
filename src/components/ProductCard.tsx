@@ -53,7 +53,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           100% Pure
         </span>
         {discount > 0 && (
-          <span className="absolute bottom-3 left-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground shadow-sm">
+          <span className="absolute bottom-3 left-3 rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-accent-foreground shadow-md">
             {discount}% OFF
           </span>
         )}
@@ -89,12 +89,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           ))}
         </ul>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-display text-lg">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xl font-semibold">
             <span>{formatINR(product.price)}</span>
             {product.mrp > product.price && (
               <>
-                <span className="text-sm text-muted-foreground line-through">{formatINR(product.mrp)}</span>
-                <span className="font-body text-xs font-bold text-primary">{discount}% OFF</span>
+                <span className="text-sm font-normal text-muted-foreground line-through">{formatINR(product.mrp)}</span>
+                <span className="text-base font-bold text-destructive">{discount}% OFF</span>
               </>
             )}
           </p>
