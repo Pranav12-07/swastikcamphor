@@ -230,24 +230,59 @@ function Index() {
 
       <CategoryTiles />
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
-        <div className="reveal flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Our range")}</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
-            <div className="gold-rule rule-animate mt-4 w-20" />
-
+      {twinPacks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+          <div className="reveal flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Twin Pack Offers")}</p>
+              <h2 className="mt-2 text-3xl md:text-4xl">{t("Buy 2 and save more")}</h2>
+              <div className="gold-rule rule-animate mt-4 w-20" />
+            </div>
+            <Link to="/products" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {t("View all products →")}
+            </Link>
           </div>
-          <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
-            {t("View all products →")}
-          </Link>
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-          {homeProducts.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
-        </div>
-      </section>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {twinPacks.map((pk) => (
+              <PackCard
+                key={`${pk.product.slug}__${pk.option.label}`}
+                pack={pk}
+                bestValue={bestValueKey === `${pk.product.slug}__${pk.option.label}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularPacks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-16">
+          <div className="reveal flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Popular packs")}</p>
+              <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
+              <div className="gold-rule rule-animate mt-4 w-20" />
+            </div>
+            <Link to="/products" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {t("View all products →")}
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {popularPacks.map((pk) => (
+              <PackCard key={`${pk.product.slug}__${pk.option.label}`} pack={pk} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularPacks.length === 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {products.map((p, i) => (
+              <ProductCard key={p.slug} product={p} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <TrustStrip />
 
