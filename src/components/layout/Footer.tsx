@@ -97,6 +97,7 @@ export function Footer() {
 
       <div className="border-t border-gold/20 px-4 py-5 text-center text-xs text-muted-foreground md:px-8">
         © {new Date().getFullYear()} {site.legalName}. {t("All rights reserved.")}
+        <span className="mt-1 block sm:ml-2 sm:mt-0 sm:inline">GSTIN: {site.gstin}</span>
       </div>
     </footer>
   );
