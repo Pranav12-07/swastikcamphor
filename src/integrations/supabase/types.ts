@@ -917,32 +917,53 @@ export type Database = {
       product_reviews: {
         Row: {
           approved: boolean
+          city: string | null
           comment: string
           created_at: string
+          helpful_count: number
           id: string
           name: string
+          photos: Json
           product_slug: string
           rating: number
+          replied_at: string | null
+          size_label: string | null
+          store_reply: string | null
+          title: string | null
           user_id: string | null
         }
         Insert: {
           approved?: boolean
+          city?: string | null
           comment: string
           created_at?: string
+          helpful_count?: number
           id?: string
           name: string
+          photos?: Json
           product_slug: string
           rating: number
+          replied_at?: string | null
+          size_label?: string | null
+          store_reply?: string | null
+          title?: string | null
           user_id?: string | null
         }
         Update: {
           approved?: boolean
+          city?: string | null
           comment?: string
           created_at?: string
+          helpful_count?: number
           id?: string
           name?: string
+          photos?: Json
           product_slug?: string
           rating?: number
+          replied_at?: string | null
+          size_label?: string | null
+          store_reply?: string | null
+          title?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -965,6 +986,11 @@ export type Database = {
           is_featured: boolean
           is_new_arrival: boolean
           low_stock_threshold: number
+          marketplace_checked_on: string | null
+          marketplace_name: string | null
+          marketplace_rating: number | null
+          marketplace_rating_count: number | null
+          marketplace_url: string | null
           name: string
           price: number
           seo_description: string | null
@@ -1002,6 +1028,11 @@ export type Database = {
           is_featured?: boolean
           is_new_arrival?: boolean
           low_stock_threshold?: number
+          marketplace_checked_on?: string | null
+          marketplace_name?: string | null
+          marketplace_rating?: number | null
+          marketplace_rating_count?: number | null
+          marketplace_url?: string | null
           name: string
           price?: number
           seo_description?: string | null
@@ -1039,6 +1070,11 @@ export type Database = {
           is_featured?: boolean
           is_new_arrival?: boolean
           low_stock_threshold?: number
+          marketplace_checked_on?: string | null
+          marketplace_name?: string | null
+          marketplace_rating?: number | null
+          marketplace_rating_count?: number | null
+          marketplace_url?: string | null
           name?: string
           price?: number
           seo_description?: string | null
@@ -1156,6 +1192,73 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      review_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          order_id: string
+          product_slug: string
+          reminder_sent_at: string | null
+          sent_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          order_id: string
+          product_slug: string
+          reminder_sent_at?: string | null
+          sent_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          order_id?: string
+          product_slug?: string
+          reminder_sent_at?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       store_settings: {
         Row: {

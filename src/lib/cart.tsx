@@ -4,6 +4,19 @@ import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
 import { getMyCart, syncMyCart } from "@/lib/cart.functions";
 import { defaultSizeOption, priceForSize } from "@/data/products";
+import { migrateCartLine } from "@/lib/pack-redirects";
+
+/** Carts saved before the catalogue restructure point at old listings; move them to the matching pack. */
+function migrateLines(lines: CartLine[]): CartLine[] {
+  let changed = false;
+  const next = lines.map((l) => {
+    const target = migrateCartLine(l.slug, l.size);
+    if (!target) return l;
+    changed = true;
+    return { slug: target.slug, size: target.size, qty: l.qty };
+  });
+  return changed ? next : lines;
+}
 
 
 export type CartLine = { slug: string; size: string; qty: number };
@@ -44,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setLines(JSON.parse(raw) as CartLine[]);
+      if (raw) setLines(migrateLines(JSON.parse(raw) as CartLine[]));
       setCoupon(localStorage.getItem(COUPON_KEY));
     } catch {
       /* ignore */
@@ -60,7 +73,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const remote = await getMyCart();
+        const remote = migrateLines(await getMyCart());
         if (cancelled) return;
         setLines((local) => {
           const map = new Map<string, CartLine>();

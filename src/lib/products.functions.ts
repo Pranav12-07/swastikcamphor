@@ -31,14 +31,21 @@ export const getPublicProduct = createServerFn({ method: "GET" })
     if (!row) return null;
     const product = mapProductRow(row);
 
-    const [{ data: relatedRows }, { data: reviewRows }] = await Promise.all([
+    const [{ data: relatedRows }, { data: reviewRows }, { data: settingsRows }] = await Promise.all([
       supabase
         .from("products")
         .select(PRODUCT_SELECT)
         .eq("is_active", true)
         .neq("slug", data.slug)
         .limit(6),
-      supabase.from("product_reviews").select("rating").eq("product_slug", data.slug).eq("approved", true),
+      supabase
+        .from("product_reviews")
+        .select("rating,name,title,comment,created_at")
+        .eq("product_slug", data.slug)
+        .eq("approved", true)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase.from("store_settings").select("key,value").in("key", ["shipping_flat_rate", "shipping_free_above"]),
     ]);
 
     const ratings = (reviewRows ?? []).map((r: { rating: number }) => Number(r.rating));
@@ -49,6 +56,21 @@ export const getPublicProduct = createServerFn({ method: "GET" })
             average: Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10,
           }
         : null;
+    const topReviews = (reviewRows ?? []).slice(0, 5) as Array<{
+      rating: number;
+      name: string;
+      title: string | null;
+      comment: string;
+      created_at: string;
+    }>;
+
+    const settingNum = (key: string, fallback: number) => {
+      const row = (settingsRows ?? []).find((r: { key: string }) => r.key === key);
+      const v = row?.value as unknown;
+      const raw = v && typeof v === "object" && "value" in (v as Record<string, unknown>) ? (v as Record<string, unknown>)["value"] : v;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : fallback;
+    };
 
     const related = (relatedRows ?? [])
       .map(mapProductRow)
@@ -59,5 +81,10 @@ export const getPublicProduct = createServerFn({ method: "GET" })
       product,
       related: related.length ? related : (relatedRows ?? []).map(mapProductRow).slice(0, 3),
       reviewStats,
+      topReviews,
+      shipping: {
+        flat: settingNum("shipping_flat_rate", 49),
+        freeAbove: settingNum("shipping_free_above", 499),
+      },
     };
   });

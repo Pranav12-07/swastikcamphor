@@ -9,6 +9,22 @@ export type SizeOption = {
   mrp: number | null;
   stock: number | null;
   popular: boolean;
+  /** Short text for selector pills, e.g. "2 × 100 g". */
+  short_label: string | null;
+  /** Net weight of the whole pack in grams. */
+  grams: number | null;
+  /** Weight of one unit inside the pack in grams. */
+  unit_grams: number | null;
+  /** 1 for single packs, 2 for Twin Packs. */
+  pack_count: number;
+  container: string | null;
+  sku: string | null;
+  /** Photo of this pack's source listing. */
+  image: string | null;
+  /** "Feature on home" flag set in admin. */
+  featured: boolean;
+  /** Pre-selected when no "Most chosen" option is set. */
+  is_default: boolean;
 };
 
 export type Product = {
@@ -39,12 +55,29 @@ export function parseSizeOptions(raw: unknown): SizeOption[] {
       if (!label || !Number.isFinite(price) || price <= 0) return null;
       const mrp = r["mrp"] == null ? null : Number(r["mrp"]);
       const stock = r["stock"] == null ? null : Number(r["stock"]);
+      const num = (k: string) => {
+        const v = r[k] == null ? null : Number(r[k]);
+        return v != null && Number.isFinite(v) ? v : null;
+      };
+      const str = (k: string) => {
+        const v = r[k];
+        return typeof v === "string" && v.trim() ? v.trim() : null;
+      };
       return {
         label,
         price,
         mrp: mrp != null && Number.isFinite(mrp) ? mrp : null,
         stock: stock != null && Number.isFinite(stock) ? Math.max(0, Math.trunc(stock)) : null,
         popular: Boolean(r["popular"]),
+        short_label: str("short_label"),
+        grams: num("grams"),
+        unit_grams: num("unit_grams"),
+        pack_count: num("pack_count") ?? 1,
+        container: str("container"),
+        sku: str("sku"),
+        image: str("image"),
+        featured: Boolean(r["featured"]),
+        is_default: Boolean(r["is_default"]),
       } as SizeOption;
     })
     .filter((o): o is SizeOption => o !== null);
@@ -52,15 +85,78 @@ export function parseSizeOptions(raw: unknown): SizeOption[] {
 
 type WithSizes = { sizeOptions?: SizeOption[]; stock?: number };
 
-/** Pre-selected size: the "Most chosen" one when in stock, else the first in stock, else the first. */
+/** Pre-selected size: "Most chosen" when in stock, else the admin default, else the first in stock, else the first. */
 export function defaultSizeOption(product: WithSizes): SizeOption | null {
   const opts = product.sizeOptions ?? [];
   if (!opts.length) return null;
   return (
     opts.find((o) => o.popular && sizeAvailable(product, o)) ??
+    opts.find((o) => o.is_default && sizeAvailable(product, o)) ??
     opts.find((o) => sizeAvailable(product, o)) ??
     opts[0]!
   );
+}
+
+/** % off, always rounded DOWN so a discount is never overstated. */
+export function pctOff(mrp: number | null | undefined, price: number): number {
+  if (!mrp || mrp <= price) return 0;
+  return Math.floor(((mrp - price) / mrp) * 100);
+}
+
+/** Price per 100 g, rounded to the nearest rupee. Null when the weight is unknown. */
+export function per100g(opt: SizeOption): number | null {
+  if (!opt.grams || opt.grams <= 0) return null;
+  return Math.round((opt.price / opt.grams) * 100);
+}
+
+export const isTwinPack = (opt: SizeOption | null | undefined) => (opt?.pack_count ?? 1) > 1;
+
+/** Savings of a Twin Pack vs buying the same weight as single jars. Null when not a Twin Pack or no saving. */
+export function twinSavings(product: WithSizes, twin: SizeOption): number | null {
+  if (!isTwinPack(twin) || !twin.unit_grams) return null;
+  const single = (product.sizeOptions ?? []).find(
+    (o) => !isTwinPack(o) && o.unit_grams === twin.unit_grams,
+  );
+  if (!single) return null;
+  const save = single.price * (twin.pack_count || 2) - twin.price;
+  return save > 0 ? save : null;
+}
+
+/** The matching Twin Pack for a single-pack option (same unit weight), when one exists. */
+export function matchingTwin(product: WithSizes, single: SizeOption): SizeOption | null {
+  if (isTwinPack(single) || !single.unit_grams) return null;
+  return (
+    (product.sizeOptions ?? []).find((o) => isTwinPack(o) && o.unit_grams === single.unit_grams) ??
+    null
+  );
+}
+
+/** "Best value" = lowest per-100 g option of this product. Marks at most one option per product. */
+export function bestValueOption(product: WithSizes): SizeOption | null {
+  let best: SizeOption | null = null;
+  let bestRate = Infinity;
+  for (const o of product.sizeOptions ?? []) {
+    const rate = per100g(o);
+    if (rate != null && rate < bestRate) {
+      best = o;
+      bestRate = rate;
+    }
+  }
+  return best;
+}
+
+/** Human net weight, e.g. "100 g" or "1 kg". */
+export function formatGrams(grams: number | null | undefined): string {
+  if (!grams) return "";
+  return grams >= 1000 ? `${grams / 1000} kg` : `${grams} g`;
+}
+
+/** Pack contents line, e.g. "2 × 100 g jars" or "1 × 100 g jar". */
+export function packContents(opt: SizeOption): string {
+  const unit = formatGrams(opt.unit_grams ?? opt.grams);
+  const container = (opt.container ?? "pack").toLowerCase();
+  const count = opt.pack_count || 1;
+  return `${count} × ${unit} ${container}${count > 1 ? "s" : ""}`;
 }
 
 /** A size is sellable when its own stock (or the product stock it falls back to) is above zero. */

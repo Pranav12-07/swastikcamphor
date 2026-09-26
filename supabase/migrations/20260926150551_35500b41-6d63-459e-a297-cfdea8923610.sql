@@ -1,0 +1,1 @@
+CREATE POLICY "Service role manages review requests" ON public.review_requests FOR ALL TO service_role USING (true) WITH CHECK (true);

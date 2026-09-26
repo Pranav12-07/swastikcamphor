@@ -1,216 +1,247 @@
-import { useState } from "react";
-import { Heart, Truck } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Heart, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   defaultSizeOption,
   formatINR,
-  isOutOfStock,
+  isTwinPack,
+  pctOff,
+  per100g,
   sizeAvailable,
-  type Product,
+  twinSavings,
+  type SizeOption,
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
-import { useWishlist } from "@/hooks/use-wishlist";
 import { useStoreSettings } from "@/lib/store-settings";
+import { useAuth } from "@/lib/auth";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { StarRating } from "@/components/StarRating";
 
-const WHATSAPP_NUMBER = "917416886881";
+export type CardProduct = {
+  slug: string;
+  name: string;
+  short?: string;
+  image: string;
+  price: number;
+  mrp?: number;
+  benefits?: string[];
+  stock?: number;
+  rating?: number | null;
+  ratingCount?: number;
+  sizeOptions?: SizeOption[];
+};
 
-export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
-  const { add } = useCart();
-  const wishlist = useWishlist();
-  const saved = wishlist.has(product.slug);
+export function ProductCard({
+  product,
+  reveal = true,
+  index = 0,
+}: {
+  product: CardProduct;
+  reveal?: boolean;
+  index?: number;
+}) {
+  const navigate = useNavigate();
+  const { lines, add, setQty } = useCart();
   const { freeShippingAbove } = useStoreSettings();
+  const { session } = useAuth();
+  const { has, toggle } = useWishlist();
 
-  const sizeOptions = product.sizeOptions ?? [];
-  const [pickedSize, setPickedSize] = useState<string | null>(null);
-  const selected = sizeOptions.length
-    ? (sizeOptions.find((o) => o.label === pickedSize) ?? defaultSizeOption(product))
-    : null;
+  const options = useMemo(() => product.sizeOptions ?? [], [product.sizeOptions]);
+  const packMode = options.length > 1;
+  const [picked, setPicked] = useState<string | null>(null);
+
+  const selected = packMode
+    ? (options.find((o) => o.label === picked) ?? defaultSizeOption(product))
+    : options.length === 1
+      ? options[0]!
+      : null;
 
   const price = selected?.price ?? product.price;
-  const mrp = selected?.mrp ?? product.mrp;
-  const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
-  const outOfStock = isOutOfStock(product);
-  const selectedAvailable = selected ? sizeAvailable(product, selected) : true;
-  const freeShipping = price >= freeShippingAbove;
-  const notifyUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    `Namaste! Please notify me when "${product.name}" is back in stock.`,
-  )}`;
+  const mrp = selected?.mrp ?? product.mrp ?? product.price;
+  const discount = pctOff(mrp, price);
+  const per100 = selected ? per100g(selected) : null;
+  const twinSave = selected ? twinSavings(product, selected) : null;
+  const inStock = selected ? sizeAvailable(product, selected) : (product.stock ?? 1) > 0;
+  const image = selected?.image ?? product.image;
 
-  async function onWishlist() {
-    if (!wishlist.signedIn) {
-      toast.info("Sign in to save products to your wishlist.");
+  const cartItem = lines.find((i) => i.slug === product.slug && i.size === (selected?.label ?? ""));
+  const wished = has(product.slug);
+
+  const detailUrl = selected?.label
+    ? `/products/${product.slug}?size=${encodeURIComponent(selected.label)}`
+    : `/products/${product.slug}`;
+
+  const goToDetail = () => {
+    if (packMode && selected?.label) {
+      navigate({
+        to: "/products/$slug",
+        params: { slug: product.slug },
+        search: { size: selected.label },
+      });
+    } else {
+      navigate({ to: "/products/$slug", params: { slug: product.slug } });
+    }
+  };
+
+  const onAdd = () => {
+    add(product.slug, selected?.label);
+    toast.success(`${product.name} added to cart`);
+  };
+
+  const onToggleWish = () => {
+    if (!session) {
+      toast.info("Sign in to save favourites.");
+      navigate({ to: "/auth" });
       return;
     }
-    try {
-      const result = await wishlist.toggle(product.slug);
-      toast.success(result.saved ? "Saved to your wishlist" : "Removed from your wishlist");
-    } catch {
-      toast.error("We could not update your wishlist.");
-    }
-  }
+    toggle(product.slug);
+  };
 
   return (
     <article
-      className="card-premium reveal group relative flex cursor-pointer flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
-      style={{ transitionDelay: `${index * 80}ms` }}
+      onClick={goToDetail}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && (e.target as HTMLElement) === e.currentTarget) goToDetail();
+      }}
+      tabIndex={0}
+      role="link"
+      aria-label={`View ${product.name}`}
+      className={`card-premium group flex cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-lg ${reveal ? "reveal" : ""}`}
+      style={reveal && index ? { transitionDelay: `${index * 70}ms` } : undefined}
     >
-      {/* Whole-card click target — buttons below sit above it and are unaffected. */}
-      <Link
-        to="/products/$slug"
-        params={{ slug: product.slug }}
-        aria-label={`View details for ${product.name}`}
-        className="absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-      >
-        <span className="sr-only">View {product.name}</span>
-      </Link>
-
-      <div className="relative aspect-4/3 overflow-hidden">
+      <div className="relative">
         <img
-          src={product.image}
-          alt={`${product.name} by Swastik Camphor`}
+          src={image}
+          alt={selected ? `${product.name} – ${selected.label}` : `${product.name} by Swastik Camphor`}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-108"
+          className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <span className="absolute left-2 top-2 rounded-full bg-primary/90 px-2 py-0.5 text-[0.58rem] uppercase tracking-wider text-primary-foreground sm:left-3 sm:top-3 sm:px-3 sm:py-1 sm:text-[0.65rem] sm:tracking-widest">
-          100% Pure
-        </span>
         {discount > 0 && (
-          <span className="absolute bottom-2 left-2 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow-md sm:bottom-3 sm:left-3 sm:px-3.5 sm:py-1.5 sm:text-sm">
+          <span className="absolute left-2 top-2 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
             {discount}% OFF
           </span>
         )}
         <button
           type="button"
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wished}
           onClick={(e) => {
-            e.preventDefault();
             e.stopPropagation();
-            void onWishlist();
+            onToggleWish();
           }}
-          aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-          aria-pressed={saved}
-          className="absolute right-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur transition-transform hover:scale-110 sm:right-3 sm:top-3"
+          className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-background/90 shadow transition-transform hover:scale-105"
         >
-          <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          <Heart className={`h-4 w-4 ${wished ? "fill-accent text-accent" : "text-muted-foreground"}`} />
         </button>
+        {!inStock && (
+          <span className="absolute inset-x-0 bottom-0 bg-background/90 py-1 text-center text-xs font-medium text-destructive">
+            Out of stock
+          </span>
+        )}
       </div>
-      <div className="flex flex-1 flex-col p-3 sm:p-5">
-        <h3 className="line-clamp-2 font-body text-base font-semibold leading-snug transition-colors group-hover:text-primary sm:line-clamp-none sm:text-2xl">{product.name}</h3>
-        {typeof product.rating === "number" && product.rating > 0 && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <StarRating rating={product.rating} className="text-sm" />
-            <span className="text-xs text-muted-foreground">{product.rating.toFixed(1)}</span>
+
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="font-body text-base font-semibold leading-snug">{product.name}</h3>
+        {typeof product.rating === "number" && product.rating > 0 && (product.ratingCount ?? 0) > 0 && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <StarRating rating={product.rating} />
             <span className="text-xs text-muted-foreground">({(product.ratingCount ?? 0).toLocaleString("en-IN")})</span>
           </div>
         )}
-        <p className="mt-2 hidden flex-1 text-sm leading-relaxed text-muted-foreground sm:block">{product.short}</p>
-        <ul className="mt-3 hidden flex-wrap gap-1.5 sm:flex">
-          {product.bestFor.map((tag) => (
-            <li key={tag} className="rounded-full bg-secondary px-2.5 py-1 text-[0.68rem] text-secondary-foreground">
-              {tag}
-            </li>
-          ))}
-        </ul>
-        {sizeOptions.length > 0 && (
-          <div className="relative z-20 mt-3 flex flex-wrap items-center gap-1.5">
-            {sizeOptions.slice(0, 3).map((opt) => {
-              const available = sizeAvailable(product, opt);
-              const active = selected?.label === opt.label;
-              return (
-                <button
-                  key={opt.label}
-                  type="button"
-                  disabled={!available}
-                  aria-pressed={active}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setPickedSize(opt.label);
-                  }}
-                  className={`rounded-full border px-2.5 py-1 text-[0.7rem] transition-colors ${
-                    active
-                      ? "border-primary bg-primary/10 font-medium"
-                      : "border-gold/40 hover:border-primary/60"
-                  } ${!available ? "cursor-not-allowed opacity-60 line-through" : ""}`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-            {sizeOptions.length > 3 && (
-              <Link
-                to="/products/$slug"
-                params={{ slug: product.slug }}
-                className="px-1 text-[0.7rem] font-medium text-primary underline-offset-2 hover:underline"
-              >
-                +{sizeOptions.length - 3} more
-              </Link>
-            )}
+
+        {packMode && (
+          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs font-medium text-muted-foreground">Pack</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Pack size">
+              {options.map((opt) => {
+                const available = sizeAvailable(product, opt);
+                const active = selected?.label === opt.label;
+                const off = pctOff(opt.mrp, opt.price);
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    disabled={!available}
+                    onClick={() => setPicked(opt.label)}
+                    className={`flex min-h-9 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors ${
+                      active
+                        ? "border-primary bg-primary/10 font-medium"
+                        : isTwinPack(opt)
+                          ? "border-gold/60 hover:border-primary/60"
+                          : "border-gold/40 hover:border-primary/60"
+                    } ${!available ? "opacity-50 line-through" : ""}`}
+                  >
+                    {opt.short_label ?? opt.label}
+                    {off > 0 && <span className="font-semibold text-primary">{off}%</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
-        <div className="mt-auto flex flex-col items-stretch gap-2 pt-3 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-0">
-          <div className="flex flex-col gap-1">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold sm:text-xl">
-              <span>{formatINR(price)}</span>
-              {mrp > price && (
-                <>
-                  <span className="text-xs font-normal text-muted-foreground line-through sm:text-sm">{formatINR(mrp)}</span>
-                  <span className="hidden text-base font-bold text-destructive sm:inline">{discount}% OFF</span>
-                </>
-              )}
-            </p>
-            {mrp > price && (
-              <span className="text-xs font-medium text-primary">Save {formatINR(mrp - price)}</span>
-            )}
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {selected?.popular && (
-                <span className="rounded-full border border-gold/50 bg-accent/15 px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-wider text-foreground">
-                  Most chosen
-                </span>
-              )}
-              {freeShipping && !outOfStock && (
-                <span className="inline-flex items-center gap-1 text-[0.68rem] text-muted-foreground">
-                  <Truck className="h-3 w-3" aria-hidden="true" />
-                  Free shipping
-                </span>
-              )}
-            </span>
-          </div>
-          {outOfStock ? (
-            <a
-              href={notifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="relative z-20 w-full rounded-full border border-primary px-4 py-2.5 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/5 sm:w-auto sm:py-2"
+
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2">
+          <span className="text-lg font-semibold">{formatINR(price)}</span>
+          {mrp > price && <span className="text-sm text-muted-foreground line-through">{formatINR(mrp)}</span>}
+        </div>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          Inclusive of all taxes
+          {per100 != null && <span> · ₹{per100.toLocaleString("en-IN")} per 100 g</span>}
+        </p>
+        {twinSave != null && (
+          <p className="mt-0.5 text-xs font-medium text-emerald-700">Save {formatINR(twinSave)} vs 2 single jars</p>
+        )}
+        {price >= freeShippingAbove && (
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Free shipping</p>
+        )}
+
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3" onClick={(e) => e.stopPropagation()}>
+          {packMode ? (
+            <button
+              type="button"
+              disabled={!inStock}
+              onClick={goToDetail}
+              className="min-h-11 w-full rounded-full border border-gold/50 text-sm font-medium transition-colors hover:bg-accent/15 disabled:opacity-50"
             >
-              Notify me on WhatsApp
-            </a>
+              {inStock ? "Select options" : "Out of stock"}
+            </button>
+          ) : cartItem ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Decrease quantity"
+                onClick={() => setQty(product.slug, cartItem.size, cartItem.qty - 1)}
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/50"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="min-w-6 text-center text-sm font-medium">{cartItem.qty}</span>
+              <button
+                type="button"
+                aria-label="Increase quantity"
+                onClick={() => setQty(product.slug, cartItem.size, cartItem.qty + 1)}
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold/50"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
           ) : (
             <button
               type="button"
-              disabled={!selectedAvailable}
-              title={selectedAvailable ? undefined : "This size is out of stock"}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                add(product.slug, selected?.label);
-                toast.success(`${product.name} added to cart`);
-              }}
-              className="relative z-20 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:w-auto sm:py-2"
+              disabled={!inStock}
+              onClick={onAdd}
+              className="min-h-11 w-full rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-50"
             >
-              Add to cart
+              {inStock ? "Add" : "Out of stock"}
             </button>
           )}
+          {packMode && (
+            <span className="shrink-0 text-[11px] text-muted-foreground">{options.length} options</span>
+          )}
         </div>
-        {outOfStock ? (
-          <span className="mt-3 hidden text-sm font-medium text-destructive sm:block">Out of stock</span>
-        ) : (
-          <span className="mt-3 hidden text-sm text-muted-foreground underline underline-offset-4 group-hover:text-foreground sm:block">
-            View product details
-          </span>
-        )}
       </div>
     </article>
   );

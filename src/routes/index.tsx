@@ -19,6 +19,57 @@ import { useBanners } from "@/hooks/use-banners";
 import { listBlogs } from "@/lib/blog.functions";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
 import { withServerProducts } from "@/lib/catalog-ssr";
+import { formatINR, isTwinPack, pctOff, per100g, twinSavings, type SizeOption } from "@/data/products";
+
+type PackRef = {
+  product: { slug: string; name: string; image: string; sizeOptions?: SizeOption[] };
+  option: SizeOption;
+};
+
+/** Card for one pack option (homepage Twin Pack Offers / Popular packs). */
+function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
+  const { product, option } = pack;
+  const off = pctOff(option.mrp, option.price);
+  const save = twinSavings(product, option);
+  return (
+    <Link
+      to="/products/$slug"
+      params={{ slug: product.slug }}
+      search={{ size: option.label }}
+      className="card-premium group relative block overflow-hidden"
+    >
+      {bestValue && (
+        <span className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow">
+          Best value
+        </span>
+      )}
+      {off > 0 && (
+        <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
+          {off}% OFF
+        </span>
+      )}
+      <img
+        src={option.image ?? product.image}
+        alt={`${product.name} – ${option.label}`}
+        loading="lazy"
+        className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <div className="p-4">
+        <h3 className="font-body text-sm font-semibold leading-snug">{product.name}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{option.label}</p>
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
+          <span className="text-base font-semibold">{formatINR(option.price)}</span>
+          {option.mrp != null && option.mrp > option.price && (
+            <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
+          )}
+        </div>
+        {save != null && (
+          <p className="mt-1 text-xs font-medium text-emerald-700">Save {formatINR(save)} vs 2 single jars</p>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,16 +77,17 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:url", content: canonical("/") },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Swastik Camphor — 100% Pure Camphor for Pooja & Wellness" },
+      { title: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         name: "description",
         content:
-          "Buy 100% pure, natural camphor tablets, Bhimseni camphor, cones and pooja gift packs from Swastik Camphor, Hyderabad. Clean burn, no residue, chemical free.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
       },
-      { property: "og:title", content: "Swastik Camphor — Purity in Every Tablet" },
+      { property: "og:title", content: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         property: "og:description",
-        content: "Pure camphor for pooja, aarti, aromatherapy and everyday freshness. Made in Hyderabad.",
+        content:
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
       },
     ],
   }),
@@ -73,9 +125,24 @@ function Index() {
   const { products: liveProducts } = useCatalog();
   const products = withServerProducts(liveProducts, serverProducts);
   const { t } = useI18n();
-  const homeProducts = [...products].sort(
-    (a, b) => Number(b.rating != null) - Number(a.rating != null),
+
+  // Pack-level picks: options flagged "Feature on home" in admin.
+  const featuredPacks: PackRef[] = products.flatMap((p) =>
+    (p.sizeOptions ?? []).filter((o) => o.featured).map((o) => ({ product: p, option: o })),
   );
+  const twinPacks = featuredPacks.filter((pk) => isTwinPack(pk.option));
+  const singlePacks = featuredPacks.filter((pk) => !isTwinPack(pk.option));
+  // "Best value" = the Twin Pack with the lowest per-100 g price.
+  let bestValueKey: string | null = null;
+  let bestRate = Infinity;
+  for (const pk of twinPacks) {
+    const rate = per100g(pk.option);
+    if (rate != null && rate < bestRate) {
+      bestRate = rate;
+      bestValueKey = `${pk.product.slug}__${pk.option.label}`;
+    }
+  }
+  const popularPacks = [...twinPacks, ...singlePacks].slice(0, 4);
   const heroBanners = useBanners("hero");
   const banner = heroBanners[0];
   useReveal();
@@ -121,9 +188,9 @@ function Index() {
               banner.title
             ) : (
               <>
-                <strong className="font-bold">PURE CAMPHOR</strong>
+                <strong className="font-bold">SWASTIK 100% PURE</strong>
                 <br />
-                <strong className="font-bold">PURE TRADITION</strong>
+                <strong className="font-bold">CAMPHOR</strong>
               </>
             )}
           </h1>
@@ -131,8 +198,7 @@ function Index() {
             className="animate-rise-in mt-6 max-w-xl text-base leading-relaxed text-gold-soft/85 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {banner?.subtitle ??
-              `${site.name} brings you 100% pure, natural and chemical-free camphor — crafted for pooja, aarti, aromatherapy and a fresher home.`}
+            {banner?.subtitle ?? "Made in Hyderabad. Trusted since 1968."}
           </p>
           <div className="animate-rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
             {banner?.link_url ? (
@@ -167,24 +233,59 @@ function Index() {
 
       <CategoryTiles />
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
-        <div className="reveal flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Our range")}</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
-            <div className="gold-rule rule-animate mt-4 w-20" />
-
+      {twinPacks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+          <div className="reveal flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Twin Pack Offers")}</p>
+              <h2 className="mt-2 text-3xl md:text-4xl">{t("Buy 2 and save more")}</h2>
+              <div className="gold-rule rule-animate mt-4 w-20" />
+            </div>
+            <Link to="/products" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {t("View all products →")}
+            </Link>
           </div>
-          <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
-            {t("View all products →")}
-          </Link>
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-          {homeProducts.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
-        </div>
-      </section>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {twinPacks.map((pk) => (
+              <PackCard
+                key={`${pk.product.slug}__${pk.option.label}`}
+                pack={pk}
+                bestValue={bestValueKey === `${pk.product.slug}__${pk.option.label}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularPacks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-16">
+          <div className="reveal flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Popular packs")}</p>
+              <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
+              <div className="gold-rule rule-animate mt-4 w-20" />
+            </div>
+            <Link to="/products" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {t("View all products →")}
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {popularPacks.map((pk) => (
+              <PackCard key={`${pk.product.slug}__${pk.option.label}`} pack={pk} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularPacks.length === 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {products.map((p, i) => (
+              <ProductCard key={p.slug} product={p} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <TrustStrip />
 

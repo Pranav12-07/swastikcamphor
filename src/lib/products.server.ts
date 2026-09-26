@@ -20,10 +20,21 @@ export type PublicProduct = {
   rating: number | null;
   ratingCount: number;
   sizeOptions: SizeOption[];
+  /** "Tablets" or "Crystals". */
+  form: string | null;
+  howToUse: string | null;
+  safety: string | null;
+  marketplace: {
+    name: string;
+    rating: number;
+    count: number;
+    url: string;
+    checkedOn: string | null;
+  } | null;
 };
 
 export const PRODUCT_SELECT =
-  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options";
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options,specifications,marketplace_name,marketplace_rating,marketplace_rating_count,marketplace_url,marketplace_checked_on";
 
 type Row = Record<string, unknown>;
 
@@ -50,6 +61,21 @@ function galleryFrom(row: Row, fallback: string): string[] {
 export function mapProductRow(row: Row): PublicProduct {
   const slug = String(row["slug"]);
   const price = Number(row["price"] ?? 0);
+  const specs = (row["specifications"] as Record<string, unknown> | null) ?? null;
+  const specStr = (k: string) => {
+    const v = specs?.[k];
+    return typeof v === "string" && v.trim() ? v : null;
+  };
+  const marketplace =
+    row["marketplace_name"] && row["marketplace_rating"] != null && row["marketplace_url"]
+      ? {
+          name: String(row["marketplace_name"]),
+          rating: Number(row["marketplace_rating"]),
+          count: Number(row["marketplace_rating_count"] ?? 0),
+          url: String(row["marketplace_url"]),
+          checkedOn: (row["marketplace_checked_on"] as string | null) ?? null,
+        }
+      : null;
   return {
     slug,
     name: String(row["name"] ?? ""),
@@ -72,6 +98,10 @@ export function mapProductRow(row: Row): PublicProduct {
     ratingCount: Number(row["admin_rating_count"] ?? 0),
     sizeOptions: parseSizeOptions(row["size_options"]),
     gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
+    form: specStr("form"),
+    howToUse: specStr("how_to_use"),
+    safety: specStr("safety"),
+    marketplace,
   };
 }
 
