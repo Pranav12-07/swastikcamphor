@@ -50,6 +50,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         stock: Number(row.stock_quantity ?? 0),
         rating: row.admin_rating != null ? Number(row.admin_rating) : null,
         ratingCount: Number(row.admin_rating_count ?? 0),
+        sizeOptions: parseSizeOptions(row.size_options),
       }));
     },
   });

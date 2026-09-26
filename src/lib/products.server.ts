@@ -70,6 +70,7 @@ export function mapProductRow(row: Row): PublicProduct {
     image_alt: null,
     rating: row["admin_rating"] == null ? null : Number(row["admin_rating"]),
     ratingCount: Number(row["admin_rating_count"] ?? 0),
+    sizeOptions: parseSizeOptions(row["size_options"]),
     gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
   };
 }
