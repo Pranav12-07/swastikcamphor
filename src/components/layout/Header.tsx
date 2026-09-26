@@ -14,7 +14,6 @@ import { useI18n } from "@/lib/i18n";
 
 /** Desktop nav order (no "Home" — the logo goes home). Twin Pack Offers is the gold pill. */
 const NAV = [
-  { label: "Shop", to: "/shop" },
   { label: "Our Products", to: "/products" },
   { label: "Twin Pack Offers", to: "/products", hash: "twin-packs", pill: true },
   { label: "About Us", to: "/about" },
