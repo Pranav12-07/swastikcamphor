@@ -15,7 +15,7 @@ export const VerificationCodeEmail = ({ token }: VerificationCodeEmailProps) => 
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>SWASTIK CAMPHOR</Text>
-        <Text style={estd}>ESTD 1968</Text>
+        <Text style={estd}>ESTD 1976</Text>
         <Heading style={h1}>Your verification code is:</Heading>
         <Section style={codeBox}>
           <Text style={code}>{token}</Text>

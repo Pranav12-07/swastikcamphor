@@ -37,13 +37,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1976. Free shipping above ₹499.",
       },
       { property: "og:title", content: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         property: "og:description",
         content:
-          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1976. Free shipping above ₹499.",
       },
     ],
   }),
@@ -174,7 +174,7 @@ function Index() {
         />
         <div className="mx-auto flex max-h-[70svh] min-h-[52svh] max-w-7xl flex-col justify-center px-4 py-8 md:max-h-none md:min-h-0 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft underline underline-offset-4">
-            ESTD 1968
+            ESTD 1976
           </p>
           <h1
             className="animate-rise-in text-shine mt-3 text-[clamp(2.125rem,9.5vw,4.5rem)] uppercase leading-[1.05] md:mt-4"

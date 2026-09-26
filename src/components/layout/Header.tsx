@@ -91,7 +91,7 @@ export function Header() {
           />
           <span className="flex flex-col leading-none">
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-deep lg:text-[13px]">
-              100% {t("PURE")} · {t("SINCE")} 1968
+              100% {t("PURE")} · {t("SINCE")} 1976
             </span>
           </span>
         </Link>

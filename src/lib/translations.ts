@@ -73,7 +73,7 @@ Object.assign(translations.hi, {
 // Mobile-first header / hero / trust update (2026-09-26).
 Object.assign(translations.te, {
   "PURE CAMPHOR":"స్వచ్ఛమైన కర్పూరం","PURE TRADITION":"స్వచ్ఛమైన సంప్రదాయం","PURE":"స్వచ్ఛమైనది","SINCE":"నుండి",
-  "Swastik 100% pure camphor. Made in Hyderabad, trusted since 1968.":"స్వస్తిక్ 100% స్వచ్ఛమైన కర్పూరం. హైదరాబాద్‌లో తయారు, 1968 నుండి నమ్మకం.",
+  "Swastik 100% pure camphor. Made in Hyderabad, trusted since 1976.":"స్వస్తిక్ 100% స్వచ్ఛమైన కర్పూరం. హైదరాబాద్‌లో తయారు, 1976 నుండి నమ్మకం.",
   "Bhimseni Camphor Jars":"భీమసేని కర్పూరం జార్లు","Camphor Tablets Jars":"కర్పూరం ట్యాబ్లెట్ జార్లు","Camphor Tablets Pouch":"కర్పూరం ట్యాబ్లెట్ పౌచ్",
   "Twin Pack Offers":"ట్విన్ ప్యాక్ ఆఫర్లు","Twin Packs: save up to":"ట్విన్ ప్యాక్‌లు: ఆదా","Free shipping above":"ఉచిత డెలివరీ",
   "Menu":"మెనూ","Close menu":"మెనూ మూసివేయండి","Call":"కాల్ చేయండి",
@@ -83,7 +83,7 @@ Object.assign(translations.te, {
 });
 Object.assign(translations.hi, {
   "PURE CAMPHOR":"शुद्ध कपूर","PURE TRADITION":"शुद्ध परंपरा","PURE":"शुद्ध","SINCE":"से",
-  "Swastik 100% pure camphor. Made in Hyderabad, trusted since 1968.":"स्वस्तिक 100% शुद्ध कपूर। हैदराबाद में बना, 1968 से भरोसेमंद।",
+  "Swastik 100% pure camphor. Made in Hyderabad, trusted since 1976.":"स्वस्तिक 100% शुद्ध कपूर। हैदराबाद में बना, 1976 से भरोसेमंद।",
   "Bhimseni Camphor Jars":"भीमसेनी कपूर जार","Camphor Tablets Jars":"कपूर टैबलेट जार","Camphor Tablets Pouch":"कपूर टैबलेट पाउच",
   "Twin Pack Offers":"ट्विन पैक ऑफ़र","Twin Packs: save up to":"ट्विन पैक: बचत","Free shipping above":"मुफ़्त शिपिंग",
   "Menu":"मेनू","Close menu":"मेनू बंद करें","Call":"कॉल करें",

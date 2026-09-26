@@ -15,7 +15,7 @@ export const Route = createFileRoute("/blogs/")({
       {
         name: "description",
         content:
-          "Guides from a camphor manufacturer since 1968: pooja camphor benefits, Bhimseni vs synthetic camphor, safe burning tips and how to buy pure camphor online in India.",
+          "Guides from a camphor manufacturer since 1976: pooja camphor benefits, Bhimseni vs synthetic camphor, safe burning tips and how to buy pure camphor online in India.",
       },
       {
         name: "keywords",
@@ -52,7 +52,7 @@ function Blogs() {
       <PageHeader
         eyebrow="Blogs"
         title="Camphor guides, rituals and buying advice"
-        subtitle="Written by the Swastik Camphor team — camphor manufacturers in Hyderabad since 1968."
+        subtitle="Written by the Swastik Camphor team — camphor manufacturers in Hyderabad since 1976."
       />
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 md:grid-cols-2 md:px-8">
         {posts.length === 0 && (

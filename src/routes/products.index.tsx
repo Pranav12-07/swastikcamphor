@@ -120,7 +120,7 @@ function ProductsPage() {
         <h1 className="mt-2 text-3xl md:text-4xl">Our Products</h1>
         <div className="gold-rule mt-4 w-20" />
         <p className="mt-4 text-muted-foreground">
-          100% pure camphor, made in Hyderabad since 1968. Choose your pack — every size has its own price, photo and
+          100% pure camphor, made in Hyderabad since 1976. Choose your pack — every size has its own price, photo and
           savings.
         </p>
       </header>

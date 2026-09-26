@@ -3,7 +3,7 @@ export const site = {
   legalName: "VIJAYASREE CAMPHOR INDUSTRIES",
   gstin: "36AGMPP0390C1ZG",
   /** Year shown as ESTD across the site. */
-  established: 1968,
+  established: 1976,
   tagline: "Purity in every tablet",
   email: "shop@online.swastikcamphor.in",
   phone: "+91 7416886881",

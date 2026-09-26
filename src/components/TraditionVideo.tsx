@@ -198,7 +198,7 @@ export function TraditionVideo() {
         {/* Brand watermark — always visible on the film */}
         <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-background/85 px-3 py-1.5 backdrop-blur-sm md:left-7 md:top-7">
           <img src={logo.url} alt="Swastik Camphor logo" className="h-6 w-auto md:h-8" />
-          <span className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground">Estd 1968</span>
+          <span className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground">Estd 1976</span>
         </div>
 
         {/* Scene label */}
