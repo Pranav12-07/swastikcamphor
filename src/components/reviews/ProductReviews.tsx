@@ -217,7 +217,7 @@ export function ProductReviews({
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                 {allPhotos.slice(0, 12).map((url) => (
                   <button key={url} type="button" onClick={() => setLightbox(url)} className="shrink-0">
-                    <img src={url} alt="Customer photo" loading="lazy" className="h-20 w-20 rounded-xl object-cover" />
+                    <img src={photoUrl(url)} alt="Customer photo" loading="lazy" className="h-20 w-20 rounded-xl object-cover" />
                   </button>
                 ))}
               </div>
@@ -271,7 +271,7 @@ export function ProductReviews({
                   <div className="mt-2 flex gap-2">
                     {r.photos.map((url) => (
                       <button key={url} type="button" onClick={() => setLightbox(url)}>
-                        <img src={url} alt="Customer photo" loading="lazy" className="h-16 w-16 rounded-lg object-cover" />
+                        <img src={photoUrl(url)} alt="Customer photo" loading="lazy" className="h-16 w-16 rounded-lg object-cover" />
                       </button>
                     ))}
                   </div>
@@ -427,7 +427,7 @@ export function ProductReviews({
                   <div className="mt-2 flex gap-2">
                     {photos.map((url) => (
                       <span key={url} className="relative">
-                        <img src={url} alt="Your upload" className="h-16 w-16 rounded-lg object-cover" />
+                        <img src={photoUrl(url)} alt="Your upload" className="h-16 w-16 rounded-lg object-cover" />
                         <button
                           type="button"
                           aria-label="Remove photo"
@@ -462,7 +462,7 @@ export function ProductReviews({
           aria-modal="true"
           onClick={() => setLightbox(null)}
         >
-          <img src={lightbox} alt="Customer photo enlarged" className="max-h-[85vh] max-w-full rounded-2xl object-contain" />
+          <img src={photoUrl(lightbox)} alt="Customer photo enlarged" className="max-h-[85vh] max-w-full rounded-2xl object-contain" />
         </div>
       )}
     </section>
