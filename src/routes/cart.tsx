@@ -115,11 +115,11 @@ function CartPage() {
             const upgrade = upgradeFor(l.slug, l.size);
             const info = lineInfo(l.slug, l.size);
             const name = info.product?.name ?? l.slug;
-            const image = info.opt?.image ?? info.product?.image ?? "";
+            const image = info.opt?.image ?? info.product?.image;
             return (
               <li key={`${l.slug}__${l.size}`} className="rounded-xl border border-gold/25 bg-card p-4">
                 <div className="flex gap-4">
-                  <img src={image} alt={name} className="h-20 w-20 rounded-lg object-cover" />
+                  {image && <img src={image} alt={name} className="h-20 w-20 rounded-lg object-cover" />}
                   <div className="flex-1">
                     <Link to="/products/$slug" params={{ slug: l.slug }} className="font-body font-semibold hover:underline">
                       {name}
