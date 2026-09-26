@@ -210,6 +210,8 @@ export function Header() {
         </TooltipProvider>
       </div>
 
+    </header>
+
       {/* Mobile / tablet drawer (below 1280px) */}
       {open && (
         <div className="fixed inset-0 z-[60] xl:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
@@ -330,7 +332,6 @@ export function Header() {
           </nav>
         </div>
       )}
-    </header>
     </>
   );
 }
