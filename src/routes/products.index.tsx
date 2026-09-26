@@ -15,7 +15,7 @@ const FILTERS: FilterId[] = ["twin", "tablets", "bhimseni", "pouch"];
 const SORTS: SortId[] = ["recommended", "low", "high", "saving"];
 
 export const Route = createFileRoute("/products/")({
-  validateSearch: (search: Record<string, unknown>): { filter?: FilterId; sort?: SortId } => ({
+  validateSearch: (search: Record<string, unknown>): { filter?: FilterId | undefined; sort?: SortId | undefined } => ({
     filter: FILTERS.includes(search["filter"] as FilterId) ? (search["filter"] as FilterId) : undefined,
     sort: SORTS.includes(search["sort"] as SortId) ? (search["sort"] as SortId) : undefined,
   }),
