@@ -6,6 +6,8 @@ import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { StarRating } from "@/components/StarRating";
 import { formatINR } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
+import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
+import { withServerProducts } from "@/lib/catalog-ssr";
 import { useCart } from "@/lib/cart";
 import { useReveal } from "@/hooks/use-reveal";
 
@@ -28,11 +30,14 @@ export const Route = createFileRoute("/products/")({
       },
     ],
   }),
+  loader: () => listPublicProducts().catch(() => [] as PublicProduct[]),
   component: Products,
 });
 
 function Products() {
-  const { products } = useCatalog();
+  const serverProducts = Route.useLoaderData();
+  const { products: liveProducts } = useCatalog();
+  const products = withServerProducts(liveProducts, serverProducts);
   useReveal();
   const { add } = useCart();
 

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/catalog";
+import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
+import { withServerProducts } from "@/lib/catalog-ssr";
 import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/shop")({
@@ -22,12 +24,15 @@ export const Route = createFileRoute("/shop")({
       { property: "og:description", content: "Buy pure camphor online with free shipping above ₹499." },
     ],
   }),
+  loader: () => listPublicProducts().catch(() => [] as PublicProduct[]),
   component: Shop,
 });
 
 function Shop() {
   useReveal();
-  const { products, categories } = useCatalog();
+  const serverProducts = Route.useLoaderData();
+  const { products: liveProducts, categories } = useCatalog();
+  const products = withServerProducts(liveProducts, serverProducts);
   const [active, setActive] = useState("All");
   useEffect(() => {
     const c = new URLSearchParams(window.location.search).get("category");
@@ -89,7 +94,7 @@ function Shop() {
           </label>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-6 lg:grid-cols-4">
           {visible.map((p, i) => (
             <ProductCard key={p.slug} product={p} index={i} />
           ))}

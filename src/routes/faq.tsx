@@ -1,12 +1,7 @@
 import { canonical, canonicalLink } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { ChevronDown } from "lucide-react";
 import { site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
 
@@ -24,6 +19,20 @@ export const Route = createFileRoute("/faq")({
       },
       { property: "og:title", content: "Swastik Camphor FAQ" },
       { property: "og:description", content: "Common questions about our camphor, orders and delivery." },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
     ],
   }),
   component: Faq,
@@ -74,16 +83,21 @@ function Faq() {
         subtitle="Everything you may want to know before you light your next camphor flame."
       />
       <div className="mx-auto max-w-3xl px-4 py-14 md:px-8">
-        <Accordion type="single" collapsible className="reveal card-premium divide-y divide-border px-6">
-          {faqs.map((f, i) => (
-            <AccordionItem key={f.q} value={`item-${i}`} className="border-0">
-              <AccordionTrigger className="text-left font-display text-lg">{f.q}</AccordionTrigger>
-              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                {f.a}
-              </AccordionContent>
-            </AccordionItem>
+        {/* Native <details>: answers stay in the page HTML so Google can read them. */}
+        <div className="reveal card-premium divide-y divide-border px-6">
+          {faqs.map((f) => (
+            <details key={f.q} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left transition-all hover:underline [&::-webkit-details-marker]:hidden">
+                <h3 className="font-display text-lg">{f.q}</h3>
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <p className="pb-4 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+            </details>
           ))}
-        </Accordion>
+        </div>
       </div>
     </>
   );

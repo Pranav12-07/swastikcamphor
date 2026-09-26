@@ -1,6 +1,6 @@
 import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Flame, Leaf, ShieldCheck, Sparkle, Truck } from "lucide-react";
+import { Flame, Leaf, ShieldCheck, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
 import heroDiyaLoopWebm from "@/assets/hero-diya-loop.webm.asset.json";
@@ -8,13 +8,17 @@ import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { TraditionVideo } from "@/components/TraditionVideo";
 import { PromoCarousel } from "@/components/PromoCarousel";
+import { CategoryTiles } from "@/components/CategoryTiles";
+import { TrustStrip } from "@/components/TrustStrip";
 
 import { useCatalog } from "@/lib/catalog";
 import { useI18n } from "@/lib/i18n";
-import { marketplaces, site } from "@/config/site";
+import { site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
 import { useBanners } from "@/hooks/use-banners";
 import { listBlogs } from "@/lib/blog.functions";
+import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
+import { withServerProducts } from "@/lib/catalog-ssr";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,7 +39,14 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  loader: () => listBlogs(),
+  // Products are loaded on the server too, so they are in the page HTML for Google.
+  loader: async () => {
+    const [posts, products] = await Promise.all([
+      listBlogs(),
+      listPublicProducts().catch(() => [] as PublicProduct[]),
+    ]);
+    return { posts, products };
+  },
   errorComponent: () => (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center">
       <h1 className="font-display text-2xl">Something went wrong loading the page</h1>
@@ -57,8 +68,10 @@ const values = [
 ];
 
 function Index() {
-  const posts = Route.useLoaderData().slice(0, 3);
-  const { products } = useCatalog();
+  const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
+  const posts = allPosts.slice(0, 3);
+  const { products: liveProducts } = useCatalog();
+  const products = withServerProducts(liveProducts, serverProducts);
   const { t } = useI18n();
   const homeProducts = [...products].sort(
     (a, b) => Number(b.rating != null) - Number(a.rating != null),
@@ -96,7 +109,7 @@ function Index() {
           style={{ background: "linear-gradient(100deg, oklch(0.2 0.06 28 / 0.92), oklch(0.2 0.06 28 / 0.45))" }}
           aria-hidden="true"
         />
-        <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-36">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft underline underline-offset-4">
             ESTD 1968
           </p>
@@ -152,6 +165,29 @@ function Index() {
         />
       </section>
 
+      <CategoryTiles />
+
+      <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+        <div className="reveal flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Our range")}</p>
+            <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
+            <div className="gold-rule rule-animate mt-4 w-20" />
+
+          </div>
+          <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+            {t("View all products →")}
+          </Link>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+          {homeProducts.map((p, i) => (
+            <ProductCard key={p.slug} product={p} index={i} />
+          ))}
+        </div>
+      </section>
+
+      <TrustStrip />
+
       <PromoCarousel />
 
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
@@ -170,25 +206,6 @@ function Index() {
       <TraditionVideo />
 
 
-
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
-        <div className="reveal flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Our range")}</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">{t("Camphor for every ritual")}</h2>
-            <div className="gold-rule rule-animate mt-4 w-20" />
-
-          </div>
-          <Link to="/shop" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
-            {t("View all products →")}
-          </Link>
-        </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {homeProducts.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
-        </div>
-      </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
         <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -217,33 +234,6 @@ function Index() {
               {t("Read our story")}
             </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <div className="card-premium reveal grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 p-8 sm:flex sm:justify-between">
-          <div className="min-w-0">
-            <h2 className="flex items-center gap-2 font-display text-2xl">
-              <Sparkle className="h-5 w-5 text-accent" aria-hidden="true" /> {t("Also available online")}
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t("Find Swastik Camphor on your favourite marketplace.")}
-            </p>
-          </div>
-          <ul className="flex shrink-0 flex-wrap gap-2">
-            {marketplaces.map((m) => (
-              <li key={m.id}>
-                <a
-                  href={m.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-gold/40 px-4 py-2 text-sm transition-colors hover:bg-accent/15"
-                >
-                  {m.label}
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

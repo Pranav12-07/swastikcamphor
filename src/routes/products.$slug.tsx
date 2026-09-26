@@ -7,6 +7,8 @@ import { useReveal } from "@/hooks/use-reveal";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { StarRating } from "@/components/StarRating";
+import { ProductOffers } from "@/components/products/ProductOffers";
+import { StickyBuyBar } from "@/components/products/StickyBuyBar";
 import { getPublicProduct } from "@/lib/products.functions";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
 import { site } from "@/config/site";
@@ -86,6 +88,10 @@ function ProductDetail() {
   useReveal();
 
   const inStock = product.stock > 0;
+  const addToCart = () => {
+    add(product.slug);
+    toast.success(`${product.name} added to cart`);
+  };
   const discount = product.mrp > product.price
     ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
     : 0;
@@ -189,12 +195,10 @@ function ProductDetail() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <button
+              id="pdp-add-to-cart"
               type="button"
               disabled={!inStock}
-              onClick={() => {
-                add(product.slug);
-                toast.success(`${product.name} added to cart`);
-              }}
+              onClick={addToCart}
               className="rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50"
             >
               Add to cart
@@ -207,6 +211,8 @@ function ProductDetail() {
               Buy now
             </Link>
           </div>
+
+          <ProductOffers productName={product.name} />
 
           <ProductReviews slug={product.slug} productName={product.name} />
         </div>
@@ -248,6 +254,16 @@ function ProductDetail() {
           Read the Swastik Camphor journal
         </Link>
       </section>
+
+      {inStock && (
+        <StickyBuyBar
+          targetId="pdp-add-to-cart"
+          productName={product.name}
+          price={product.price}
+          mrp={product.mrp}
+          onAdd={addToCart}
+        />
+      )}
     </div>
   );
 }

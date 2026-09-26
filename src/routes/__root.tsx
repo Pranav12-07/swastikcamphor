@@ -17,6 +17,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AmbientAudio } from "@/components/AmbientAudio";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { CartProvider } from "@/lib/cart";
 import { CatalogProvider } from "@/lib/catalog";
 import { AuthProvider } from "@/lib/auth";
@@ -166,6 +167,7 @@ function RootComponent() {
           <>
             {showIntro && <CamphorIntro />}
             <div className="flex min-h-screen flex-col">
+              <AnnouncementBar />
               <Header />
               <main className="flex-1">
                 {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
