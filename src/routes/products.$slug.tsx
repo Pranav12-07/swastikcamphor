@@ -51,7 +51,7 @@ export const Route = createFileRoute("/products/$slug")({
   },
   head: ({ params, loaderData }) => {
     if (!loaderData) return {};
-    const { product, reviewStats, topReviews } = loaderData;
+    const { product, reviewStats, topReviews, shipping } = loaderData;
     const path = `/products/${params.slug}`;
     const title = product.seo_title || `${product.name} | Buy Online | Swastik Camphor`;
     const description =
@@ -133,6 +133,28 @@ export const Route = createFileRoute("/products/$slug")({
                 availability: availability("stock" in o ? (o.stock ?? null) : null),
                 url: `${SITE_URL}${path}?size=${encodeURIComponent(o.label)}`,
                 itemCondition: "https://schema.org/NewCondition",
+                shippingDetails: [
+                  {
+                    "@type": "OfferShippingDetails",
+                    shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+                    shippingRate: { "@type": "MonetaryAmount", value: shipping.flat.toFixed(2), currency: "INR" },
+                    deliveryTime: {
+                      "@type": "ShippingDeliveryTime",
+                      handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 2, unitCode: "d" },
+                    },
+                  },
+                  {
+                    "@type": "OfferShippingDetails",
+                    shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+                    shippingRate: { "@type": "MonetaryAmount", value: "0.00", currency: "INR" },
+                    doesNotShip: false,
+                    transitTimeLabel: `Free shipping on orders above ₹${shipping.freeAbove}`,
+                    deliveryTime: {
+                      "@type": "ShippingDeliveryTime",
+                      handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 2, unitCode: "d" },
+                    },
+                  },
+                ],
               })),
             },
           }),
