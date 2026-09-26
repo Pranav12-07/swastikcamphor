@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
-import { formatINR } from "@/data/products";
+import { formatINR, priceForSize } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { placeOrder } from "@/lib/api.functions";
 import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account.functions";
