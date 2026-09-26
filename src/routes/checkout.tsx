@@ -173,7 +173,7 @@ function Checkout() {
     try {
       const items = cart.lines.map((l) => {
         const p = products.find((x) => x.slug === l.slug)!;
-        return { slug: l.slug, name: p.name, size: l.size, qty: l.qty, price: p.price };
+        return { slug: l.slug, name: p.name, size: l.size, qty: l.qty, price: priceForSize(p, l.size) };
       });
       const result = await placeOrder({
         data: {
@@ -397,7 +397,7 @@ function Checkout() {
                   <span className="min-w-0">
                     {p.name} <span className="text-muted-foreground">({l.size}) × {l.qty}</span>
                   </span>
-                  <span className="shrink-0">{formatINR(p.price * l.qty)}</span>
+                  <span className="shrink-0">{formatINR(priceForSize(p, l.size) * l.qty)}</span>
                 </li>
               );
             })}
