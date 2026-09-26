@@ -20,6 +20,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const { add } = useCart();
   const wishlist = useWishlist();
   const saved = wishlist.has(product.slug);
+  const { freeShippingAbove } = useStoreSettings();
 
   const sizeOptions = product.sizeOptions ?? [];
   const [pickedSize, setPickedSize] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const outOfStock = isOutOfStock(product);
   const selectedAvailable = selected ? sizeAvailable(product, selected) : true;
+  const freeShipping = price >= freeShippingAbove;
   const notifyUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     `Namaste! Please notify me when "${product.name}" is back in stock.`,
   )}`;
