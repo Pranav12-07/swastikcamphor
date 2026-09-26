@@ -6,6 +6,8 @@ type Props = {
   /** id of the page's main Add to cart button; the bar appears once it scrolls off screen */
   targetId: string;
   productName: string;
+  /** Selected pack size label, shown beside the name when present. */
+  size?: string | null;
   price: number;
   mrp: number;
   onAdd: () => void;
@@ -15,7 +17,7 @@ type Props = {
  * Phones only: keeps "Add to cart" within thumb reach on long product pages.
  * While visible it sets body[data-sticky-buy] so the floating buttons move up (see styles.css).
  */
-export function StickyBuyBar({ targetId, productName, price, mrp, onAdd }: Props) {
+export function StickyBuyBar({ targetId, productName, size, price, mrp, onAdd }: Props) {
   const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
@@ -53,7 +55,10 @@ export function StickyBuyBar({ targetId, productName, price, mrp, onAdd }: Props
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-muted-foreground">{productName}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {productName}
+            {size ? <span> • {size}</span> : null}
+          </p>
           <p className="text-base font-semibold">
             {formatINR(price)}
             {mrp > price && (
