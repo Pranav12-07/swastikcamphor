@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { formatINR } from "@/data/products";
+import { formatINR, priceForSize } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 
@@ -76,7 +76,7 @@ function CartPage() {
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <span className="font-medium">{formatINR(product.price * line.qty)}</span>
+                        <span className="font-medium">{formatINR(priceForSize(product, line.size) * line.qty)}</span>
                         <button
                           type="button"
                           onClick={() => cart.remove(line.slug, line.size)}

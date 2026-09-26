@@ -3,12 +3,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Card } from "@/components/admin/ui";
 import { ProductImagesManager, type GalleryImage } from "@/components/admin/ImageUploader";
 import { adminSaveProduct, adminListCategories } from "@/lib/admin.functions";
+import { parseSizeOptions } from "@/data/products";
 
 export type ProductRow = Record<string, unknown>;
+
+type SizeRow = { label: string; price: string; mrp: string; stock: string; popular: boolean };
+const emptySizeRow = (): SizeRow => ({ label: "", price: "", mrp: "", stock: "", popular: false });
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -84,6 +88,20 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     String(n("admin_rating_count")),
   );
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [sizeRows, setSizeRows] = useState<SizeRow[]>(() =>
+    parseSizeOptions(initial?.["size_options"]).map((o) => ({
+      label: o.label,
+      price: String(o.price),
+      mrp: o.mrp != null ? String(o.mrp) : "",
+      stock: o.stock != null ? String(o.stock) : "",
+      popular: o.popular,
+    })),
+  );
+
+  const setSizeRow = (i: number, patch: Partial<SizeRow>) =>
+    setSizeRows((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const setPopular = (i: number) =>
+    setSizeRows((rows) => rows.map((r, j) => ({ ...r, popular: j === i ? !r.popular : false })));
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   const csv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
@@ -94,6 +112,23 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     if (!form.name.trim() || !form.price) {
       toast.error("Product name and price are required");
       return;
+    }
+    const filledRows = sizeRows.filter((r) => r.label.trim() || r.price);
+    for (const r of filledRows) {
+      const price = Number(r.price);
+      const mrp = r.mrp ? Number(r.mrp) : null;
+      if (!r.label.trim()) {
+        toast.error("Every pack size needs a label");
+        return;
+      }
+      if (!Number.isFinite(price) || price <= 0) {
+        toast.error(`Pack size "${r.label}": price must be above 0`);
+        return;
+      }
+      if (mrp != null && mrp < price) {
+        toast.error(`Pack size "${r.label}": MRP must be at least the price`);
+        return;
+      }
     }
     setBusy(true);
     try {
@@ -118,6 +153,13 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         images: gallery.map((g) => g.url),
         gallery,
         sizes: csv(form.sizes),
+        size_options: filledRows.map((r) => ({
+          label: r.label.trim(),
+          price: Number(r.price),
+          mrp: r.mrp ? Number(r.mrp) : null,
+          stock: r.stock ? Math.max(0, Math.trunc(Number(r.stock))) : null,
+          popular: r.popular,
+        })),
         features: csv(form.features),
         is_active: asDraft ? false : form.is_active,
         is_featured: form.is_featured,
@@ -171,6 +213,47 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
           <Field label="MRP / compare at (₹)"><input className={input} type="number" min={0} step="0.01" value={form.compare_at_price} onChange={(e) => set("compare_at_price", e.target.value)} /></Field>
           <Field label="Cost price (₹)"><input className={input} type="number" min={0} step="0.01" value={form.cost_price} onChange={(e) => set("cost_price", e.target.value)} /></Field>
           <Field label="GST / tax (%)"><input className={input} type="number" min={0} max={100} step="0.01" value={form.tax_rate} onChange={(e) => set("tax_rate", e.target.value)} /></Field>
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="font-semibold">Pack sizes and prices</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Optional. When sizes are listed here, customers pick a pack size and pay its price. Leave empty to sell at the single price above.
+        </p>
+        <div className="mt-3 space-y-2">
+          {sizeRows.length > 0 && (
+            <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto_auto] gap-2 px-1 text-xs font-medium text-muted-foreground sm:grid">
+              <span>Label</span><span>Price (₹)</span><span>MRP (₹)</span><span>Stock (optional)</span><span>Most chosen</span><span />
+            </div>
+          )}
+          {sizeRows.map((row, i) => (
+            <div key={i} className="grid grid-cols-2 items-center gap-2 rounded-md border border-input p-2 sm:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto_auto] sm:border-0 sm:p-0">
+              <input className={input} placeholder="e.g. 100 g" value={row.label} maxLength={40} onChange={(e) => setSizeRow(i, { label: e.target.value })} />
+              <input className={input} type="number" min={0} step="0.01" placeholder="Price" value={row.price} onChange={(e) => setSizeRow(i, { price: e.target.value })} />
+              <input className={input} type="number" min={0} step="0.01" placeholder="MRP" value={row.mrp} onChange={(e) => setSizeRow(i, { mrp: e.target.value })} />
+              <input className={input} type="number" min={0} step={1} placeholder="Stock" value={row.stock} onChange={(e) => setSizeRow(i, { stock: e.target.value })} />
+              <label className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <input type="checkbox" checked={row.popular} onChange={() => setPopular(i)} className="accent-primary" />
+                Most chosen
+              </label>
+              <button
+                type="button"
+                aria-label={`Remove size ${row.label || i + 1}`}
+                onClick={() => setSizeRows((rows) => rows.filter((_, j) => j !== i))}
+                className="justify-self-end rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSizeRows((rows) => [...rows, emptySizeRow()])}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+          >
+            <Plus className="h-4 w-4" /> Add pack size
+          </button>
         </div>
       </Card>
 

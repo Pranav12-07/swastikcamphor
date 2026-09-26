@@ -3,6 +3,7 @@ import { useCatalog } from "@/lib/catalog";
 import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
 import { getMyCart, syncMyCart } from "@/lib/cart.functions";
+import { defaultSizeOption, priceForSize } from "@/data/products";
 
 
 export type CartLine = { slug: string; size: string; qty: number };
@@ -130,7 +131,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (slug, size, qty = 1) => {
       const product = products.find((p) => p.slug === slug);
       if (!product) return;
-      const resolved = size ?? product.sizes[0] ?? "Standard";
+      const resolved = size ?? defaultSizeOption(product)?.label ?? product.sizes[0] ?? "Standard";
       setLines((prev) => {
         const found = prev.find((l) => l.slug === slug && l.size === resolved);
         const next = found
@@ -175,7 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartValue>(() => {
     const subtotal = lines.reduce((sum, l) => {
       const p = products.find((x) => x.slug === l.slug);
-      return sum + (p ? p.price * l.qty : 0);
+      return sum + (p ? priceForSize(p, l.size) * l.qty : 0);
     }, 0);
     const active = coupon ? coupons.find((c) => c.code === coupon) : undefined;
     let discount = 0;

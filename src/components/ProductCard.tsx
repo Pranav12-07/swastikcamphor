@@ -1,18 +1,39 @@
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { formatINR, type Product } from "@/data/products";
+import {
+  defaultSizeOption,
+  formatINR,
+  isOutOfStock,
+  sizeAvailable,
+  type Product,
+} from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { StarRating } from "@/components/StarRating";
+
+const WHATSAPP_NUMBER = "917416886881";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { add } = useCart();
   const wishlist = useWishlist();
   const saved = wishlist.has(product.slug);
-  const discount = product.mrp > product.price
-    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
-    : 0;
+
+  const sizeOptions = product.sizeOptions ?? [];
+  const [pickedSize, setPickedSize] = useState<string | null>(null);
+  const selected = sizeOptions.length
+    ? (sizeOptions.find((o) => o.label === pickedSize) ?? defaultSizeOption(product))
+    : null;
+
+  const price = selected?.price ?? product.price;
+  const mrp = selected?.mrp ?? product.mrp;
+  const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+  const outOfStock = isOutOfStock(product);
+  const selectedAvailable = selected ? sizeAvailable(product, selected) : true;
+  const notifyUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    `Namaste! Please notify me when "${product.name}" is back in stock.`,
+  )}`;
 
   async function onWishlist() {
     if (!wishlist.signedIn) {
@@ -88,32 +109,87 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             </li>
           ))}
         </ul>
+        {sizeOptions.length > 0 && (
+          <div className="relative z-20 mt-3 flex flex-wrap items-center gap-1.5">
+            {sizeOptions.slice(0, 3).map((opt) => {
+              const available = sizeAvailable(product, opt);
+              const active = selected?.label === opt.label;
+              return (
+                <button
+                  key={opt.label}
+                  type="button"
+                  disabled={!available}
+                  aria-pressed={active}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPickedSize(opt.label);
+                  }}
+                  className={`rounded-full border px-2.5 py-1 text-[0.7rem] transition-colors ${
+                    active
+                      ? "border-primary bg-primary/10 font-medium"
+                      : "border-gold/40 hover:border-primary/60"
+                  } ${!available ? "cursor-not-allowed opacity-60 line-through" : ""}`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+            {sizeOptions.length > 3 && (
+              <Link
+                to="/products/$slug"
+                params={{ slug: product.slug }}
+                className="px-1 text-[0.7rem] font-medium text-primary underline-offset-2 hover:underline"
+              >
+                +{sizeOptions.length - 3} more
+              </Link>
+            )}
+          </div>
+        )}
         <div className="mt-auto flex flex-col items-stretch gap-2 pt-3 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-0">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold sm:text-xl">
-            <span>{formatINR(product.price)}</span>
-            {product.mrp > product.price && (
+            <span>{formatINR(price)}</span>
+            {mrp > price && (
               <>
-                <span className="text-xs font-normal text-muted-foreground line-through sm:text-sm">{formatINR(product.mrp)}</span>
+                <span className="text-xs font-normal text-muted-foreground line-through sm:text-sm">{formatINR(mrp)}</span>
                 <span className="hidden text-base font-bold text-destructive sm:inline">{discount}% OFF</span>
               </>
             )}
           </p>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              add(product.slug);
-              toast.success(`${product.name} added to cart`);
-            }}
-            className="relative z-20 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 sm:w-auto sm:py-2"
-          >
-            Add to cart
-          </button>
+          {outOfStock ? (
+            <a
+              href={notifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-20 w-full rounded-full border border-primary px-4 py-2.5 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/5 sm:w-auto sm:py-2"
+            >
+              Notify me on WhatsApp
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled={!selectedAvailable}
+              title={selectedAvailable ? undefined : "This size is out of stock"}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                add(product.slug, selected?.label);
+                toast.success(`${product.name} added to cart`);
+              }}
+              className="relative z-20 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:w-auto sm:py-2"
+            >
+              Add to cart
+            </button>
+          )}
         </div>
-        <span className="mt-3 hidden text-sm text-muted-foreground underline underline-offset-4 group-hover:text-foreground sm:block">
-          View product details
-        </span>
+        {outOfStock ? (
+          <span className="mt-3 hidden text-sm font-medium text-destructive sm:block">Out of stock</span>
+        ) : (
+          <span className="mt-3 hidden text-sm text-muted-foreground underline underline-offset-4 group-hover:text-foreground sm:block">
+            View product details
+          </span>
+        )}
       </div>
     </article>
   );

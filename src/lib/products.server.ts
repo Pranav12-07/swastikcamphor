@@ -1,4 +1,4 @@
-import { products as fallbackProducts } from "@/data/products";
+import { products as fallbackProducts, parseSizeOptions, type SizeOption } from "@/data/products";
 
 export type PublicProduct = {
   slug: string;
@@ -19,10 +19,11 @@ export type PublicProduct = {
   gallery: string[];
   rating: number | null;
   ratingCount: number;
+  sizeOptions: SizeOption[];
 };
 
 export const PRODUCT_SELECT =
-  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count";
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options";
 
 type Row = Record<string, unknown>;
 
@@ -69,6 +70,7 @@ export function mapProductRow(row: Row): PublicProduct {
     image_alt: null,
     rating: row["admin_rating"] == null ? null : Number(row["admin_rating"]),
     ratingCount: Number(row["admin_rating_count"] ?? 0),
+    sizeOptions: parseSizeOptions(row["size_options"]),
     gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
   };
 }

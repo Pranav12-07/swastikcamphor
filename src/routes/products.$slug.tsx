@@ -1,8 +1,10 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronRight } from "lucide-react";
-import { formatINR } from "@/data/products";
+import { ChevronRight, Truck } from "lucide-react";
+import { defaultSizeOption, formatINR, sizeAvailable } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useStoreSettings } from "@/lib/store-settings";
 import { useReveal } from "@/hooks/use-reveal";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
@@ -85,15 +87,24 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductDetail() {
   const { product, related, reviewStats } = Route.useLoaderData();
   const { add } = useCart();
+  const { freeShippingAbove } = useStoreSettings();
   useReveal();
 
-  const inStock = product.stock > 0;
+  const sizeOptions = product.sizeOptions ?? [];
+  const [pickedSize, setPickedSize] = useState<string | null>(null);
+  const selected = sizeOptions.length
+    ? (sizeOptions.find((o) => o.label === pickedSize) ?? defaultSizeOption(product))
+    : null;
+
+  const price = selected?.price ?? product.price;
+  const mrp = selected?.mrp ?? product.mrp;
+  const inStock = selected ? sizeAvailable(product, selected) : product.stock > 0;
   const addToCart = () => {
-    add(product.slug);
+    add(product.slug, selected?.label);
     toast.success(`${product.name} added to cart`);
   };
-  const discount = product.mrp > product.price
-    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+  const discount = mrp > price
+    ? Math.round(((mrp - price) / mrp) * 100)
     : 0;
 
   return (
@@ -127,9 +138,9 @@ function ProductDetail() {
           <p className="mt-4 leading-relaxed text-muted-foreground">{product.description || product.short}</p>
 
           <div className="mt-6 flex flex-wrap items-baseline gap-3">
-            <span className="text-3xl font-semibold">{formatINR(product.price)}</span>
-            {product.mrp > product.price && (
-              <span className="text-muted-foreground line-through">{formatINR(product.mrp)}</span>
+            <span className="text-3xl font-semibold">{formatINR(price)}</span>
+            {mrp > price && (
+              <span className="text-muted-foreground line-through">{formatINR(mrp)}</span>
             )}
             {discount > 0 && (
               <span className="rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-accent-foreground">
@@ -140,6 +151,50 @@ function ProductDetail() {
               {inStock ? "In stock" : "Out of stock"}
             </span>
           </div>
+          {mrp > price && (
+            <p className="mt-1.5 text-sm font-medium text-emerald-700">Save {formatINR(mrp - price)}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {selected?.popular && (
+              <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+                Most chosen
+              </span>
+            )}
+            {price >= freeShippingAbove && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-2.5 py-1 text-xs text-muted-foreground">
+                <Truck className="h-3.5 w-3.5" aria-hidden="true" /> Free shipping
+              </span>
+            )}
+          </div>
+
+          {sizeOptions.length > 0 && (
+            <div className="mt-5">
+              <p className="text-sm font-medium">Available in:</p>
+              <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pack size">
+                {sizeOptions.map((opt) => {
+                  const available = sizeAvailable(product, opt);
+                  const active = selected?.label === opt.label;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      disabled={!available}
+                      onClick={() => setPickedSize(opt.label)}
+                      className={`h-10 rounded-full border px-4 text-sm transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 font-medium"
+                          : "border-gold/40 hover:border-primary/60"
+                      } ${!available ? "cursor-not-allowed opacity-60 line-through" : ""}`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {typeof product.rating === "number" && product.rating > 0 ? (
             <div className="mt-3 flex items-center gap-2">
@@ -167,10 +222,12 @@ function ProductDetail() {
           )}
 
           <dl className="mt-6 grid gap-2 text-sm text-muted-foreground">
-            <div className="flex gap-2">
-              <dt className="text-foreground">Available in:</dt>
-              <dd>{product.sizes.join(" • ")}</dd>
-            </div>
+            {sizeOptions.length === 0 && (
+              <div className="flex gap-2">
+                <dt className="text-foreground">Available in:</dt>
+                <dd>{product.sizes.join(" • ")}</dd>
+              </div>
+            )}
             <div className="flex gap-2">
               <dt className="text-foreground">SKU:</dt>
               <dd>{product.sku}</dd>
@@ -205,8 +262,8 @@ function ProductDetail() {
             </button>
             <Link
               to="/checkout"
-              onClick={() => add(product.slug)}
-              className="rounded-full border border-gold/50 px-7 py-3 text-sm font-medium transition-colors hover:bg-accent/15"
+              onClick={() => add(product.slug, selected?.label)}
+              className={`rounded-full border border-gold/50 px-7 py-3 text-sm font-medium transition-colors hover:bg-accent/15 ${!inStock ? "pointer-events-none opacity-50" : ""}`}
             >
               Buy now
             </Link>
@@ -259,8 +316,9 @@ function ProductDetail() {
         <StickyBuyBar
           targetId="pdp-add-to-cart"
           productName={product.name}
-          price={product.price}
-          mrp={product.mrp}
+          size={selected?.label ?? null}
+          price={price}
+          mrp={mrp}
           onAdd={addToCart}
         />
       )}

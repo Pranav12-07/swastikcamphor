@@ -112,6 +112,34 @@ const productSchema = z.object({
   images: z.array(z.string().trim().max(500)).max(20).default([]),
   gallery: z.array(z.object({ url: z.string().trim().min(1).max(500), is_primary: z.boolean().default(false) })).max(20).default([]),
   sizes: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  size_options: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(40),
+        price: z.number().min(0.01).max(1000000),
+        mrp: z.number().min(0).max(1000000).nullable().default(null),
+        stock: z.number().int().min(0).max(1000000).nullable().default(null),
+        popular: z.boolean().default(false),
+      }),
+    )
+    .max(20)
+    .default([])
+    .superRefine((rows, ctx) => {
+      rows.forEach((r, i) => {
+        if (r.mrp != null && r.mrp < r.price) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "MRP must be at least the selling price", path: [i, "mrp"] });
+        }
+      });
+    })
+    .transform((rows) => {
+      // Only one size can be "Most chosen" — keep the first one flagged.
+      let seen = false;
+      return rows.map((r) => {
+        if (r.popular && seen) return { ...r, popular: false };
+        if (r.popular) seen = true;
+        return r;
+      });
+    }),
   features: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
