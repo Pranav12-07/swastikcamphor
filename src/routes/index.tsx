@@ -122,9 +122,24 @@ function Index() {
   const { products: liveProducts } = useCatalog();
   const products = withServerProducts(liveProducts, serverProducts);
   const { t } = useI18n();
-  const homeProducts = [...products].sort(
-    (a, b) => Number(b.rating != null) - Number(a.rating != null),
+
+  // Pack-level picks: options flagged "Feature on home" in admin.
+  const featuredPacks: PackRef[] = products.flatMap((p) =>
+    (p.sizeOptions ?? []).filter((o) => o.featured).map((o) => ({ product: p, option: o })),
   );
+  const twinPacks = featuredPacks.filter((pk) => isTwinPack(pk.option));
+  const singlePacks = featuredPacks.filter((pk) => !isTwinPack(pk.option));
+  // "Best value" = the Twin Pack with the lowest per-100 g price.
+  let bestValueKey: string | null = null;
+  let bestRate = Infinity;
+  for (const pk of twinPacks) {
+    const rate = per100g(pk.option);
+    if (rate != null && rate < bestRate) {
+      bestRate = rate;
+      bestValueKey = `${pk.product.slug}__${pk.option.label}`;
+    }
+  }
+  const popularPacks = [...twinPacks, ...singlePacks].slice(0, 4);
   const heroBanners = useBanners("hero");
   const banner = heroBanners[0];
   useReveal();
