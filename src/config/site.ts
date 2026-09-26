@@ -33,11 +33,11 @@ export const upi = {
   payeeName: "MS Vijaya Sree Camphor Industries",
 } as const;
 
-/** Company-profile (2024) statements used on the website. Keep wording as the company states it. */
+/** Company-profile statements used on the website. Keep wording as the company states it. */
 export const companyProfile = {
-  retailStores: "5,000+",
+  retailStores: "200+",
   retailRegion: "India",
-  retailPartners: ["Ratnadeep", "National Mart", "Reliance Retail", "DMart", "KPN Fresh"],
+  retailPartners: ["Ratnadeep", "Q Mart", "Balaji Grand", "Vijetha", "SMR Vinay"],
 } as const;
 
 /** Single source of truth for every social link on the site. */
