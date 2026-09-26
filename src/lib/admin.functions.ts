@@ -547,6 +547,8 @@ const couponSchema = z.object({
   expires_at: z.string().nullable().default(null),
   usage_limit: z.number().int().min(0).max(1000000).nullable().default(null),
   per_customer_limit: z.number().int().min(0).max(1000).nullable().default(null),
+  is_public: z.boolean().default(false),
+  first_order_only: z.boolean().default(false),
   is_active: z.boolean().default(true),
 });
 
@@ -558,7 +560,15 @@ export const adminListCoupons = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin.from("coupons").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const rows = data ?? [];
+    // Attach the assigned customer's email so private codes are recognisable.
+    const assignedIds = [...new Set(rows.map((r) => r.assigned_user_id).filter(Boolean))] as string[];
+    if (assignedIds.length) {
+      const { data: profiles } = await supabaseAdmin.from("profiles").select("id, email").in("id", assignedIds);
+      const emailById = new Map((profiles ?? []).map((p) => [p.id, p.email]));
+      return rows.map((r) => ({ ...r, assigned_email: r.assigned_user_id ? (emailById.get(r.assigned_user_id) ?? null) : null }));
+    }
+    return rows;
   });
 
 export const adminSaveCoupon = createServerFn({ method: "POST" })
