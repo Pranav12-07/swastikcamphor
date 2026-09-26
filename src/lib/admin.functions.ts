@@ -710,6 +710,8 @@ export const adminSetReviewApproval = createServerFn({ method: "POST" })
               per_customer_limit: 1,
               expires_at: expires.toISOString(),
               is_active: true,
+              is_public: false,
+              assigned_user_id: before.user_id,
             });
             if (!couponError) {
               await supabaseAdmin.from("product_reviews").update({ thank_you_coupon: code }).eq("id", data.id);
