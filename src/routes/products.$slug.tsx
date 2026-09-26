@@ -211,6 +211,12 @@ function ProductDetail() {
   const discount = pctOff(mrp, price);
   const per100 = selected ? per100g(selected) : null;
   const twinSave = selected ? twinSavings(product, selected) : null;
+  const twinSingle =
+    selected && isTwinPack(selected)
+      ? sizeOptions.find((o) => !isTwinPack(o) && o.unit_grams === selected.unit_grams)
+      : null;
+  const twinSingleFull = selected && twinSingle ? twinSingle.price * (selected.pack_count || 2) : null;
+  const stockLeft = selected ? (selected.stock ?? product.stock ?? null) : (product.stock ?? null);
   const upsellTwin = selected ? matchingTwin(product, selected) : null;
   const upsellSave = upsellTwin ? twinSavings(product, upsellTwin) : null;
 
@@ -318,9 +324,11 @@ function ProductDetail() {
           <p className="mt-3 leading-relaxed text-muted-foreground">{product.short || product.description}</p>
 
           <div className="mt-4 flex flex-wrap items-baseline gap-3">
-            <span className="text-3xl font-semibold">{formatINR(price)}</span>
+            <PriceTag amount={price} className="text-[32px] text-maroon-deep md:text-[40px]" />
             {mrp > price && (
-              <span className="text-lg text-muted-foreground line-through">{formatINR(mrp)}</span>
+              <span className="tnum text-lg text-muted-foreground">
+                MRP <span className="line-through">{formatINR(mrp)}</span>
+              </span>
             )}
             {discount > 0 && (
               <span className="rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-accent-foreground">
@@ -331,14 +339,24 @@ function ProductDetail() {
               {inStock ? "In stock" : "Out of stock"}
             </span>
           </div>
+          {stockLeft != null && stockLeft >= 1 && stockLeft <= 10 && (
+            <p className="mt-1 text-sm font-medium text-amber-700">
+              Only {stockLeft} left
+            </p>
+          )}
           <p className="mt-1.5 text-xs text-muted-foreground">
             Inclusive of all taxes
             {per100 != null && <span> · ₹{per100.toLocaleString("en-IN")} per 100 g</span>}
           </p>
-          {twinSave != null && (
-            <p className="mt-1 text-sm font-medium text-emerald-700">
-              Save {formatINR(twinSave)} vs 2 single jars
-            </p>
+          {twinSave != null && twinSingleFull != null && (
+            <>
+              <p className="tnum mt-1.5 text-xs text-muted-foreground">
+                {selected?.pack_count || 2} jars separately: {formatINR(twinSingleFull)}
+              </p>
+              <p className="tnum mt-0.5 text-sm font-semibold text-emerald-700">
+                Save {formatINR(twinSave)} ({Math.floor((twinSave / twinSingleFull) * 100)}%) vs 2 single jars
+              </p>
+            </>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {selected?.popular && (
