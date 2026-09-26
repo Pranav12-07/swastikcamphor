@@ -144,7 +144,7 @@ function Checkout() {
         <PageHeader eyebrow="Checkout" title="Your cart is empty" />
         <div className="mx-auto max-w-2xl px-4 py-16 text-center md:px-8">
           <Link
-            to="/shop"
+            to="/products"
             className="inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
           >
             Browse products

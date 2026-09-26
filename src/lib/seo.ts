@@ -71,7 +71,7 @@ export const websiteJsonLd = {
   url: SITE_URL,
   potentialAction: {
     "@type": "SearchAction",
-    target: `${SITE_URL}/shop?q={search_term_string}`,
+    target: `${SITE_URL}/products?q={search_term_string}`,
     "query-input": "required name=search_term_string",
   },
 };

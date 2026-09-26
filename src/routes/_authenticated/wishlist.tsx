@@ -33,7 +33,7 @@ function WishlistPage() {
           <div className="card-premium p-10 text-center">
             <p className="text-muted-foreground">You have not saved any products yet.</p>
             <Link
-              to="/shop"
+              to="/products"
               className="mt-5 inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
             >
               Browse the shop

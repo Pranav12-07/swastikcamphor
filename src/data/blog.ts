@@ -57,8 +57,8 @@ export const blogPosts: BlogPost[] = [
           "The key word is pure. Camphor cut with paraffin or fillers produces soot, blackens your aarti plate and gives off an acrid smell. 100% pure camphor sublimates cleanly — nothing to scrape off, nothing to wipe away.",
         ],
         links: [
-          { to: "/shop", label: "Shop pure camphor tablets" },
-          { to: "/shop", label: "Shop Bhimseni camphor" },
+          { to: "/products", label: "Shop pure camphor tablets" },
+          { to: "/products", label: "Shop Bhimseni camphor" },
         ],
       },
       {
@@ -67,7 +67,7 @@ export const blogPosts: BlogPost[] = [
           "One small tablet per aarti is enough for a home shrine; temples and larger halls typically use two to four. A 100 g pack of Swastik Camphor tablets covers roughly a month of twice-daily worship.",
           "Store camphor in an airtight container away from direct sunlight — it sublimates in open air and slowly loses weight and fragrance.",
         ],
-        links: [{ to: "/shop", label: "Browse all camphor products" }],
+        links: [{ to: "/products", label: "Browse all camphor products" }],
       },
     ],
     faqs: [
@@ -103,7 +103,7 @@ export const blogPosts: BlogPost[] = [
           "Bhimseni camphor (also called Nagi or edible-grade camphor) is derived from the camphor tree rather than petrochemicals. It forms irregular, slightly translucent crystals and carries a softer, cooling aroma.",
           "Synthetic camphor is manufactured from turpentine, pressed into uniform white tablets, and is intended for burning only.",
         ],
-        links: [{ to: "/shop", label: "Buy Bhimseni camphor online" }],
+        links: [{ to: "/products", label: "Buy Bhimseni camphor online" }],
       },
       {
         heading: "Three quick purity tests",
@@ -163,7 +163,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "One tablet gives a full aarti's worth of flame. Stacking several tablets creates a taller, less predictable flame.",
         ],
-        links: [{ to: "/shop", label: "Shop camphor tablets" }],
+        links: [{ to: "/products", label: "Shop camphor tablets" }],
       },
       {
         heading: "4. Store it airtight",
@@ -200,7 +200,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "A camphor cone lit for a minute leaves a clean, cooling fragrance that lingers for hours — far gentler than a synthetic spray.",
         ],
-        links: [{ to: "/shop", label: "Shop camphor cones" }],
+        links: [{ to: "/products", label: "Shop camphor cones" }],
       },
       {
         heading: "Wardrobe and storage protection",
@@ -238,7 +238,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "Camphor packs come in 50 g, 100 g, 250 g and 1 kg. Divide price by grams before you compare listings — a cheap-looking pack is often the smallest one.",
         ],
-        links: [{ to: "/shop", label: "See camphor prices and pack sizes" }],
+        links: [{ to: "/products", label: "See camphor prices and pack sizes" }],
       },
       {
         heading: "Look for a stated purity and grade",
@@ -254,7 +254,7 @@ export const blogPosts: BlogPost[] = [
         ],
         links: [
           { to: "/contact", label: "Contact Swastik Camphor" },
-          { to: "/shop", label: "Buy camphor online" },
+          { to: "/products", label: "Buy camphor online" },
         ],
       },
     ],
@@ -279,7 +279,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "A home Diwali pooja typically uses 8–12 tablets across the evening; a Navratri nine-day observance runs comfortably on a 250 g pack.",
         ],
-        links: [{ to: "/shop", label: "Stock up on camphor tablets" }],
+        links: [{ to: "/products", label: "Stock up on camphor tablets" }],
       },
       {
         heading: "Why a pooja gift pack works",

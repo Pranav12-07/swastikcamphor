@@ -291,7 +291,7 @@ function OrderSuccessPage() {
                   Download receipt (PDF)
                 </button>
               )}
-              <Link to="/shop" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
+              <Link to="/products" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
                 Continue shopping
               </Link>
             </div>
@@ -344,7 +344,7 @@ function OrderSuccessPage() {
               >
                 Track this order
               </Link>
-              <Link to="/shop" className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground">
+              <Link to="/products" className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground">
                 Continue shopping
               </Link>
             </div>
@@ -427,7 +427,7 @@ function OrderSuccessPage() {
                   {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                   Download receipt
                 </button>
-                <Link to="/shop" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
+                <Link to="/products" className="rounded-full border border-gold/40 px-6 py-2.5 text-sm font-medium">
                   Continue shopping
                 </Link>
               </div>
