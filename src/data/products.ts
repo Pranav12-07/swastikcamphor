@@ -9,6 +9,22 @@ export type SizeOption = {
   mrp: number | null;
   stock: number | null;
   popular: boolean;
+  /** Short text for selector pills, e.g. "2 × 100 g". */
+  short_label: string | null;
+  /** Net weight of the whole pack in grams. */
+  grams: number | null;
+  /** Weight of one unit inside the pack in grams. */
+  unit_grams: number | null;
+  /** 1 for single packs, 2 for Twin Packs. */
+  pack_count: number;
+  container: string | null;
+  sku: string | null;
+  /** Photo of this pack's source listing. */
+  image: string | null;
+  /** "Feature on home" flag set in admin. */
+  featured: boolean;
+  /** Pre-selected when no "Most chosen" option is set. */
+  is_default: boolean;
 };
 
 export type Product = {
