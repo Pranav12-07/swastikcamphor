@@ -5,7 +5,7 @@ import { listPublicProducts, type PublicProduct } from "@/lib/products.functions
 import { ProductCard } from "@/components/ProductCard";
 import { useReveal } from "@/hooks/use-reveal";
 import { canonicalLink, seoMeta } from "@/lib/seo";
-import { formatINR, isTwinPack, pctOff, twinSavings, type SizeOption } from "@/data/products";
+import { formatINR, isTwinPack, pctOff, twinSavings } from "@/data/products";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/products/")({
@@ -85,11 +85,19 @@ function ProductsPage() {
         </p>
       </header>
 
-      {sections.length > 1 && (
+      {sections.length > 0 && (
         <nav
           aria-label="Product sections"
           className="sticky top-16 z-20 -mx-4 mt-6 flex gap-2 overflow-x-auto bg-background/95 px-4 py-3 backdrop-blur md:top-20"
         >
+          {twinPacks.length > 0 && (
+            <a
+              href="#twin-packs"
+              className="shrink-0 rounded-full bg-gold-soft px-4 py-1.5 text-sm font-semibold text-maroon-deep transition-colors hover:bg-gold/60"
+            >
+              {t("Twin Pack Offers")}
+            </a>
+          )}
           {sections.map((s) => (
             <a
               key={s.id}
