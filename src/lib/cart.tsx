@@ -4,6 +4,19 @@ import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
 import { getMyCart, syncMyCart } from "@/lib/cart.functions";
 import { defaultSizeOption, priceForSize } from "@/data/products";
+import { migrateCartLine } from "@/lib/pack-redirects";
+
+/** Carts saved before the catalogue restructure point at old listings; move them to the matching pack. */
+function migrateLines(lines: CartLine[]): CartLine[] {
+  let changed = false;
+  const next = lines.map((l) => {
+    const target = migrateCartLine(l.slug, l.size);
+    if (!target) return l;
+    changed = true;
+    return { slug: target.slug, size: target.size, qty: l.qty };
+  });
+  return changed ? next : lines;
+}
 
 
 export type CartLine = { slug: string; size: string; qty: number };

@@ -40,7 +40,7 @@ export function ProductCard({
   reveal?: boolean;
 }) {
   const navigate = useNavigate();
-  const { items, add, setQty } = useCart();
+  const { lines, add, setQty } = useCart();
   const { freeShippingAbove } = useStoreSettings();
   const { session } = useAuth();
   const { has, toggle } = useWishlist();
@@ -63,7 +63,7 @@ export function ProductCard({
   const inStock = selected ? sizeAvailable(product, selected) : (product.stock ?? 1) > 0;
   const image = selected?.image ?? product.image;
 
-  const cartItem = items.find((i) => i.slug === product.slug && i.size === (selected?.label ?? ""));
+  const cartItem = lines.find((i) => i.slug === product.slug && i.size === (selected?.label ?? ""));
   const wished = has(product.slug);
 
   const detailUrl = selected?.label
