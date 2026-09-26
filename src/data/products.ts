@@ -55,12 +55,29 @@ export function parseSizeOptions(raw: unknown): SizeOption[] {
       if (!label || !Number.isFinite(price) || price <= 0) return null;
       const mrp = r["mrp"] == null ? null : Number(r["mrp"]);
       const stock = r["stock"] == null ? null : Number(r["stock"]);
+      const num = (k: string) => {
+        const v = r[k] == null ? null : Number(r[k]);
+        return v != null && Number.isFinite(v) ? v : null;
+      };
+      const str = (k: string) => {
+        const v = r[k];
+        return typeof v === "string" && v.trim() ? v.trim() : null;
+      };
       return {
         label,
         price,
         mrp: mrp != null && Number.isFinite(mrp) ? mrp : null,
         stock: stock != null && Number.isFinite(stock) ? Math.max(0, Math.trunc(stock)) : null,
         popular: Boolean(r["popular"]),
+        short_label: str("short_label"),
+        grams: num("grams"),
+        unit_grams: num("unit_grams"),
+        pack_count: num("pack_count") ?? 1,
+        container: str("container"),
+        sku: str("sku"),
+        image: str("image"),
+        featured: Boolean(r["featured"]),
+        is_default: Boolean(r["is_default"]),
       } as SizeOption;
     })
     .filter((o): o is SizeOption => o !== null);
