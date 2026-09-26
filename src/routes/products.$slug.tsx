@@ -24,6 +24,7 @@ import { StarRating } from "@/components/StarRating";
 import { ProductOffers } from "@/components/products/ProductOffers";
 import { StickyBuyBar } from "@/components/products/StickyBuyBar";
 import { QtyStepper } from "@/components/QtyStepper";
+import { PriceTag } from "@/components/PriceTag";
 import { getPublicProduct } from "@/lib/products.functions";
 import { OLD_SLUG_REDIRECTS } from "@/lib/pack-redirects";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
@@ -430,7 +431,7 @@ function ProductDetail() {
 
           <ul className="mt-6 grid grid-cols-2 gap-2.5 text-xs text-muted-foreground sm:grid-cols-4">
             <li className="flex items-center gap-1.5">
-              <BadgeCheck className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" /> 100% pure camphor
+              <BadgeCheck className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" /> Inclusive of all taxes
             </li>
             <li className="flex items-center gap-1.5">
               <Truck className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" /> Dispatched in 1–2 days
