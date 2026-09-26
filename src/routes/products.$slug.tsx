@@ -1,8 +1,10 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronRight } from "lucide-react";
-import { formatINR } from "@/data/products";
+import { ChevronRight, Truck } from "lucide-react";
+import { defaultSizeOption, formatINR, sizeAvailable } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useStoreSettings } from "@/lib/store-settings";
 import { useReveal } from "@/hooks/use-reveal";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
@@ -85,15 +87,24 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductDetail() {
   const { product, related, reviewStats } = Route.useLoaderData();
   const { add } = useCart();
+  const { freeShippingAbove } = useStoreSettings();
   useReveal();
 
-  const inStock = product.stock > 0;
+  const sizeOptions = product.sizeOptions ?? [];
+  const [pickedSize, setPickedSize] = useState<string | null>(null);
+  const selected = sizeOptions.length
+    ? (sizeOptions.find((o) => o.label === pickedSize) ?? defaultSizeOption(product))
+    : null;
+
+  const price = selected?.price ?? product.price;
+  const mrp = selected?.mrp ?? product.mrp;
+  const inStock = selected ? sizeAvailable(product, selected) : product.stock > 0;
   const addToCart = () => {
-    add(product.slug);
+    add(product.slug, selected?.label);
     toast.success(`${product.name} added to cart`);
   };
-  const discount = product.mrp > product.price
-    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+  const discount = mrp > price
+    ? Math.round(((mrp - price) / mrp) * 100)
     : 0;
 
   return (
