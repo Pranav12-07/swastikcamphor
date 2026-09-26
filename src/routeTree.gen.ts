@@ -63,6 +63,7 @@ import { Route as AdminProductsEditIdRouteImport } from './routes/admin/products
 import { Route as ApiPublicPhonepeCallbackRouteImport } from './routes/api/public/phonepe/callback'
 import { Route as ApiPublicProductImageSplatRouteImport } from './routes/api/public/product-image/$'
 import { Route as ApiPublicPromoMediaSplatRouteImport } from './routes/api/public/promo-media/$'
+import { Route as ApiPublicReviewPhotoSplatRouteImport } from './routes/api/public/review-photo/$'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -341,6 +342,12 @@ const ApiPublicPromoMediaSplatRoute =
     path: '/api/public/promo-media/$',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicReviewPhotoSplatRoute =
+  ApiPublicReviewPhotoSplatRouteImport.update({
+    id: '/api/public/review-photo/$',
+    path: '/api/public/review-photo/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -412,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/api/public/promo-media/$': typeof ApiPublicPromoMediaSplatRoute
+  '/api/public/review-photo/$': typeof ApiPublicReviewPhotoSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -469,6 +477,7 @@ export interface FileRoutesByTo {
   '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/api/public/promo-media/$': typeof ApiPublicPromoMediaSplatRoute
+  '/api/public/review-photo/$': typeof ApiPublicReviewPhotoSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -529,6 +538,7 @@ export interface FileRoutesById {
   '/api/public/phonepe/callback': typeof ApiPublicPhonepeCallbackRoute
   '/api/public/product-image/$': typeof ApiPublicProductImageSplatRoute
   '/api/public/promo-media/$': typeof ApiPublicPromoMediaSplatRoute
+  '/api/public/review-photo/$': typeof ApiPublicReviewPhotoSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -589,6 +599,7 @@ export interface FileRouteTypes {
     | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/api/public/promo-media/$'
+    | '/api/public/review-photo/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -646,6 +657,7 @@ export interface FileRouteTypes {
     | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/api/public/promo-media/$'
+    | '/api/public/review-photo/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -705,6 +717,7 @@ export interface FileRouteTypes {
     | '/api/public/phonepe/callback'
     | '/api/public/product-image/$'
     | '/api/public/promo-media/$'
+    | '/api/public/review-photo/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -736,6 +749,7 @@ export interface RootRouteChildren {
   ApiPublicPhonepeCallbackRoute: typeof ApiPublicPhonepeCallbackRoute
   ApiPublicProductImageSplatRoute: typeof ApiPublicProductImageSplatRoute
   ApiPublicPromoMediaSplatRoute: typeof ApiPublicPromoMediaSplatRoute
+  ApiPublicReviewPhotoSplatRoute: typeof ApiPublicReviewPhotoSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -1121,6 +1135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPromoMediaSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/review-photo/$': {
+      id: '/api/public/review-photo/$'
+      path: '/api/public/review-photo/$'
+      fullPath: '/api/public/review-photo/$'
+      preLoaderRoute: typeof ApiPublicReviewPhotoSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -1249,6 +1270,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPhonepeCallbackRoute: ApiPublicPhonepeCallbackRoute,
   ApiPublicProductImageSplatRoute: ApiPublicProductImageSplatRoute,
   ApiPublicPromoMediaSplatRoute: ApiPublicPromoMediaSplatRoute,
+  ApiPublicReviewPhotoSplatRoute: ApiPublicReviewPhotoSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

@@ -9,6 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/StarRating";
 import type { SizeOption } from "@/data/products";
 
+/** Photos are stored as private storage paths and served through our own route. */
+const photoUrl = (p: string) =>
+  p.startsWith("http") || p.startsWith("/") ? p : `/api/public/review-photo/${p}`;
+
 function Stars({ value }: { value: number }) {
   return (
     <span className="text-accent" aria-label={`${value} out of 5 stars`}>
@@ -131,8 +135,7 @@ export function ProductReviews({
         const path = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error } = await supabase.storage.from("review-photos").upload(path, file, { upsert: false });
         if (error) throw error;
-        const { data: pub } = supabase.storage.from("review-photos").getPublicUrl(path);
-        urls.push(pub.publicUrl);
+        urls.push(path);
       }
       setPhotos((p) => [...p, ...urls].slice(0, 3));
     } catch {
