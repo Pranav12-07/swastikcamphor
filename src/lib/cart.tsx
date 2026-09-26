@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useCatalog } from "@/lib/catalog";
 import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
-import { getMyCart, syncMyCart } from "@/lib/cart.functions";
+import { getMyCart, syncMyCart, validateCoupon, type CouponRule } from "@/lib/cart.functions";
 import { defaultSizeOption, isTwinPack, matchingTwin, priceForSize, sizeAvailable } from "@/data/products";
 import { migrateCartLine } from "@/lib/pack-redirects";
 import { StealDealPopup } from "@/components/StealDealPopup";
@@ -45,7 +45,8 @@ type CartValue = {
   total: number;
   coupon: string | null;
   freeShippingAbove: number;
-  applyCoupon: (code: string) => boolean;
+  /** Validates the code on the server (works for private assigned codes too). */
+  applyCoupon: (code: string) => Promise<{ ok: boolean; message?: string }>;
   removeCoupon: () => void;
 };
 
@@ -59,6 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [couponRule, setCouponRule] = useState<CouponRule | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const mergedFor = useRef<string | null>(null);
   const [prompt, setPrompt] = useState<{ slug: string; size: string } | null>(null);
@@ -141,6 +143,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [hydrated, userId]);
 
 
+  // Re-validate a restored coupon (e.g. after a reload) so private codes keep working.
+  useEffect(() => {
+    if (!hydrated || !coupon || couponRule?.code === coupon) return;
+    let cancelled = false;
+    validateCoupon({ data: { code: coupon } })
+      .then((res) => {
+        if (cancelled) return;
+        if (res.ok && res.coupon) {
+          setCouponRule(res.coupon);
+        } else {
+          setCoupon(null);
+          try {
+            localStorage.removeItem(COUPON_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, coupon, couponRule]);
+
   const persist = useCallback((next: CartLine[]) => {
     setLines(next);
     try {
@@ -210,7 +236,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const p = products.find((x) => x.slug === l.slug);
       return sum + (p ? priceForSize(p, l.size) * l.qty : 0);
     }, 0);
-    const active = coupon ? coupons.find((c) => c.code === coupon) : undefined;
+    // The validated rule wins; the public list covers codes seen before validation returns.
+    const active =
+      (couponRule && couponRule.code === coupon ? couponRule : undefined) ??
+      (coupon ? coupons.find((c) => c.code === coupon) : undefined);
     let discount = 0;
     if (active && subtotal >= active.min_order_amount) {
       discount =
@@ -218,6 +247,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           ? Math.min(active.discount_value, subtotal)
           : Math.round((subtotal * active.discount_value) / 100);
       if (active.max_discount !== null) discount = Math.min(discount, active.max_discount);
+      discount = Math.min(discount, subtotal);
     }
     const hasTwin = lines.some((l) => {
       const p = products.find((x) => x.slug === l.slug);
@@ -254,20 +284,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total: subtotal - discount - stealDeal + shipping,
       coupon,
       freeShippingAbove,
-      applyCoupon: (code: string) => {
+      applyCoupon: async (code: string) => {
         const normalized = code.trim().toUpperCase();
-        const match = coupons.find((c) => c.code === normalized);
-        if (!match) return false;
-        setCoupon(normalized);
         try {
-          localStorage.setItem(COUPON_KEY, normalized);
+          const res = await validateCoupon({ data: { code: normalized } });
+          if (!res.ok || !res.coupon) return { ok: false, message: res.message ?? "This code is not valid" };
+          setCouponRule(res.coupon);
+          setCoupon(res.coupon.code);
+          try {
+            localStorage.setItem(COUPON_KEY, res.coupon.code);
+          } catch {
+            /* ignore */
+          }
+          return { ok: true };
         } catch {
-          /* ignore */
+          return { ok: false, message: "Could not check this code right now. Please try again." };
         }
-        return true;
       },
       removeCoupon: () => {
         setCoupon(null);
+        setCouponRule(null);
         try {
           localStorage.removeItem(COUPON_KEY);
         } catch {
