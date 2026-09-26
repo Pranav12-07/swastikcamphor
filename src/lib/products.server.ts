@@ -20,10 +20,21 @@ export type PublicProduct = {
   rating: number | null;
   ratingCount: number;
   sizeOptions: SizeOption[];
+  /** "Tablets" or "Crystals". */
+  form: string | null;
+  howToUse: string | null;
+  safety: string | null;
+  marketplace: {
+    name: string;
+    rating: number;
+    count: number;
+    url: string;
+    checkedOn: string | null;
+  } | null;
 };
 
 export const PRODUCT_SELECT =
-  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options";
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options,specifications,marketplace_name,marketplace_rating,marketplace_rating_count,marketplace_url,marketplace_checked_on";
 
 type Row = Record<string, unknown>;
 
