@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, Truck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { useStoreSettings } from "@/lib/store-settings";
 import { StarRating } from "@/components/StarRating";
 
 const WHATSAPP_NUMBER = "917416886881";
