@@ -40,7 +40,7 @@ function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {saved.map((p, i) => (
               <ProductCard key={p.slug} product={p} index={i} />
             ))}
