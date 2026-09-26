@@ -413,6 +413,12 @@ function Checkout() {
                 <dd>-{formatINR(cart.discount)}</dd>
               </div>
             )}
+            {cart.stealDeal > 0 && (
+              <div className="flex justify-between text-primary">
+                <dt>Steal Deal (Twin Pack)</dt>
+                <dd>-{formatINR(cart.stealDeal)}</dd>
+              </div>
+            )}
             <div className="flex justify-between font-display text-lg">
               <dt>Total</dt>
               <dd>{formatINR(cart.total)}</dd>
