@@ -1,20 +1,38 @@
-# Roadmap — Swastik Camphor store
+# Roadmap
 
-## Done (this round)
-- Steal Deal: server-enforced in place_order (Twin Pack + order ₹500+ → extra ₹50, always the bigger of coupon vs deal), stored on the order, shown in cart/checkout summaries, customer + admin emails, and PDF receipts.
-- Twin Pack upsell popup when a single jar is added (once per product), plus "Switch to Twin Pack" buttons and a Steal Deal progress bar on the cart page.
-- Homepage: hero CTAs, category circles reordered (Tablets, Bhimseni, Pouch), 9-pack auto-scrolling carousel (2 visible on phones, 4 on desktop, pause on hover/touch, arrows + dots + play/pause).
-- /products rebuilt: filter chips (All / Twin Pack Offers / Tablets / Bhimseni / Pouch) with counts, sort dropdown (recommended, price low/high, biggest saving), URL-backed state, empty state; SSR loader/meta preserved.
-- Shop page removed: /shop 301-redirects to /products (old ?category= maps to ?filter=), all nav/footer/blog/cart links updated, sitemap + legacy redirects cleaned.
-- Product cards show real review stars/counts (fallback text when none) and genuine rounded purchase counts from recent paid/delivered orders; admin-set ratings cleared from the DB.
-- Review coupons: approving a first review auto-creates a single-use ₹25 coupon (min ₹299, 60 days) and emails a branded thank-you; coupon marker exposed in review data.
-- Footer top gap removed; build OK.
+## Current: One-message spec (Part A audit fixes → Part B round 4 → Part C price change)
 
-## Remaining
-- Trust strip text: 200+ stores, ESTD 1968, partner list (Ratnadeep, Q Mart, Balaji Grand, Vijetha, SMR Vinay) — config values still 5,000+.
-- Order-success page: show Steal Deal line (getPaymentState now returns it); admin order detail page Steal Deal line.
-- Admin settings: editable Steal Deal (enabled/amount/min) + review-coupon programme controls; admin reviews: show coupon marker.
-- Product page: no-review fallback text, review-coupon incentive line, Buy Now must skip the upsell popup.
-- Telugu/Hindi translations for all new strings.
-- Full responsive + accessibility check (360/390/768/1280/1440), carousel geometry test.
-- Review-request cron + publish; Resend setup still blocks order emails.
+### Part A — audit fixes (money & security)
+- [ ] A1: fix place_order percentage coupon bug (percent vs percentage), CHECK constraint, normalise rows, matching rounding in cart.tsx, checkout total-mismatch safety net, report affected past orders
+- [ ] A2: coupons privacy — is_public + assigned_user_id columns, new RLS policies, server-side coupon validation at checkout, review coupons private+assigned, place_order rejects other-account codes
+- [ ] A3: enforce per_customer_limit + first_order_only (SWASTIK10 first order only), cart message
+- [ ] A4: admin coupons page — used_count fix, edit is_public/first_order_only/per_customer_limit, show assigned email
+- [ ] A5: shipping default flat_rate 100 → 49 in place_order; report saved settings; verify ₹380→₹49, ₹499→free
+- [ ] A6: ItemList JSON-LD on /products
+- [ ] A7: remove admin_rating mapping in products.server.ts; hide admin rating fields in product form
+
+### Part B — round 4 design/conversion
+- [ ] B1: established = 1976 everywhere (code + DB content), replace all "1968"/"58+ years", list changes
+- [ ] B2: hero eyebrow "ESTD 1976"; subline exactly "Swastik 100% Pure Camphor — Trusted Since Generations."
+- [ ] B3: header cart icon → lucide ShoppingCart (keep maroon button, gold badge, "Cart" text ≥1280px)
+- [ ] B4: price/discount display hierarchy on all cards + PDP (big price w/ smaller ₹, struck MRP, green % OFF, savings lines, twin "2 jars separately" line, bigger photo badge)
+- [ ] B5: honest buying cues (Only N left ≤10, COD if enabled, tax/secure/dispatch trust line, BEST SAVING ribbon computed)
+- [ ] B6: all sliders autoplay on load, 5s loop, fade under reduced motion
+- [ ] B7: spacing ~32px mobile / 48px desktop between Twin slider dots and POPULAR PACKS
+- [ ] B8: slider subheadings 24/32px display font + "View all →" links
+- [ ] B9: trust stats 5,000+ stores / Since 1976 / Pan-India; chips DMart, Ratnadeep, Reliance Bazaar, KPN Fresh
+- [ ] B10: cart savings card large green style; "Total savings −₹X" above Total
+- [ ] B11: te/hi translations for all new text
+
+### Part C — price change
+- [ ] C1: Bhimseni Twin 2×100g ₹490→₹499 (MRP 580) in DB size_options
+- [ ] C2: steal_deal_min 500→499; remove hard-coded ₹500 texts
+- [ ] C3: verify derived values (13% OFF, Save ₹41 (7%), strip "up to 15%")
+
+### Verification & report
+- [ ] Mobile 360/390px + 1440px checks, no overlap/scroll
+- [ ] Run all Part A/B/C checks from spec and report results
+
+## Pending from earlier
+- [ ] Resend API key setup (user action needed)
+- [ ] Publish site
