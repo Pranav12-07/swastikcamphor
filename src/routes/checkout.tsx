@@ -10,6 +10,8 @@ import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { useI18n } from "@/lib/i18n";
 import phonepeLogo from "@/assets/phonepe.png";
 
 
@@ -52,6 +54,7 @@ function Checkout() {
   const { products } = useCatalog();
   const cart = useCart();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { session, loading: authLoading } = useAuth();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
