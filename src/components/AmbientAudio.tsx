@@ -4,7 +4,7 @@ import track from "@/assets/karpur-gauram.mp3.asset.json";
 
 const STORAGE_KEY = "swastik-ambient-muted";
 
-/** Continuous, low-volume devotional ambience that blends with the site. */
+/** Optional low-volume devotional music. Plays only after the visitor taps the button. */
 export function AmbientAudio() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -12,32 +12,11 @@ export function AmbientAudio() {
 
   useEffect(() => setReady(true), []);
 
+  // Music never starts on its own (no autoplay on scroll or tap anywhere on the page).
+  // It plays only when the visitor taps the music button, and the file downloads only then.
   useEffect(() => {
-    if (!ready) return;
     const el = audioRef.current;
-    if (!el) return;
-    el.volume = 0.18;
-    el.muted = false;
-
-    const wantsMuted = window.localStorage.getItem(STORAGE_KEY) === "1";
-    if (wantsMuted) return;
-
-    const start = () => {
-      el.play()
-        .then(() => setPlaying(true))
-        .catch(() => {
-          /* browser needs a gesture — listeners below handle it */
-        });
-    };
-    start();
-
-    const onGesture = () => {
-      if (window.localStorage.getItem(STORAGE_KEY) === "1") return;
-      start();
-    };
-    const events: (keyof WindowEventMap)[] = ["pointerdown", "keydown", "touchstart", "scroll"];
-    events.forEach((e) => window.addEventListener(e, onGesture, { once: true, passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, onGesture));
+    if (el) el.volume = 0.18;
   }, [ready]);
 
   const toggle = () => {
@@ -65,13 +44,13 @@ export function AmbientAudio() {
 
   return (
     <>
-      <audio ref={audioRef} src={track.url} loop preload="auto" playsInline />
+      <audio ref={audioRef} src={track.url} loop preload="none" playsInline />
       <button
         type="button"
         onClick={toggle}
         aria-label={playing ? "Mute background music" : "Play background music"}
         title={playing ? "Mute Karpur Gauram" : "Play Karpur Gauram"}
-        className="group fixed bottom-6 left-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-gold/40 bg-background/80 text-accent shadow-lg backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:bg-accent/15 md:bottom-24"
+        className="float-lift group fixed bottom-6 left-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-gold/40 bg-background/80 text-accent shadow-lg backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:bg-accent/15 md:bottom-24"
       >
         {playing ? (
           <span className="relative flex items-center justify-center">
