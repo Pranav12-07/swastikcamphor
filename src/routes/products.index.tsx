@@ -1,11 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useCatalog } from "@/lib/catalog";
 import { withServerProducts } from "@/lib/catalog-ssr";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
-import { ProductCard } from "@/components/ProductCard";
+import { PackCard, type PackRef } from "@/components/PackCard";
 import { useReveal } from "@/hooks/use-reveal";
 import { canonicalLink, seoMeta } from "@/lib/seo";
-import { defaultSizeOption, formatINR, isTwinPack, pctOff, twinSavings, type SizeOption } from "@/data/products";
+import { isTwinPack, pctOff, twinSavings, type SizeOption } from "@/data/products";
 import { useI18n } from "@/lib/i18n";
 
 type FilterId = "twin" | "tablets" | "bhimseni" | "pouch";
@@ -32,101 +33,27 @@ export const Route = createFileRoute("/products/")({
   component: ProductsPage,
 });
 
-type Section = { id: string; title: string; blurb: string; slugs: string[] };
-
-const SECTIONS: Section[] = [
-  {
-    id: "camphor-tablets",
-    title: "Swastik Camphor Tablets",
-    blurb: "100% pure camphor tablets for daily pooja and aarti — jars from 50 g to 500 g and money-saving Twin Packs.",
-    slugs: ["camphor-tablets"],
+const FILTER_META: Record<FilterId, { label: string; match: (pk: PackRef) => boolean }> = {
+  twin: { label: "Twin Pack Offers", match: (pk) => isTwinPack(pk.option) },
+  tablets: {
+    label: "Camphor Tablets",
+    match: (pk) => pk.product.slug === "camphor-tablets" && !isTwinPack(pk.option),
   },
-  {
-    id: "bhimseni-camphor",
-    title: "Swastik Bhimseni Camphor",
-    blurb: "Natural Bhimseni camphor crystals for pooja and enhancing air quality — jars from 50 g to 450 g and Twin Packs up to 900 g.",
-    slugs: ["bhimseni-camphor"],
+  bhimseni: {
+    label: "Bhimseni Camphor",
+    match: (pk) => pk.product.slug === "bhimseni-camphor" && !isTwinPack(pk.option),
   },
-  {
-    id: "refill-pouches",
-    title: "Refill Pouches",
-    blurb: "Convenient pouches to refill your Swastik jar and keep tablets fresh.",
-    slugs: ["camphor-tablets-refill-pouch"],
-  },
-];
-
-const FILTER_META: Record<FilterId, { label: string; slugs: string[] }> = {
-  twin: { label: "Twin Pack Offers", slugs: [] },
-  tablets: { label: "Camphor Tablets", slugs: ["camphor-tablets"] },
-  bhimseni: { label: "Bhimseni Camphor", slugs: ["bhimseni-camphor"] },
-  pouch: { label: "Refill Pouch", slugs: ["camphor-tablets-refill-pouch"] },
+  pouch: { label: "Refill Pouch", match: (pk) => pk.product.slug === "camphor-tablets-refill-pouch" },
 };
 
-type CardProduct = Parameters<typeof ProductCard>[0]["product"];
+const packSaving = (pk: PackRef) =>
+  isTwinPack(pk.option) ? (twinSavings(pk.product, pk.option) ?? 0) : pctOff(pk.option.mrp, pk.option.price);
 
-const cardPrice = (p: CardProduct) => defaultSizeOption(p)?.price ?? p.price;
-const cardSaving = (p: CardProduct) => {
-  const opt = defaultSizeOption(p);
-  return opt ? pctOff(opt.mrp, opt.price) : 0;
-};
-
-function sortProducts(list: CardProduct[], sort: SortId): CardProduct[] {
-  if (sort === "low") return [...list].sort((a, b) => cardPrice(a) - cardPrice(b));
-  if (sort === "high") return [...list].sort((a, b) => cardPrice(b) - cardPrice(a));
-  if (sort === "saving") return [...list].sort((a, b) => cardSaving(b) - cardSaving(a));
-  return list;
-}
-
-type TwinRef = { product: CardProduct; option: SizeOption };
-
-function sortTwins(list: TwinRef[], sort: SortId): TwinRef[] {
+function sortPacks(list: PackRef[], sort: SortId): PackRef[] {
   if (sort === "low") return [...list].sort((a, b) => a.option.price - b.option.price);
   if (sort === "high") return [...list].sort((a, b) => b.option.price - a.option.price);
-  if (sort === "saving") return [...list].sort((a, b) => pctOff(b.option.mrp, b.option.price) - pctOff(a.option.mrp, a.option.price));
+  if (sort === "saving") return [...list].sort((a, b) => packSaving(b) - packSaving(a));
   return list;
-}
-
-function TwinCard({ product, option }: TwinRef) {
-  const { t } = useI18n();
-  const off = pctOff(option.mrp, option.price);
-  const save = twinSavings(product, option);
-  const outOfStock = option.stock != null && option.stock <= 0;
-  return (
-    <Link
-      to="/products/$slug"
-      params={{ slug: product.slug }}
-      search={{ size: option.label }}
-      className={`card-premium group relative block overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
-    >
-      {off > 0 && (
-        <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
-          {off}% {t("OFF")}
-        </span>
-      )}
-      <img
-        src={option.image ?? product.image}
-        alt={`${product.name} – ${option.label}`}
-        loading="lazy"
-        className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      <div className="p-3 md:p-4">
-        <h3 className="truncate font-body text-[13px] font-semibold md:text-sm">{product.name}</h3>
-        <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted-foreground">{option.label}</p>
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-base font-bold">{formatINR(option.price)}</span>
-          {option.mrp != null && option.mrp > option.price && (
-            <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
-          )}
-        </div>
-        {save != null && (
-          <p className="mt-1 text-xs font-medium text-emerald-700">
-            {t("Save")} {formatINR(save)} {t("vs 2 single jars")}
-          </p>
-        )}
-        {outOfStock && <p className="mt-1 text-xs font-semibold text-destructive">{t("Out of stock")}</p>}
-      </div>
-    </Link>
-  );
 }
 
 function ProductsPage() {
@@ -148,43 +75,43 @@ function ProductsPage() {
     });
   };
 
-  // Every in-stock Twin Pack across the catalogue, Tablets first.
-  const twinPacks: TwinRef[] = products
-    .flatMap((p) =>
-      (p.sizeOptions ?? [])
-        .filter((o) => isTwinPack(o))
-        .map((o) => ({ product: p, option: o })),
-    )
-    .sort((a, b) => (a.product.slug === "camphor-tablets" ? -1 : b.product.slug === "camphor-tablets" ? 1 : 0));
+  // /products#twin-packs opens with the Twin Pack filter selected.
+  useEffect(() => {
+    if (window.location.hash === "#twin-packs" && !filter) setSearch({ filter: "twin" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const known = new Set(SECTIONS.flatMap((s) => s.slugs));
-  const extra = products.filter((p) => !known.has(p.slug));
-  const sections = [
-    ...SECTIONS.map((s) => ({
-      ...s,
-      items: sortProducts(products.filter((p) => s.slugs.includes(p.slug)), activeSort),
-    })),
-    ...(extra.length
-      ? [{ id: "more", title: "More from Swastik", blurb: "", slugs: extra.map((p) => p.slug), items: sortProducts(extra, activeSort) }]
-      : []),
-  ].filter((s) => s.items.length > 0);
+  // Every pack as its own card. "All" order: 7 Twin Packs (Tablets by weight,
+  // then Bhimseni by weight), then Refill Pouch, Tablets jars, Bhimseni jars.
+  const allPacks: PackRef[] = products.flatMap((p) =>
+    (p.sizeOptions ?? []).map((o) => ({ product: p, option: o })),
+  );
+  const rank = (pk: PackRef): [number, number] => {
+    const slug = pk.product.slug;
+    const grams = pk.option.grams ?? 0;
+    if (isTwinPack(pk.option)) return [slug === "camphor-tablets" ? 0 : 1, grams];
+    if (slug === "camphor-tablets-refill-pouch") return [2, grams];
+    if (slug === "camphor-tablets") return [3, grams];
+    if (slug === "bhimseni-camphor") return [4, grams];
+    return [5, grams];
+  };
+  const recommended = [...allPacks].sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    return ra[0] - rb[0] || ra[1] - rb[1];
+  });
+
+  const filtered =
+    activeFilter === "all" ? recommended : recommended.filter((pk) => FILTER_META[activeFilter].match(pk));
+  const shown = sortPacks(filtered, activeSort);
 
   const countFor = (id: FilterId | "all") =>
-    id === "all"
-      ? products.length + twinPacks.length
-      : id === "twin"
-        ? twinPacks.length
-        : products.filter((p) => FILTER_META[id].slugs.includes(p.slug)).length;
+    id === "all" ? recommended.length : recommended.filter((pk) => FILTER_META[id].match(pk)).length;
 
   const chips: { id: FilterId | "all"; label: string }[] = [
     { id: "all", label: "All" },
     ...FILTERS.map((id) => ({ id, label: FILTER_META[id].label })),
   ];
-
-  const filteredSections =
-    activeFilter === "all" ? sections : sections.filter((s) => FILTER_META[activeFilter as FilterId]?.slugs.some((slug) => s.slugs.includes(slug)));
-  const sortedTwins = sortTwins(twinPacks, activeSort);
-  const isEmpty = activeFilter !== "all" && activeFilter !== "twin" && filteredSections.length === 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-16">
@@ -198,7 +125,7 @@ function ProductsPage() {
         </p>
       </header>
 
-      <div className="sticky top-[60px] z-20 -mx-4 mt-6 bg-background/95 px-4 py-3 backdrop-blur xl:top-[76px]">
+      <div className="sticky top-[60px] z-20 -mx-4 mt-6 bg-background/95 px-4 py-3 backdrop-blur lg:top-[76px]">
         <div className="flex items-center justify-between gap-3">
           <ul
             aria-label={t("Filter products")}
@@ -245,23 +172,15 @@ function ProductsPage() {
         </div>
       </div>
 
-      {(activeFilter === "all" || activeFilter === "twin") && sortedTwins.length > 0 && (
-        <section id="twin-packs" className="mt-10 scroll-mt-32">
-          <h2 className="font-display text-2xl md:text-3xl">{t("Twin Pack Offers")}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {t("Buy 2 and save more, plus an extra ₹50 off on orders ₹500+.")}
-          </p>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-            {sortedTwins.map(({ product, option }) => (
-              <TwinCard key={`${product.slug}__${option.label}`} product={product} option={option} />
-            ))}
-          </div>
-        </section>
+      {activeFilter !== "all" && (
+        <p className="mt-6 text-sm text-muted-foreground">
+          {shown.length} {t("products")}
+        </p>
       )}
 
       {loading && products.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading products…</p>
-      ) : isEmpty || (activeFilter === "all" && sections.length === 0) ? (
+      ) : shown.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-gold/25 p-8 text-center">
           <p className="text-muted-foreground">{t("No products here right now.")}</p>
           <button
@@ -273,17 +192,14 @@ function ProductsPage() {
           </button>
         </div>
       ) : (
-        filteredSections.map((s) => (
-          <section key={s.id} id={s.id} className="mt-14 scroll-mt-32">
-            <h2 className="font-display text-2xl md:text-3xl">{s.title}</h2>
-            {s.blurb && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{s.blurb}</p>}
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-              {s.items.map((p, i) => (
-                <ProductCard key={p.slug} product={p} index={i} />
-              ))}
-            </div>
-          </section>
-        ))
+        <div
+          id={activeFilter === "twin" ? "twin-packs" : undefined}
+          className="mt-6 grid scroll-mt-32 grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {shown.map((pk) => (
+            <PackCard key={`${pk.product.slug}__${pk.option.label}`} pack={pk} />
+          ))}
+        </div>
       )}
     </div>
   );
