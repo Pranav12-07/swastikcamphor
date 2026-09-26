@@ -22,6 +22,7 @@ interface Props {
   subtotal?: number
   shipping?: number
   discount?: number
+  stealDealDiscount?: number
   tax?: number
   total?: number
   placedAt?: string
@@ -45,6 +46,7 @@ const Email = ({
   subtotal = 0,
   shipping = 0,
   discount = 0,
+  stealDealDiscount = 0,
   tax = 0,
   total = 0,
   placedAt = '',
@@ -119,6 +121,7 @@ const Email = ({
           <Hr style={hr} />
           <Row><Column><Text style={totalsLabel}>Subtotal</Text></Column><Column><Text style={totalsValue}>{inr(subtotal)}</Text></Column></Row>
           {discount ? <Row><Column><Text style={totalsLabel}>Discount</Text></Column><Column><Text style={discountValue}>-{inr(discount)}</Text></Column></Row> : null}
+          {stealDealDiscount ? <Row><Column><Text style={totalsLabel}>Steal Deal (Twin Pack)</Text></Column><Column><Text style={discountValue}>-{inr(stealDealDiscount)}</Text></Column></Row> : null}
           {tax ? <Row><Column><Text style={totalsLabel}>GST / tax</Text></Column><Column><Text style={totalsValue}>{inr(tax)}</Text></Column></Row> : null}
           <Row><Column><Text style={totalsLabel}>Shipping</Text></Column><Column><Text style={totalsValue}>{shipping ? inr(shipping) : 'Free'}</Text></Column></Row>
           <Row style={totalRow}><Column><Text style={totalStyle}>{paymentMethod === 'cod' ? 'Total Due' : 'Total Paid'}</Text></Column><Column><Text style={totalAmount}>{inr(total)}</Text></Column></Row>

@@ -162,6 +162,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
       })) ?? "";
@@ -195,6 +196,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
         placedAt,
@@ -237,6 +239,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
         adminUrl: `${base}/admin/orders/${order.id}`,
