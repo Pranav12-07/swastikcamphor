@@ -65,6 +65,16 @@ function Checkout() {
   const [selectedAddress, setSelectedAddress] = useState<string>("new");
   const [saveAddress, setSaveAddress] = useState(true);
   const [method, setMethod] = useState<"upi" | "cod">("upi");
+  // Safety net: when the server's final total differs from what the customer
+  // saw, we pause and ask them to confirm the updated amount before paying.
+  const [totalChanged, setTotalChanged] = useState<{
+    orderNumber: string;
+    total: number;
+    subtotal: number;
+    discount: number;
+    stealDeal: number;
+    shipping: number;
+  } | null>(null);
 
 
   useEffect(() => {
@@ -207,13 +217,20 @@ function Checkout() {
         }).catch(() => undefined);
       }
       // Totals come back from the server — it is the pricing authority.
-      // The cart is only cleared once the payment is verified (order-success page).
-      if (method === "cod") {
-        navigate({ to: "/order-success/$orderNumber", params: { orderNumber: result.orderNumber } });
+      // If it disagrees with what the customer saw (by more than ₹1), pause
+      // and ask them to confirm the updated total before paying.
+      if (Math.abs(result.total - cart.total) > 1) {
+        setTotalChanged({
+          orderNumber: result.orderNumber,
+          total: result.total,
+          subtotal: result.subtotal,
+          discount: result.discount,
+          stealDeal: result.stealDeal,
+          shipping: result.shipping,
+        });
         return;
       }
-      setPlaced({ email: parsed.data.email, total: result.total });
-      setOrderNumber(result.orderNumber);
+      proceed(result.orderNumber, result.total, parsed.data.email);
 
     } catch (err) {
       toast.error(
