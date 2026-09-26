@@ -19,10 +19,11 @@ export type PublicProduct = {
   gallery: string[];
   rating: number | null;
   ratingCount: number;
+  sizeOptions: SizeOption[];
 };
 
 export const PRODUCT_SELECT =
-  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count";
+  "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,stock_quantity,sku,seo_title,seo_description,is_featured,admin_rating,admin_rating_count,size_options";
 
 type Row = Record<string, unknown>;
 
