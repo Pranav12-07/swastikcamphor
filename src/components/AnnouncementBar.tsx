@@ -35,19 +35,23 @@ export function AnnouncementBar() {
   }, [products]);
 
   const messages: { key: string; node: ReactNode }[] = [
-    {
-      key: "twin",
-      node: (
-        <Link
-          to="/products"
-          search={{ filter: "twin" }}
-          className="inline-flex items-center gap-1.5 font-semibold text-gold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-        >
-          <Tag className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {t("Twin Packs: save up to")} {twinOff}% →
-        </Link>
-      ),
-    },
+    ...(twinOff > 0
+      ? [
+          {
+            key: "twin",
+            node: (
+              <Link
+                to="/products"
+                search={{ filter: "twin" }}
+                className="inline-flex items-center gap-1.5 font-semibold text-gold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              >
+                <Tag className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                {t("Twin Packs: save up to")} {twinOff}% →
+              </Link>
+            ),
+          },
+        ]
+      : []),
     {
       key: "ship",
       node: (
