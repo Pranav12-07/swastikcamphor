@@ -60,12 +60,13 @@ export function Header() {
   }, [open]);
 
   return (
+    <>
     <header
       className={cn(
         "site-header sticky top-0 z-50 w-full transition-all duration-200",
         scrolled
           ? "border-b border-gold/30 bg-background/95 shadow-[var(--shadow-soft)] backdrop-blur"
-          : "bg-background/80 backdrop-blur-sm",
+          : "bg-background/80",
       )}
     >
       <div
@@ -330,5 +331,6 @@ export function Header() {
         </div>
       )}
     </header>
+    </>
   );
 }
