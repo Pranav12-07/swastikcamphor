@@ -18,3 +18,4 @@
 - legacy-redirects.ts: WordPress /product/* rules; sitemap: image entries.
 - Review-request automation: /api/public/cron/review-requests + pg_cron (needs publish).
 - Publish everything; Resend setup still blocks order emails.
+- [x] Mobile-first header/hero/cards spec — done & verified at 360/390/1280/1440
