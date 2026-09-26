@@ -647,7 +647,7 @@ export const adminListReviews = createServerFn({ method: "POST" })
     await assertPerm(context.supabase as never, context.userId, "reviews");
     const { data, error } = await context.supabase
       .from("product_reviews")
-      .select("id, product_slug, name, rating, comment, approved, created_at")
+      .select("id, product_slug, name, rating, comment, approved, thank_you_coupon, created_at")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) throw new Error(error.message);
@@ -661,9 +661,72 @@ export const adminSetReviewApproval = createServerFn({ method: "POST" })
     const { assertPerm, logAudit } = await import("@/lib/admin-guard.server");
     await assertPerm(context.supabase as never, context.userId, "reviews");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: before } = await supabaseAdmin
+      .from("product_reviews")
+      .select("id, approved, user_id, name, product_slug, thank_you_coupon")
+      .eq("id", data.id)
+      .maybeSingle();
     const { error } = await supabaseAdmin.from("product_reviews").update({ approved: data.approved }).eq("id", data.id);
     if (error) throw new Error(error.message);
     await logAudit({ actorId: context.userId, action: data.approved ? "review.approved" : "review.hidden", entity: "review", entityId: data.id });
+
+    // Thank-you coupon: only on the first approval, once per review, when the programme is on.
+    if (data.approved && before && !before.approved && before.user_id && !before.thank_you_coupon) {
+      try {
+        const { data: settingRows } = await supabaseAdmin
+          .from("store_settings")
+          .select("key,value")
+          .in("key", ["review_coupon_enabled", "review_coupon_amount"]);
+        const read = (key: string, fallback: string) => {
+          const row = (settingRows ?? []).find((r) => r.key === key);
+          const v = row?.value as unknown;
+          const raw = v && typeof v === "object" && "value" in (v as Record<string, unknown>) ? (v as Record<string, unknown>)["value"] : v;
+          return raw == null ? fallback : String(raw);
+        };
+        const enabled = read("review_coupon_enabled", "true") !== "false";
+        const amount = Math.max(1, Math.round(Number(read("review_coupon_amount", "25")) || 25));
+        if (enabled) {
+          const { data: userData } = await supabaseAdmin.auth.admin.getUserById(String(before.user_id));
+          const email = userData?.user?.email;
+          if (email) {
+            const code = `REVIEW-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+            const expires = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+            const { error: couponError } = await supabaseAdmin.from("coupons").insert({
+              code,
+              discount_type: "fixed",
+              discount_value: amount,
+              min_order_amount: 299,
+              usage_limit: 1,
+              per_customer_limit: 1,
+              expires_at: expires.toISOString(),
+              is_active: true,
+            });
+            if (!couponError) {
+              await supabaseAdmin.from("product_reviews").update({ thank_you_coupon: code }).eq("id", data.id);
+              const { data: prod } = await supabaseAdmin
+                .from("products")
+                .select("name")
+                .eq("slug", String(before.product_slug))
+                .maybeSingle();
+              const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+              await sendTemplateEmail("review-thank-you", email, {
+                templateData: {
+                  customerName: String(before.name ?? "Customer"),
+                  productName: String(prod?.name ?? before.product_slug),
+                  couponCode: code,
+                  couponAmount: amount,
+                  minOrder: 299,
+                  expiresAt: expires.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                },
+                idempotencyKey: `review-thank-you-${data.id}`,
+              });
+            }
+          }
+        }
+      } catch (couponErr) {
+        console.error("review thank-you coupon failed", couponErr);
+      }
+    }
     return { ok: true as const };
   });
 
