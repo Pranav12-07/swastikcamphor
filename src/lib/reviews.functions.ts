@@ -152,8 +152,6 @@ export const toggleHelpful = createServerFn({ method: "POST" })
 
     if (existing) {
       await supabaseAdmin.from("review_votes").delete().eq("id", existing.id);
-      await supabaseAdmin.rpc("decrement_review_helpful" as never, { _review: data.review_id } as never).catch(() => undefined);
-      // Fallback when the rpc is not present: direct update.
       await supabaseAdmin
         .from("product_reviews")
         .update({ helpful_count: Math.max(0, (await currentHelpful(data.review_id)) - 1) })
