@@ -15,6 +15,7 @@ export type TrackedOrder = {
   subtotal: number;
   shipping: number;
   discount: number;
+  steal_deal_discount: number | null;
   tax: number;
   items: Array<{ name?: string; size?: string; qty?: number; quantity?: number; price?: number }>;
   customer_name: string;
