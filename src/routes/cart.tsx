@@ -40,11 +40,16 @@ function CartPage() {
   };
 
   // --- Live savings breakdown (all from the cart context / store settings) ---
+  const lineInfo = (slug: string, size: string) => {
+    const p = products.find((x) => x.slug === slug);
+    const opt = p?.sizeOptions?.find((o) => o.label === size);
+    return { product: p, opt, price: opt?.price ?? p?.price ?? 0, mrp: opt?.mrp ?? opt?.price ?? p?.price ?? 0 };
+  };
   const itemSavings = cart.lines.reduce((sum, l) => {
-    const mrp = l.mrp ?? l.price;
-    return sum + (mrp > l.price ? (mrp - l.price) * l.qty : 0);
+    const { price, mrp } = lineInfo(l.slug, l.size);
+    return sum + (mrp > price ? (mrp - price) * l.qty : 0);
   }, 0);
-  const shippingSaved = cart.subtotal > 0 && cart.shipping === 0 ? cart.shippingFlat : 0;
+  const shippingSaved = cart.subtotal > 0 && cart.shipping === 0 ? shippingFlat : 0;
   const totalSaved = itemSavings + cart.stealDeal + shippingSaved;
 
   // A single-jar line whose Twin Pack isn't already in the cart.
@@ -108,21 +113,24 @@ function CartPage() {
         <ul className="space-y-4">
           {cart.lines.map((l) => {
             const upgrade = upgradeFor(l.slug, l.size);
+            const info = lineInfo(l.slug, l.size);
+            const name = info.product?.name ?? l.slug;
+            const image = info.opt?.image ?? info.product?.image ?? "";
             return (
               <li key={`${l.slug}__${l.size}`} className="rounded-xl border border-gold/25 bg-card p-4">
                 <div className="flex gap-4">
-                  <img src={l.image} alt={l.name} className="h-20 w-20 rounded-lg object-cover" />
+                  <img src={image} alt={name} className="h-20 w-20 rounded-lg object-cover" />
                   <div className="flex-1">
                     <Link to="/products/$slug" params={{ slug: l.slug }} className="font-body font-semibold hover:underline">
-                      {l.name}
+                      {name}
                     </Link>
                     {l.size && <p className="text-xs text-muted-foreground">{l.size}</p>}
-                    <p className="tnum mt-1 text-sm">{formatINR(l.price)}</p>
+                    <p className="tnum mt-1 text-sm">{formatINR(info.price)}</p>
                   </div>
                   <div className="flex flex-col items-end justify-between">
                     <button
                       type="button"
-                      aria-label={`Remove ${l.name}`}
+                      aria-label={`Remove ${name}`}
                       onClick={() => cart.setQty(l.slug, l.size, 0)}
                       className="text-muted-foreground transition-colors hover:text-destructive"
                     >
