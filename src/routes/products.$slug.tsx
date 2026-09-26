@@ -138,9 +138,9 @@ function ProductDetail() {
           <p className="mt-4 leading-relaxed text-muted-foreground">{product.description || product.short}</p>
 
           <div className="mt-6 flex flex-wrap items-baseline gap-3">
-            <span className="text-3xl font-semibold">{formatINR(product.price)}</span>
-            {product.mrp > product.price && (
-              <span className="text-muted-foreground line-through">{formatINR(product.mrp)}</span>
+            <span className="text-3xl font-semibold">{formatINR(price)}</span>
+            {mrp > price && (
+              <span className="text-muted-foreground line-through">{formatINR(mrp)}</span>
             )}
             {discount > 0 && (
               <span className="rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-accent-foreground">
@@ -151,6 +151,50 @@ function ProductDetail() {
               {inStock ? "In stock" : "Out of stock"}
             </span>
           </div>
+          {mrp > price && (
+            <p className="mt-1.5 text-sm font-medium text-emerald-700">Save {formatINR(mrp - price)}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {selected?.popular && (
+              <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+                Most chosen
+              </span>
+            )}
+            {price >= freeShippingAbove && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-2.5 py-1 text-xs text-muted-foreground">
+                <Truck className="h-3.5 w-3.5" aria-hidden="true" /> Free shipping
+              </span>
+            )}
+          </div>
+
+          {sizeOptions.length > 0 && (
+            <div className="mt-5">
+              <p className="text-sm font-medium">Available in:</p>
+              <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pack size">
+                {sizeOptions.map((opt) => {
+                  const available = sizeAvailable(product, opt);
+                  const active = selected?.label === opt.label;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      disabled={!available}
+                      onClick={() => setPickedSize(opt.label)}
+                      className={`h-10 rounded-full border px-4 text-sm transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 font-medium"
+                          : "border-gold/40 hover:border-primary/60"
+                      } ${!available ? "cursor-not-allowed opacity-60 line-through" : ""}`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {typeof product.rating === "number" && product.rating > 0 ? (
             <div className="mt-3 flex items-center gap-2">
