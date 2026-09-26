@@ -112,7 +112,7 @@ function Index() {
   const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
   const posts = allPosts.slice(0, 3);
   const { products: liveProducts } = useCatalog();
-  const products = withServerProducts(liveProducts, serverProducts) as CatalogProduct[];
+  const products = withServerProducts(liveProducts, serverProducts) as unknown as CatalogProduct[];
   const { t } = useI18n();
 
   // Twin Pack Offers: every Twin Pack, Tablets by weight first, then Bhimseni.

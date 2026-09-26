@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { formatINR, isTwinPack, matchingTwin, twinSavings, twinSavingsPct } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
+import { useStoreSettings } from "@/lib/store-settings";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 import { useI18n } from "@/lib/i18n";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
@@ -31,6 +32,7 @@ function CartPage() {
   const { t } = useI18n();
   const [upselling, setUpselling] = useState(false);
   const { products } = useCatalog();
+  const { shippingFlat } = useStoreSettings();
 
   const switchToTwin = (slug: string, singleSize: string, twinLabel: string) => {
     cart.setQty(slug, singleSize, 0);
