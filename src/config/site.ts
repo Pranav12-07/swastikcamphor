@@ -35,10 +35,9 @@ export const upi = {
 
 /** Company-profile (2024) statements used on the website. Keep wording as the company states it. */
 export const companyProfile = {
-  retailStores: "1,000+",
-  retailRegion: "Telangana",
-  retailPartners: ["Ratnadeep", "Spencer's", "Vijetha", "National Mart", "Value Zone", "Reliance Retail"],
-  ayodhyaKg: 108,
+  retailStores: "5,000+",
+  retailRegion: "India",
+  retailPartners: ["Ratnadeep", "National Mart", "Reliance Retail", "DMart", "KPN Fresh"],
 } as const;
 
 /** Single source of truth for every social link on the site. */

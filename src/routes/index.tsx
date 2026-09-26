@@ -1,5 +1,5 @@
 import { canonical, canonicalLink } from "@/lib/seo";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Flame, Leaf, ShieldCheck, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
@@ -12,6 +12,7 @@ import { CategoryTiles } from "@/components/CategoryTiles";
 import { TrustStrip } from "@/components/TrustStrip";
 
 import { useCatalog } from "@/lib/catalog";
+import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 import { site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
@@ -29,51 +30,93 @@ type PackRef = {
 /** Card for one pack option (homepage Twin Pack Offers / Popular packs). */
 function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
   const { product, option } = pack;
+  const { t } = useI18n();
+  const { add } = useCart();
+  const navigate = useNavigate();
   const off = pctOff(option.mrp, option.price);
   const save = twinSavings(product, option);
+  const rate = per100g(option);
+  const outOfStock = option.stock != null && option.stock <= 0;
+
+  const buyNow = () => {
+    add(product.slug, option.label);
+    void navigate({ to: "/checkout" });
+  };
+
   return (
-    <Link
-      to="/products/$slug"
-      params={{ slug: product.slug }}
-      search={{ size: option.label }}
-      className="card-premium group relative block overflow-hidden"
-    >
+    <div className="card-premium group relative flex flex-col overflow-hidden">
       {bestValue && (
         <span className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow">
-          Best value
+          {t("Best value")}
         </span>
       )}
       {off > 0 && (
         <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
-          {off}% OFF
+          {off}% {t("OFF")}
         </span>
       )}
-      <img
-        src={option.image ?? product.image}
-        alt={`${product.name} – ${option.label}`}
-        loading="lazy"
-        className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      <div className="p-4">
-        <h3 className="font-body text-sm font-semibold leading-snug">{product.name}</h3>
-        <p className="mt-0.5 text-xs text-muted-foreground">{option.label}</p>
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-base font-semibold">{formatINR(option.price)}</span>
+      <Link
+        to="/products/$slug"
+        params={{ slug: product.slug }}
+        search={{ size: option.label }}
+        aria-label={`${product.name} – ${option.label}`}
+        className="block"
+      >
+        <img
+          src={option.image ?? product.image}
+          alt={`${product.name} – ${option.label}`}
+          loading="lazy"
+          className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+      </Link>
+      <div className="flex flex-1 flex-col p-3 md:p-4">
+        <h3 className="truncate font-body text-[13px] font-semibold leading-snug md:text-sm">{product.name}</h3>
+        <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted-foreground">{option.label}</p>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+          <span className="text-base font-bold">{formatINR(option.price)}</span>
           {option.mrp != null && option.mrp > option.price && (
             <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
           )}
         </div>
-        {save != null && (
-          <p className="mt-1 text-xs font-medium text-emerald-700">Save {formatINR(save)} vs 2 single jars</p>
-        )}
+        {save != null ? (
+          <p className="mt-1 text-xs font-medium text-emerald-700">
+            {t("Save")} {formatINR(save)} {t("vs 2 single jars")}
+          </p>
+        ) : rate != null ? (
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
+            {formatINR(rate)} {t("per 100 g")}
+          </p>
+        ) : null}
+        <div className="mt-3 flex flex-col gap-2 lg:flex-row">
+          <button
+            type="button"
+            disabled={outOfStock}
+            onClick={() => add(product.slug, option.label)}
+            className="h-11 w-full whitespace-nowrap rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50 lg:flex-1"
+          >
+            {outOfStock ? t("Out of stock") : t("Add to cart")}
+          </button>
+          <button
+            type="button"
+            disabled={outOfStock}
+            onClick={buyNow}
+            className="h-11 w-full whitespace-nowrap rounded-full border border-gold/50 px-4 text-xs font-semibold transition-colors hover:bg-accent/15 disabled:opacity-50 lg:flex-1"
+          >
+            {t("Buy now")}
+          </button>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    links: canonicalLink("/"),
+    links: [
+      ...canonicalLink("/"),
+      // The hero poster is the largest image on screen — load it with priority.
+      { rel: "preload", as: "image", href: hero },
+    ],
     meta: [
       { property: "og:url", content: canonical("/") },
       { name: "twitter:card", content: "summary_large_image" },
@@ -119,6 +162,14 @@ const values = [
   { icon: Truck, title: "Pan-India Delivery", text: "Dispatched in 1-2 days, delivered across India." },
 ];
 
+/** The 4 single packs shown in "Camphor for every ritual" (Tablets first, never Twin Packs). */
+const POPULAR_PICKS: { slug: string; packHint: string }[] = [
+  { slug: "camphor-tablets", packHint: "100 g Jar" },
+  { slug: "camphor-tablets", packHint: "250 g Jar" },
+  { slug: "bhimseni-camphor", packHint: "100 g Jar" },
+  { slug: "bhimseni-camphor", packHint: "450 g Jar" },
+];
+
 function Index() {
   const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
   const posts = allPosts.slice(0, 3);
@@ -126,12 +177,22 @@ function Index() {
   const products = withServerProducts(liveProducts, serverProducts);
   const { t } = useI18n();
 
-  // Pack-level picks: options flagged "Feature on home" in admin.
-  const featuredPacks: PackRef[] = products.flatMap((p) =>
-    (p.sizeOptions ?? []).filter((o) => o.featured).map((o) => ({ product: p, option: o })),
-  );
-  const twinPacks = featuredPacks.filter((pk) => isTwinPack(pk.option));
-  const singlePacks = featuredPacks.filter((pk) => !isTwinPack(pk.option));
+  // Twin Pack Offers: featured Twin Packs, Tablets first, up to 4.
+  const twinPacks: PackRef[] = products
+    .flatMap((p) => (p.sizeOptions ?? []).filter((o) => o.featured && isTwinPack(o)).map((o) => ({ product: p, option: o })))
+    .sort((a, b) => (a.product.slug === "camphor-tablets" ? -1 : b.product.slug === "camphor-tablets" ? 1 : 0))
+    .slice(0, 4);
+
+  // Popular packs: the 4 fixed single packs above.
+  const popularPacks: PackRef[] = POPULAR_PICKS.flatMap((pick) => {
+    const product = products.find((p) => p.slug === pick.slug);
+    if (!product) return [];
+    const option = (product.sizeOptions ?? []).find(
+      (o) => !isTwinPack(o) && o.label.startsWith(pick.packHint),
+    );
+    return option ? [{ product, option }] : [];
+  });
+
   // "Best value" = the Twin Pack with the lowest per-100 g price.
   let bestValueKey: string | null = null;
   let bestRate = Infinity;
@@ -142,7 +203,6 @@ function Index() {
       bestValueKey = `${pk.product.slug}__${pk.option.label}`;
     }
   }
-  const popularPacks = [...twinPacks, ...singlePacks].slice(0, 4);
   const heroBanners = useBanners("hero");
   const banner = heroBanners[0];
   useReveal();
@@ -163,6 +223,7 @@ function Index() {
             muted
             loop
             playsInline
+            preload="metadata"
             poster={hero}
             aria-label="A gently flickering camphor flame in a brass diya"
           >
@@ -176,49 +237,51 @@ function Index() {
           style={{ background: "linear-gradient(100deg, oklch(0.2 0.06 28 / 0.92), oklch(0.2 0.06 28 / 0.45))" }}
           aria-hidden="true"
         />
-        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-36">
+        <div className="mx-auto flex max-h-[70svh] min-h-[52svh] max-w-7xl flex-col justify-center px-4 py-8 md:max-h-none md:min-h-0 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft underline underline-offset-4">
             ESTD 1968
           </p>
           <h1
-            className="animate-rise-in text-shine mt-4 max-w-3xl text-4xl leading-[1.1] md:text-6xl"
+            className="animate-rise-in text-shine mt-3 text-[clamp(2.125rem,9.5vw,4.5rem)] uppercase leading-[1.05] md:mt-4"
             style={{ animationDelay: "80ms" }}
           >
             {banner ? (
               banner.title
             ) : (
               <>
-                <strong className="font-bold">SWASTIK 100% PURE</strong>
-                <br />
-                <strong className="font-bold">CAMPHOR</strong>
+                <strong className="block whitespace-nowrap font-bold">{t("PURE CAMPHOR")}</strong>
+                <strong className="block whitespace-nowrap font-bold">{t("PURE TRADITION")}</strong>
               </>
             )}
           </h1>
           <p
-            className="animate-rise-in mt-6 max-w-xl text-base leading-relaxed text-gold-soft/85 md:text-lg"
+            className="animate-rise-in mt-4 max-w-xl text-base leading-relaxed text-gold-soft/85 md:mt-6 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {banner?.subtitle ?? "Made in Hyderabad. Trusted since 1968."}
+            {banner?.subtitle ?? t("Swastik 100% pure camphor. Made in Hyderabad, trusted since 1968.")}
           </p>
-          <div className="animate-rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
+          <div
+            className="animate-rise-in mt-6 flex flex-col gap-3 sm:flex-row md:mt-9"
+            style={{ animationDelay: "240ms" }}
+          >
             {banner?.link_url ? (
               <a
                 href={banner.link_url}
-                className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
+                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-accent px-7 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1 sm:w-auto"
               >
                 {banner.button_text || t("Shop Now")}
               </a>
             ) : (
               <Link
                 to="/shop"
-                className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
+                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-accent px-7 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1 sm:w-auto"
               >
                 {t("Shop Now")}
               </Link>
             )}
             <Link
               to="/products"
-              className="rounded-full border border-gold/60 px-7 py-3 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-gold/60 px-7 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15 sm:w-auto"
             >
               {t("Explore Products")}
             </Link>
@@ -234,18 +297,22 @@ function Index() {
       <CategoryTiles />
 
       {twinPacks.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-8 md:pb-16 md:pt-10">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Twin Pack Offers")}</p>
               <h2 className="mt-2 text-3xl md:text-4xl">{t("Buy 2 and save more")}</h2>
               <div className="gold-rule rule-animate mt-4 w-20" />
             </div>
-            <Link to="/products" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
-              {t("View all products →")}
+            <Link
+              to="/products"
+              hash="twin-packs"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {t("View all offers")}
             </Link>
           </div>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 md:mt-8 lg:grid-cols-4">
             {twinPacks.map((pk) => (
               <PackCard
                 key={`${pk.product.slug}__${pk.option.label}`}
@@ -269,7 +336,7 @@ function Index() {
               {t("View all products →")}
             </Link>
           </div>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 md:mt-8 lg:grid-cols-4">
             {popularPacks.map((pk) => (
               <PackCard key={`${pk.product.slug}__${pk.option.label}`} pack={pk} />
             ))}
