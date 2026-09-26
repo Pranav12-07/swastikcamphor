@@ -37,13 +37,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1976. Free shipping above ₹499.",
       },
       { property: "og:title", content: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         property: "og:description",
         content:
-          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1976. Free shipping above ₹499.",
       },
     ],
   }),
@@ -174,7 +174,7 @@ function Index() {
         />
         <div className="mx-auto flex max-h-[70svh] min-h-[52svh] max-w-7xl flex-col justify-center px-4 py-8 md:max-h-none md:min-h-0 md:px-8 md:py-36">
           <p className="animate-rise-in text-xs uppercase tracking-[0.34em] text-gold-soft underline underline-offset-4">
-            ESTD 1968
+            ESTD 1976
           </p>
           <h1
             className="animate-rise-in text-shine mt-3 text-[clamp(2.125rem,9.5vw,4.5rem)] uppercase leading-[1.05] md:mt-4"
@@ -193,7 +193,7 @@ function Index() {
             className="animate-rise-in mt-4 max-w-xl text-base leading-relaxed text-gold-soft/85 md:mt-6 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {banner?.subtitle ?? t("Swastik 100% Pure Camphor — Trusted for Generations.")}
+            {banner?.subtitle ?? t("Swastik 100% Pure Camphor — Trusted Since Generations.")}
           </p>
           <div
             className="animate-rise-in mt-6 flex flex-col gap-3 sm:flex-row md:mt-9"
@@ -264,7 +264,7 @@ function Index() {
       )}
 
       {(tabletPacks.length > 0 || bhimseniPacks.length > 0) && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-20">
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-8 md:px-8 md:pb-20 md:pt-12">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Popular packs")}</p>
@@ -278,7 +278,16 @@ function Index() {
 
           {tabletPacks.length > 0 && (
             <div className="mt-8">
-              <h3 className="font-display text-lg md:text-xl">{t("Camphor Tablets")}</h3>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-2xl md:text-[32px]">{t("Camphor Tablets")}</h3>
+                <Link
+                  to="/products"
+                  search={{ filter: "tablets" }}
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {t("View all →")}
+                </Link>
+              </div>
               <div className="mt-3">
                 <InfiniteSlider
                   ariaLabel={t("Camphor Tablets")}
@@ -293,7 +302,16 @@ function Index() {
 
           {bhimseniPacks.length > 0 && (
             <div className="mt-8">
-              <h3 className="font-display text-lg md:text-xl">{t("Bhimseni Camphor")}</h3>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-2xl md:text-[32px]">{t("Bhimseni Camphor")}</h3>
+                <Link
+                  to="/products"
+                  search={{ filter: "bhimseni" }}
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {t("View all →")}
+                </Link>
+              </div>
               <div className="mt-3">
                 <InfiniteSlider
                   ariaLabel={t("Bhimseni Camphor")}

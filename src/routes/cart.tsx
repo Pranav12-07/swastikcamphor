@@ -9,6 +9,7 @@ import { useStoreSettings } from "@/lib/store-settings";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 import { useI18n } from "@/lib/i18n";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { CouponForm } from "@/components/cart/CouponForm";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -50,7 +51,7 @@ function CartPage() {
     return sum + (mrp > price ? (mrp - price) * l.qty : 0);
   }, 0);
   const shippingSaved = cart.subtotal > 0 && cart.shipping === 0 ? shippingFlat : 0;
-  const totalSaved = itemSavings + cart.stealDeal + shippingSaved;
+  const totalSaved = itemSavings + cart.stealDeal + cart.discount + shippingSaved;
 
   // A single-jar line whose Twin Pack isn't already in the cart.
   const upgradeFor = (slug: string, size: string) => {
@@ -92,13 +93,18 @@ function CartPage() {
       {totalSaved > 0 && (
         <div
           key={cart.stealDeal > 0 ? "deal-on" : "deal-off"}
-          className={`mt-6 rounded-2xl border border-emerald-600/25 bg-emerald-50/60 p-4 ${cart.stealDeal > 0 ? "animate-savings-pulse" : ""}`}
+          className={`mt-6 rounded-2xl border border-emerald-600/25 bg-emerald-50/60 p-5 ${cart.stealDeal > 0 ? "animate-savings-pulse" : ""}`}
         >
-          <p className="font-semibold text-emerald-800">
+          <p className="text-lg font-bold text-emerald-700 md:text-xl">
             {t("You're saving")} {formatINR(totalSaved)} {t("on this order")}
           </p>
           <ul className="tnum mt-1.5 space-y-0.5 text-sm text-emerald-900/80">
             {itemSavings > 0 && <li>{t("Pack savings")}: {formatINR(itemSavings)}</li>}
+            {cart.discount > 0 && (
+              <li>
+                {t("Coupon")} {cart.coupon}: −{formatINR(cart.discount)}
+              </li>
+            )}
             {cart.stealDeal > 0 && (
               <li>
                 {t("Steal Deal")}: −{formatINR(cart.stealDeal)}
@@ -201,11 +207,21 @@ function CartPage() {
               <dt className="text-muted-foreground">{t("Shipping")}</dt>
               <dd>{cart.shipping === 0 ? t("Free") : formatINR(cart.shipping)}</dd>
             </div>
+            {itemSavings + cart.stealDeal + cart.discount > 0 && (
+              <div className="flex justify-between border-t border-gold/25 pt-2 text-base font-bold text-emerald-700">
+                <dt>{t("Total savings")}</dt>
+                <dd>−{formatINR(itemSavings + cart.stealDeal + cart.discount)}</dd>
+              </div>
+            )}
             <div className="flex justify-between border-t border-gold/25 pt-2 text-lg font-bold text-maroon-deep">
               <dt>{t("Total")}</dt>
               <dd>{formatINR(cart.total)}</dd>
             </div>
           </dl>
+
+          <div className="mt-4">
+            <CouponForm />
+          </div>
 
           <div className="mt-4">
             <FreeShippingProgress />

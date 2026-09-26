@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { CouponForm } from "@/components/cart/CouponForm";
 import { useI18n } from "@/lib/i18n";
 import phonepeLogo from "@/assets/phonepe.png";
 
@@ -64,6 +65,16 @@ function Checkout() {
   const [selectedAddress, setSelectedAddress] = useState<string>("new");
   const [saveAddress, setSaveAddress] = useState(true);
   const [method, setMethod] = useState<"upi" | "cod">("upi");
+  // Safety net: when the server's final total differs from what the customer
+  // saw, we pause and ask them to confirm the updated amount before paying.
+  const [totalChanged, setTotalChanged] = useState<{
+    orderNumber: string;
+    total: number;
+    subtotal: number;
+    discount: number;
+    stealDeal: number;
+    shipping: number;
+  } | null>(null);
 
 
   useEffect(() => {
@@ -141,6 +152,53 @@ function Checkout() {
     );
   }
 
+  if (totalChanged) {
+    return (
+      <>
+        <PageHeader eyebrow="Checkout" title="Your total has been updated" />
+        <div className="mx-auto max-w-md px-4 py-16 md:px-8">
+          <div className="card-premium p-8 text-center">
+            <p className="text-muted-foreground">Your total has been updated to</p>
+            <p className="tnum mt-2 font-display text-3xl font-bold text-maroon-deep">{formatINR(totalChanged.total)}</p>
+            <dl className="tnum mt-5 space-y-2 border-t border-border pt-4 text-left text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t("Subtotal")}</dt>
+                <dd>{formatINR(totalChanged.subtotal)}</dd>
+              </div>
+              {totalChanged.discount > 0 && (
+                <div className="flex justify-between text-primary">
+                  <dt>{t("Coupon")}</dt>
+                  <dd>-{formatINR(totalChanged.discount)}</dd>
+                </div>
+              )}
+              {totalChanged.stealDeal > 0 && (
+                <div className="flex justify-between text-primary">
+                  <dt>{t("Steal Deal")}</dt>
+                  <dd>-{formatINR(totalChanged.stealDeal)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t("Shipping")}</dt>
+                <dd>{totalChanged.shipping === 0 ? t("Free") : formatINR(totalChanged.shipping)}</dd>
+              </div>
+            </dl>
+            <button
+              type="button"
+              onClick={() => {
+                const { orderNumber: no, total } = totalChanged;
+                setTotalChanged(null);
+                proceed(no, total, session?.user?.email ?? "");
+              }}
+              className="mt-6 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              {t("Confirm")} • {formatINR(totalChanged.total)}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   if (cart.lines.length === 0) {
     return (
       <>
@@ -156,6 +214,16 @@ function Checkout() {
       </>
     );
   }
+
+  const proceed = (orderNo: string, total: number, email: string) => {
+    // The cart is only cleared once the payment is verified (order-success page).
+    if (method === "cod") {
+      navigate({ to: "/order-success/$orderNumber", params: { orderNumber: orderNo } });
+      return;
+    }
+    setPlaced({ email, total });
+    setOrderNumber(orderNo);
+  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -206,13 +274,20 @@ function Checkout() {
         }).catch(() => undefined);
       }
       // Totals come back from the server — it is the pricing authority.
-      // The cart is only cleared once the payment is verified (order-success page).
-      if (method === "cod") {
-        navigate({ to: "/order-success/$orderNumber", params: { orderNumber: result.orderNumber } });
+      // If it disagrees with what the customer saw (by more than ₹1), pause
+      // and ask them to confirm the updated total before paying.
+      if (Math.abs(result.total - cart.total) > 1) {
+        setTotalChanged({
+          orderNumber: result.orderNumber,
+          total: result.total,
+          subtotal: result.subtotal,
+          discount: result.discount,
+          stealDeal: result.stealDeal,
+          shipping: result.shipping,
+        });
         return;
       }
-      setPlaced({ email: parsed.data.email, total: result.total });
-      setOrderNumber(result.orderNumber);
+      proceed(result.orderNumber, result.total, parsed.data.email);
 
     } catch (err) {
       toast.error(
@@ -431,6 +506,9 @@ function Checkout() {
               <dd>{formatINR(cart.total)}</dd>
             </div>
           </dl>
+          <div className="mt-4">
+            <CouponForm />
+          </div>
           <div className="mt-4">
             <FreeShippingProgress />
           </div>

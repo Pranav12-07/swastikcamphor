@@ -8,7 +8,7 @@ import {
   isTwinPack,
   pctOff,
   sizeAvailable,
-  twinSavingsPct,
+  twinSavings,
   type SizeOption,
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
@@ -19,6 +19,7 @@ import { useBoughtCounts } from "@/lib/catalog";
 import { useI18n } from "@/lib/i18n";
 import { StarRating } from "@/components/StarRating";
 import { QtyStepper } from "@/components/QtyStepper";
+import { PriceTag } from "@/components/PriceTag";
 
 export type CardProduct = {
   slug: string;
@@ -64,7 +65,14 @@ export function ProductCard({
   const price = selected?.price ?? product.price;
   const mrp = selected?.mrp ?? product.mrp ?? product.price;
   const discount = pctOff(mrp, price);
-  const twinPct = selected ? twinSavingsPct(product, selected) : null;
+  const twinSave = selected ? twinSavings(product, selected) : null;
+  const twinSingle =
+    selected && isTwinPack(selected)
+      ? options.find((o) => !isTwinPack(o) && o.unit_grams === selected.unit_grams)
+      : null;
+  const twinFull = selected && twinSingle ? twinSingle.price * (selected.pack_count || 2) : null;
+  const twinPct = twinSave != null && twinFull ? Math.floor((twinSave / twinFull) * 100) : null;
+  const stockLeft = selected ? (selected.stock ?? product.stock ?? null) : (product.stock ?? null);
   const inStock = selected ? sizeAvailable(product, selected) : (product.stock ?? 1) > 0;
   const image = selected?.image ?? product.image;
 
@@ -187,15 +195,32 @@ export function ProductCard({
         )}
 
         <div className="mt-3 flex flex-wrap items-baseline gap-x-2">
-          <span className="tnum text-lg font-semibold">{formatINR(price)}</span>
-          {mrp > price && <span className="tnum text-sm text-muted-foreground line-through">{formatINR(mrp)}</span>}
+          <PriceTag amount={price} className="text-[22px] text-maroon-deep md:text-[26px]" />
+          {mrp > price && (
+            <span className="tnum text-base text-muted-foreground line-through md:text-lg">{formatINR(mrp)}</span>
+          )}
+          {discount > 0 && <span className="text-base font-bold text-emerald-700 md:text-lg">{discount}% {t("OFF")}</span>}
         </div>
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">Inclusive of all taxes</p>
-        {twinPct != null ? (
-          <p className="mt-0.5 text-xs font-semibold text-emerald-700">Save {twinPct}% vs 2 single jars</p>
+        {twinSave != null && twinPct != null && twinFull != null ? (
+          <>
+            <p className="tnum mt-0.5 text-[11px] text-muted-foreground">
+              {selected?.pack_count || 2} {t("jars separately")}: {formatINR(twinFull)}
+            </p>
+            <p className="tnum mt-0.5 text-xs font-semibold text-emerald-700">
+              {t("Save")} {formatINR(twinSave)} ({twinPct}%) {t("vs 2 single jars")}
+            </p>
+          </>
         ) : discount >= 1 ? (
-          <p className="mt-0.5 text-xs font-semibold text-emerald-700">Save {discount}% on MRP</p>
+          <p className="tnum mt-0.5 text-xs font-semibold text-emerald-700">
+            {t("You save")} {formatINR(mrp - price)} {t("on MRP")}
+          </p>
         ) : null}
+        {stockLeft != null && stockLeft >= 1 && stockLeft <= 10 && (
+          <p className="mt-0.5 text-xs font-medium text-amber-700">
+            {t("Only")} {stockLeft} {t("left")}
+          </p>
+        )}
         {price >= freeShippingAbove && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">Free shipping</p>
         )}

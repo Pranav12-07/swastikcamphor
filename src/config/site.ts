@@ -3,7 +3,7 @@ export const site = {
   legalName: "VIJAYASREE CAMPHOR INDUSTRIES",
   gstin: "36AGMPP0390C1ZG",
   /** Year shown as ESTD across the site. */
-  established: 1968,
+  established: 1976,
   tagline: "Purity in every tablet",
   email: "shop@online.swastikcamphor.in",
   phone: "+91 7416886881",
@@ -35,9 +35,9 @@ export const upi = {
 
 /** Company-profile statements used on the website. Keep wording as the company states it. */
 export const companyProfile = {
-  retailStores: "200+",
+  retailStores: "5,000+",
   retailRegion: "India",
-  retailPartners: ["Ratnadeep", "Q Mart", "Balaji Grand", "Vijetha", "SMR Vinay"],
+  retailPartners: ["DMart", "Ratnadeep", "Reliance Bazaar", "KPN Fresh"],
 } as const;
 
 /** Single source of truth for every social link on the site. */

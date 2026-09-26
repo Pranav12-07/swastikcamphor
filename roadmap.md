@@ -1,20 +1,29 @@
-# Roadmap — Swastik Camphor store
+# Roadmap
 
-## Done (this round)
-- Steal Deal: server-enforced in place_order (Twin Pack + order ₹500+ → extra ₹50, always the bigger of coupon vs deal), stored on the order, shown in cart/checkout summaries, customer + admin emails, and PDF receipts.
-- Twin Pack upsell popup when a single jar is added (once per product), plus "Switch to Twin Pack" buttons and a Steal Deal progress bar on the cart page.
-- Homepage: hero CTAs, category circles reordered (Tablets, Bhimseni, Pouch), 9-pack auto-scrolling carousel (2 visible on phones, 4 on desktop, pause on hover/touch, arrows + dots + play/pause).
-- /products rebuilt: filter chips (All / Twin Pack Offers / Tablets / Bhimseni / Pouch) with counts, sort dropdown (recommended, price low/high, biggest saving), URL-backed state, empty state; SSR loader/meta preserved.
-- Shop page removed: /shop 301-redirects to /products (old ?category= maps to ?filter=), all nav/footer/blog/cart links updated, sitemap + legacy redirects cleaned.
-- Product cards show real review stars/counts (fallback text when none) and genuine rounded purchase counts from recent paid/delivered orders; admin-set ratings cleared from the DB.
-- Review coupons: approving a first review auto-creates a single-use ₹25 coupon (min ₹299, 60 days) and emails a branded thank-you; coupon marker exposed in review data.
-- Footer top gap removed; build OK.
+## Round 4 (audit fixes + design + prices)
+- [x] A1 Percentage coupons charged correctly in place_order (percent/percentage), whole-rupee rounding, caps
+- [x] A2 Private coupons (is_public, assigned_user_id) + server-side validation; catalog sees public only
+- [x] A3 per_customer_limit + first_order_only enforced server-side (SWASTIK10 first order)
+- [x] A4 Admin coupons: used_count fixed; is_public/first_order_only/per_customer_limit/assigned email shown
+- [x] A5 Shipping default ₹49 (store setting wins)
+- [x] A6 /products ItemList JSON-LD
+- [x] A7 Ratings only from approved reviews; admin rating fields removed
+- [x] B1 1976 everywhere (code + DB descriptions)
+- [x] B2 Hero "ESTD 1976" + exact subline
+- [x] B3 Cart icon → ShoppingCart
+- [x] B4 Price hierarchy on cards + PDP (PriceTag, MRP, % OFF, savings lines)
+- [x] B5 Honest cues: Only N left (≤10), BEST SAVING ribbon, real bought counts
+- [x] B6 Sliders autoplay 5s; reduced-motion fade instead of stop
+- [x] B7 Spacing above POPULAR PACKS
+- [x] B8 Bigger subheadings + View all → links
+- [x] B9 Trust: 5,000+ stores, Since 1976, DMart/Ratnadeep/Reliance Bazaar/KPN Fresh
+- [x] B10 Cart savings card + Total savings −₹X above Total
+- [x] B11 te/hi translations for new text
+- [x] C1 Bhimseni 2×100g Twin ₹499 (MRP ₹580)
+- [x] C2 steal_deal_min → ₹499
+- [x] C3 All amounts from prices/settings (ticker derives max twin %)
 
-## Remaining
-- Trust strip text: 200+ stores, ESTD 1968, partner list (Ratnadeep, Q Mart, Balaji Grand, Vijetha, SMR Vinay) — config values still 5,000+.
-- Order-success page: show Steal Deal line (getPaymentState now returns it); admin order detail page Steal Deal line.
-- Admin settings: editable Steal Deal (enabled/amount/min) + review-coupon programme controls; admin reviews: show coupon marker.
-- Product page: no-review fallback text, review-coupon incentive line, Buy Now must skip the upsell popup.
-- Telugu/Hindi translations for all new strings.
-- Full responsive + accessibility check (360/390/768/1280/1440), carousel geometry test.
-- Review-request cron + publish; Resend setup still blocks order emails.
+## Outstanding
+- [ ] Publish the site
+- [ ] Resend API key + domain verification (user action needed)
+- [ ] Final phone/desktop visual pass after publish

@@ -74,10 +74,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     queryKey: ["public-coupons"],
     staleTime: 60_000,
     queryFn: async (): Promise<CatalogCoupon[]> => {
+      // Only advertised (public) codes load here; private codes validate server-side.
       const { data, error } = await supabase
         .from("coupons")
         .select("code,discount_type,discount_value,min_order_amount,max_discount,expires_at,starts_at")
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .eq("is_public", true)
+        .is("assigned_user_id", null);
       if (error) throw error;
       const now = Date.now();
       return (data ?? [])

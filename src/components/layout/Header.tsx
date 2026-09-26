@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Heart, LogOut, Menu, Phone, ShoppingBasket, Tag, User, X } from "lucide-react";
+import { Heart, LogOut, Menu, Phone, ShoppingCart, Tag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/swastik-logo-trimmed.png.asset.json";
 import { site } from "@/config/site";
@@ -91,7 +91,7 @@ export function Header() {
           />
           <span className="flex flex-col leading-none">
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-deep lg:text-[13px]">
-              100% {t("PURE")} · {t("SINCE")} 1968
+              100% {t("PURE")} · {t("SINCE")} 1976
             </span>
           </span>
         </Link>
@@ -187,7 +187,7 @@ export function Header() {
                 aria-label={`${t("Cart")}, ${count} ${t("items")}`}
                 className="relative flex h-11 w-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 xl:h-10 xl:w-auto xl:px-3.5"
               >
-                <ShoppingBasket className="h-4 w-4" aria-hidden="true" />
+                <ShoppingCart className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden text-sm font-medium xl:inline">{t("Cart")}</span>
                 {count > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[0.65rem] font-bold text-maroon-deep">

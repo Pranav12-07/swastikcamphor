@@ -116,7 +116,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Buying from a camphor manufacturer instead of a reseller",
         paragraphs: [
-          "Buying directly from a camphor manufacturer means fresher stock, batch-level quality checks and honest labelling of grade and weight. Swastik Camphor has manufactured and supplied camphor from Hyderabad since 1968, serving households, temples and bulk buyers across India.",
+          "Buying directly from a camphor manufacturer means fresher stock, batch-level quality checks and honest labelling of grade and weight. Swastik Camphor has manufactured and supplied camphor from Hyderabad since 1976, serving households, temples and bulk buyers across India.",
         ],
         links: [
           { to: "/about", label: "About Swastik Camphor" },

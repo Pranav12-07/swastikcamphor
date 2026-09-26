@@ -37,10 +37,11 @@ export function useStoreSettings() {
     shippingFlat: num(settings, "shipping_flat_rate", 49),
     freeShippingAbove: num(settings, "shipping_free_above", 499),
     codFee: num(settings, "shipping_cod_fee", 0),
+    codEnabled: settings["cod_enabled"] !== "false",
     shippingEta: settings["shipping_eta"] ?? "",
     stealDealEnabled: settings["steal_deal_enabled"] !== "false",
     stealDealAmount: num(settings, "steal_deal_amount", 50),
-    stealDealMin: num(settings, "steal_deal_min", 500),
+    stealDealMin: num(settings, "steal_deal_min", 499),
     reviewCouponEnabled: settings["review_coupon_enabled"] !== "false",
     reviewCouponAmount: num(settings, "review_coupon_amount", 25),
   };

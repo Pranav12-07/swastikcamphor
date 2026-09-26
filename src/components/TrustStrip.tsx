@@ -7,7 +7,7 @@ export function TrustStrip() {
   const { t } = useI18n();
   const stats = [
     { icon: Store, value: companyProfile.retailStores, label: t("retail stores across India") },
-    { icon: Flame, value: `${new Date().getFullYear() - site.established}+ ${t("years")}`, label: t("of purity, made in Hyderabad") },
+    { icon: Flame, value: `${t("Since")} ${site.established}`, label: t("Crafting camphor since generations") },
     { icon: Truck, value: t("Pan-India"), label: t("delivery, dispatched in 1–2 days") },
   ];
 

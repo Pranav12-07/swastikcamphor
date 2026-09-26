@@ -25,8 +25,26 @@ export function InfiniteSlider({ items, keys, ariaLabel }: Props) {
   const [index, setIndex] = useState(n);
   const [animated, setAnimated] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  const [fading, setFading] = useState(false);
   const touchX = useRef<number | null>(null);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reduced motion: keep the autoplay rhythm but swap the slide for a soft fade.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!reduced) return;
+    setFading(true);
+    const id = setTimeout(() => setFading(false), 350);
+    return () => clearTimeout(id);
+  }, [index, reduced]);
 
   useEffect(() => {
     const mq3 = window.matchMedia("(min-width: 1024px)");
@@ -81,8 +99,7 @@ export function InfiniteSlider({ items, keys, ariaLabel }: Props) {
   }, [animated]);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!multi || paused || reduced || document.hidden) return;
+    if (!multi || paused || document.hidden) return;
     const timer = setInterval(() => go(index + 1), INTERVAL);
     return () => clearInterval(timer);
   }, [multi, paused, index, go]);
@@ -124,7 +141,11 @@ export function InfiniteSlider({ items, keys, ariaLabel }: Props) {
       }}
     >
       <div
-        className={`flex ${animated ? "transition-transform duration-700 ease-out" : ""} motion-reduce:transition-none`}
+        className={
+          reduced
+            ? `flex transition-opacity duration-700 ${fading ? "opacity-0" : "opacity-100"}`
+            : `flex ${animated ? "transition-transform duration-700 ease-out" : ""} motion-reduce:transition-none`
+        }
         style={{ width: `${trackWidth}%`, transform: `translateX(-${index * slideWidth}%)` }}
         onTransitionEnd={onTransitionEnd}
       >

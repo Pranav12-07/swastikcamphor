@@ -39,7 +39,7 @@ export async function buildReceiptDoc(data: ReceiptData) {
   doc.setFontSize(9);
   doc.setTextColor(120);
   y += 16;
-  doc.text("ESTD 1968  •  Pure Camphor. Pure Tradition.", left, y);
+  doc.text("ESTD 1976  •  Pure Camphor. Pure Tradition.", left, y);
 
   doc.setFontSize(16);
   doc.setTextColor(20);

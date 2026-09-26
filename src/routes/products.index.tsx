@@ -5,7 +5,7 @@ import { withServerProducts } from "@/lib/catalog-ssr";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
 import { PackCard, type PackRef } from "@/components/PackCard";
 import { useReveal } from "@/hooks/use-reveal";
-import { canonicalLink, seoMeta } from "@/lib/seo";
+import { canonical, canonicalLink, seoMeta } from "@/lib/seo";
 import { isTwinPack, pctOff, twinSavings, type SizeOption } from "@/data/products";
 import { useI18n } from "@/lib/i18n";
 
@@ -28,10 +28,27 @@ export const Route = createFileRoute("/products/")({
       path: "/products",
     }),
     links: canonicalLink("/products"),
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(itemListJsonLd) }],
   }),
   loader: () => listPublicProducts().catch(() => [] as PublicProduct[]),
   component: ProductsPage,
 });
+
+// The three active products, for search engines.
+const itemListJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Camphor Tablets", url: canonical("/products/camphor-tablets") },
+    { "@type": "ListItem", position: 2, name: "Bhimseni Camphor", url: canonical("/products/bhimseni-camphor") },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "Camphor Tablets Refill Pouch",
+      url: canonical("/products/camphor-tablets-refill-pouch"),
+    },
+  ],
+};
 
 const FILTER_META: Record<FilterId, { label: string; match: (pk: PackRef) => boolean }> = {
   twin: { label: "Twin Pack Offers", match: (pk) => isTwinPack(pk.option) },
@@ -120,7 +137,7 @@ function ProductsPage() {
         <h1 className="mt-2 text-3xl md:text-4xl">Our Products</h1>
         <div className="gold-rule mt-4 w-20" />
         <p className="mt-4 text-muted-foreground">
-          100% pure camphor, made in Hyderabad since 1968. Choose your pack — every size has its own price, photo and
+          100% pure camphor, made in Hyderabad since 1976. Choose your pack — every size has its own price, photo and
           savings.
         </p>
       </header>

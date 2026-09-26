@@ -145,7 +145,7 @@ function BlogPostPage() {
         <div className="card-premium mt-12 p-8 text-center">
           <h2 className="font-display text-2xl">Buy 100% pure camphor online</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Manufactured in Hyderabad since 1968 and dispatched across India.
+            Manufactured in Hyderabad since 1976 and dispatched across India.
           </p>
           <Link
             to="/products"
