@@ -388,3 +388,6 @@
     transform: translateY(-4.5rem);
   }
 }
+
+/* Reveal-on-scroll animations briefly sit off-screen; clip so the page never scrolls sideways. */
+html, body { overflow-x: clip; }

@@ -21,8 +21,9 @@ const submitSchema = z.object({
 export const listReviews = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ slug: z.string().max(200) }).parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    const { publicSupabase } = await import("@/lib/products.server");
+    const supabasePublic = await publicSupabase();
+    const { data: rows, error } = await supabasePublic
       .from("product_reviews")
       .select("id, product_slug, name, rating, comment, created_at")
       .eq("product_slug", data.slug)
