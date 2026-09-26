@@ -1,4 +1,4 @@
-import { products as fallbackProducts } from "@/data/products";
+import { products as fallbackProducts, parseSizeOptions, type SizeOption } from "@/data/products";
 
 export type PublicProduct = {
   slug: string;

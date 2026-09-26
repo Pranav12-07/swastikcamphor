@@ -3,6 +3,14 @@ import bhimseni from "@/assets/product-bhimseni.jpg";
 import cones from "@/assets/product-cones.jpg";
 import giftpack from "@/assets/product-giftpack.jpg";
 
+export type SizeOption = {
+  label: string;
+  price: number;
+  mrp: number | null;
+  stock: number | null;
+  popular: boolean;
+};
+
 export type Product = {
   slug: string;
   name: string;
@@ -16,7 +24,61 @@ export type Product = {
   bestFor: string[];
   rating?: number | null;
   ratingCount?: number;
+  sizeOptions?: SizeOption[];
 };
+
+/** Normalise the products.size_options jsonb column. */
+export function parseSizeOptions(raw: unknown): SizeOption[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((o) => {
+      if (!o || typeof o !== "object") return null;
+      const r = o as Record<string, unknown>;
+      const label = String(r["label"] ?? "").trim();
+      const price = Number(r["price"]);
+      if (!label || !Number.isFinite(price) || price <= 0) return null;
+      const mrp = r["mrp"] == null ? null : Number(r["mrp"]);
+      const stock = r["stock"] == null ? null : Number(r["stock"]);
+      return {
+        label,
+        price,
+        mrp: mrp != null && Number.isFinite(mrp) ? mrp : null,
+        stock: stock != null && Number.isFinite(stock) ? Math.max(0, Math.trunc(stock)) : null,
+        popular: Boolean(r["popular"]),
+      } as SizeOption;
+    })
+    .filter((o): o is SizeOption => o !== null);
+}
+
+/** Pre-selected size: the "Most chosen" one, else the first in stock, else the first. */
+export function defaultSizeOption(product: Product): SizeOption | null {
+  const opts = product.sizeOptions ?? [];
+  if (!opts.length) return null;
+  return (
+    opts.find((o) => o.popular) ??
+    opts.find((o) => sizeAvailable(product, o)) ??
+    opts[0]!
+  );
+}
+
+/** A size is sellable when its own stock (or the product stock it falls back to) is above zero. */
+export function sizeAvailable(product: Product & { stock?: number }, opt: SizeOption): boolean {
+  const stock = opt.stock ?? product.stock;
+  return stock == null || stock > 0;
+}
+
+/** True when nothing sellable remains: product stock 0 and no size with its own stock left. */
+export function isOutOfStock(product: Product & { stock?: number }): boolean {
+  const opts = product.sizeOptions ?? [];
+  if (opts.length) return opts.every((o) => !sizeAvailable(product, o));
+  return product.stock != null && product.stock <= 0;
+}
+
+/** Price for a chosen size label, falling back to the product's base price. */
+export function priceForSize(product: Product, size: string | null | undefined): number {
+  const opt = size ? (product.sizeOptions ?? []).find((o) => o.label === size) : undefined;
+  return opt?.price ?? product.price;
+}
 
 export const products: Product[] = [
   {
