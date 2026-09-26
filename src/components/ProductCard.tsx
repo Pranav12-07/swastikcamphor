@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, Truck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { useStoreSettings } from "@/lib/store-settings";
 import { StarRating } from "@/components/StarRating";
 
 const WHATSAPP_NUMBER = "917416886881";
@@ -19,6 +20,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const { add } = useCart();
   const wishlist = useWishlist();
   const saved = wishlist.has(product.slug);
+  const { freeShippingAbove } = useStoreSettings();
 
   const sizeOptions = product.sizeOptions ?? [];
   const [pickedSize, setPickedSize] = useState<string | null>(null);
@@ -31,6 +33,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const outOfStock = isOutOfStock(product);
   const selectedAvailable = selected ? sizeAvailable(product, selected) : true;
+  const freeShipping = price >= freeShippingAbove;
   const notifyUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     `Namaste! Please notify me when "${product.name}" is back in stock.`,
   )}`;
@@ -147,15 +150,33 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </div>
         )}
         <div className="mt-auto flex flex-col items-stretch gap-2 pt-3 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-0">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold sm:text-xl">
-            <span>{formatINR(price)}</span>
+          <div className="flex flex-col gap-1">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold sm:text-xl">
+              <span>{formatINR(price)}</span>
+              {mrp > price && (
+                <>
+                  <span className="text-xs font-normal text-muted-foreground line-through sm:text-sm">{formatINR(mrp)}</span>
+                  <span className="hidden text-base font-bold text-destructive sm:inline">{discount}% OFF</span>
+                </>
+              )}
+            </p>
             {mrp > price && (
-              <>
-                <span className="text-xs font-normal text-muted-foreground line-through sm:text-sm">{formatINR(mrp)}</span>
-                <span className="hidden text-base font-bold text-destructive sm:inline">{discount}% OFF</span>
-              </>
+              <span className="text-xs font-medium text-primary">Save {formatINR(mrp - price)}</span>
             )}
-          </p>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {selected?.popular && (
+                <span className="rounded-full border border-gold/50 bg-accent/15 px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-wider text-foreground">
+                  Most chosen
+                </span>
+              )}
+              {freeShipping && !outOfStock && (
+                <span className="inline-flex items-center gap-1 text-[0.68rem] text-muted-foreground">
+                  <Truck className="h-3 w-3" aria-hidden="true" />
+                  Free shipping
+                </span>
+              )}
+            </span>
+          </div>
           {outOfStock ? (
             <a
               href={notifyUrl}
