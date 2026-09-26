@@ -158,6 +158,20 @@ export function bestValueOption(product: WithSizes): SizeOption | null {
   return best;
 }
 
+/** The Twin Pack of this product with the biggest rupee saving vs buying single jars. */
+export function bestSavingTwin(product: WithSizes): SizeOption | null {
+  let best: SizeOption | null = null;
+  let bestSave = 0;
+  for (const o of product.sizeOptions ?? []) {
+    const save = twinSavings(product, o);
+    if (save != null && save > bestSave) {
+      best = o;
+      bestSave = save;
+    }
+  }
+  return best;
+}
+
 /** Human net weight, e.g. "100 g" or "1 kg". */
 export function formatGrams(grams: number | null | undefined): string {
   if (!grams) return "";
