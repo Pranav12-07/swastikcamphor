@@ -112,7 +112,6 @@ export function Header() {
               <Link
                 key={item.label}
                 to={item.to}
-                activeOptions={{ exact: item.to === "/" }}
                 className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-foreground/80 underline-offset-8 transition-colors hover:bg-accent/15 hover:text-foreground data-[status=active]:text-foreground data-[status=active]:underline data-[status=active]:decoration-gold data-[status=active]:decoration-2"
               >
                 {t(item.label)}
