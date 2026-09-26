@@ -382,3 +382,9 @@
   }
 }
 
+/* Product page on phones: lift the floating WhatsApp, music and chat buttons above the sticky buy bar. */
+@media (max-width: 767px) {
+  body[data-sticky-buy] .float-lift {
+    transform: translateY(-4.5rem);
+  }
+}
