@@ -29,10 +29,12 @@ import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
 import { site } from "@/config/site";
 
 export const Route = createFileRoute("/products/$slug")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    size: typeof search["size"] === "string" ? search["size"] : undefined,
-    review: search["review"] === "1" || search["review"] === 1 ? ("1" as const) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { size?: string; review?: "1" } = {};
+    if (typeof search["size"] === "string" && search["size"]) out.size = search["size"];
+    if (search["review"] === "1" || search["review"] === 1) out.review = "1";
+    return out;
+  },
   loader: async ({ params }) => {
     const data = await getPublicProduct({ data: { slug: params.slug } });
     if (!data) {
@@ -492,6 +494,7 @@ function ProductDetail() {
                 key={item.slug}
                 to="/products/$slug"
                 params={{ slug: item.slug }}
+                search={{}}
                 className="card-premium group overflow-hidden"
               >
                 <img

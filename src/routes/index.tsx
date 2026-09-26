@@ -21,7 +21,10 @@ import { listPublicProducts, type PublicProduct } from "@/lib/products.functions
 import { withServerProducts } from "@/lib/catalog-ssr";
 import { formatINR, isTwinPack, pctOff, per100g, twinSavings, type SizeOption } from "@/data/products";
 
-type PackRef = { product: PublicProduct; option: SizeOption };
+type PackRef = {
+  product: { slug: string; name: string; image: string; sizeOptions?: SizeOption[] };
+  option: SizeOption;
+};
 
 /** Card for one pack option (homepage Twin Pack Offers / Popular packs). */
 function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
