@@ -3,12 +3,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Card } from "@/components/admin/ui";
 import { ProductImagesManager, type GalleryImage } from "@/components/admin/ImageUploader";
 import { adminSaveProduct, adminListCategories } from "@/lib/admin.functions";
+import { parseSizeOptions } from "@/data/products";
 
 export type ProductRow = Record<string, unknown>;
+
+type SizeRow = { label: string; price: string; mrp: string; stock: string; popular: boolean };
+const emptySizeRow = (): SizeRow => ({ label: "", price: "", mrp: "", stock: "", popular: false });
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -84,6 +88,20 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
     String(n("admin_rating_count")),
   );
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [sizeRows, setSizeRows] = useState<SizeRow[]>(() =>
+    parseSizeOptions(initial?.["size_options"]).map((o) => ({
+      label: o.label,
+      price: String(o.price),
+      mrp: o.mrp != null ? String(o.mrp) : "",
+      stock: o.stock != null ? String(o.stock) : "",
+      popular: o.popular,
+    })),
+  );
+
+  const setSizeRow = (i: number, patch: Partial<SizeRow>) =>
+    setSizeRows((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const setPopular = (i: number) =>
+    setSizeRows((rows) => rows.map((r, j) => ({ ...r, popular: j === i ? !r.popular : false })));
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   const csv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
