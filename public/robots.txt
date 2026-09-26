@@ -23,4 +23,4 @@ Disallow: /account
 User-agent: Googlebot-Image
 Allow: /
 
-Sitemap: https://swastikcamphor.lovable.app/sitemap.xml
+Sitemap: https://swastikcamphor.in/sitemap.xml
