@@ -57,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setLines(JSON.parse(raw) as CartLine[]);
+      if (raw) setLines(migrateLines(JSON.parse(raw) as CartLine[]));
       setCoupon(localStorage.getItem(COUPON_KEY));
     } catch {
       /* ignore */
@@ -73,7 +73,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const remote = await getMyCart();
+        const remote = migrateLines(await getMyCart());
         if (cancelled) return;
         setLines((local) => {
           const map = new Map<string, CartLine>();
