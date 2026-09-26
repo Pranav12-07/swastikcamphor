@@ -1,6 +1,9 @@
 export const site = {
   name: "Swastik Camphor",
   legalName: "VIJAYASREE CAMPHOR INDUSTRIES",
+  gstin: "36AGMPP0390C1ZG",
+  /** Year shown as ESTD across the site. */
+  established: 1968,
   tagline: "Purity in every tablet",
   email: "shop@online.swastikcamphor.in",
   phone: "+91 7416886881",
@@ -28,6 +31,14 @@ export const site = {
 export const upi = {
   vpa: "msvijayasreecamphorindustries.eazypay@icici",
   payeeName: "MS Vijaya Sree Camphor Industries",
+} as const;
+
+/** Company-profile (2024) statements used on the website. Keep wording as the company states it. */
+export const companyProfile = {
+  retailStores: "1,000+",
+  retailRegion: "Telangana",
+  retailPartners: ["Ratnadeep", "Spencer's", "Vijetha", "National Mart", "Value Zone", "Reliance Retail"],
+  ayodhyaKg: 108,
 } as const;
 
 /** Single source of truth for every social link on the site. */
