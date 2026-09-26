@@ -217,6 +217,47 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
       </Card>
 
       <Card>
+        <h2 className="font-semibold">Pack sizes and prices</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Optional. When sizes are listed here, customers pick a pack size and pay its price. Leave empty to sell at the single price above.
+        </p>
+        <div className="mt-3 space-y-2">
+          {sizeRows.length > 0 && (
+            <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto_auto] gap-2 px-1 text-xs font-medium text-muted-foreground sm:grid">
+              <span>Label</span><span>Price (₹)</span><span>MRP (₹)</span><span>Stock (optional)</span><span>Most chosen</span><span />
+            </div>
+          )}
+          {sizeRows.map((row, i) => (
+            <div key={i} className="grid grid-cols-2 items-center gap-2 rounded-md border border-input p-2 sm:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto_auto] sm:border-0 sm:p-0">
+              <input className={input} placeholder="e.g. 100 g" value={row.label} maxLength={40} onChange={(e) => setSizeRow(i, { label: e.target.value })} />
+              <input className={input} type="number" min={0} step="0.01" placeholder="Price" value={row.price} onChange={(e) => setSizeRow(i, { price: e.target.value })} />
+              <input className={input} type="number" min={0} step="0.01" placeholder="MRP" value={row.mrp} onChange={(e) => setSizeRow(i, { mrp: e.target.value })} />
+              <input className={input} type="number" min={0} step={1} placeholder="Stock" value={row.stock} onChange={(e) => setSizeRow(i, { stock: e.target.value })} />
+              <label className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <input type="checkbox" checked={row.popular} onChange={() => setPopular(i)} className="accent-primary" />
+                Most chosen
+              </label>
+              <button
+                type="button"
+                aria-label={`Remove size ${row.label || i + 1}`}
+                onClick={() => setSizeRows((rows) => rows.filter((_, j) => j !== i))}
+                className="justify-self-end rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSizeRows((rows) => [...rows, emptySizeRow()])}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+          >
+            <Plus className="h-4 w-4" /> Add pack size
+          </button>
+        </div>
+      </Card>
+
+      <Card>
         <h2 className="font-semibold">Inventory & details</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <Field label="Stock quantity"><input className={input} type="number" min={0} value={form.stock_quantity} onChange={(e) => set("stock_quantity", e.target.value)} /></Field>
