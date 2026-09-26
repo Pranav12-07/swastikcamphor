@@ -1,78 +1,55 @@
 import { useEffect, useState } from "react";
 import { formatINR } from "@/data/products";
-import { useI18n } from "@/lib/i18n";
+import { QtyStepper } from "@/components/QtyStepper";
 
 type Props = {
-  /** id of the page's main Add to cart button; the bar appears once it scrolls off screen */
+  /** Id of the on-page add-to-cart control; the bar appears once it scrolls out of view. */
   targetId: string;
+  slug: string;
   productName: string;
-  /** Selected pack size label, shown beside the name when present. */
-  size?: string | null;
+  /** SizeOption.label (cart key). */
+  size: string;
+  /** Short label shown in the bar. */
+  sizeLabel: string;
   price: number;
   mrp: number;
-  onAdd: () => void;
+  max?: number | null;
 };
 
-/**
- * Phones only: keeps "Add to cart" within thumb reach on long product pages.
- * While visible it sets body[data-sticky-buy] so the floating buttons move up (see styles.css).
- */
-export function StickyBuyBar({ targetId, productName, size, price, mrp, onAdd }: Props) {
-  const { t } = useI18n();
+/** Sticky bottom bar with the live cart stepper for the selected pack. */
+export function StickyBuyBar({ targetId, slug, productName, size, sizeLabel, price, mrp, max = null }: Props) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const target = document.getElementById(targetId);
-      setVisible(target ? target.getBoundingClientRect().bottom < 0 : false);
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
+    const target = document.getElementById(targetId);
+    if (!target || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(!(entry?.isIntersecting ?? true)), {
+      rootMargin: "-64px 0px 0px 0px",
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
   }, [targetId]);
-
-  useEffect(() => {
-    document.body.toggleAttribute("data-sticky-buy", visible);
-    return () => document.body.removeAttribute("data-sticky-buy");
-  }, [visible]);
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-gold/30 bg-background/95 px-4 pt-2 shadow-[0_-8px_24px_-12px_oklch(0.3_0.09_28/0.35)] backdrop-blur transition-[translate,visibility] duration-200 motion-reduce:transition-none md:hidden ${
-        visible ? "visible translate-y-0" : "invisible translate-y-full"
+      aria-hidden={!visible}
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-gold/25 bg-background/95 backdrop-blur transition-transform duration-300 md:hidden ${
+        visible ? "translate-y-0" : "translate-y-full"
       }`}
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-muted-foreground">
-            {productName}
-            {size ? <span> • {size}</span> : null}
+          <p className="truncate text-sm font-semibold">
+            {productName} {sizeLabel ? `· ${sizeLabel}` : ""}
           </p>
-          <p className="text-base font-semibold">
-            {formatINR(price)}
-            {mrp > price && (
-              <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{formatINR(mrp)}</span>
-            )}
+          <p className="tnum text-sm">
+            <span className="font-semibold">{formatINR(price)}</span>{" "}
+            {mrp > price && <span className="text-xs text-muted-foreground line-through">{formatINR(mrp)}</span>}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="h-11 shrink-0 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          {t("Add to cart")}
-        </button>
+        <div className="w-40 shrink-0">
+          <QtyStepper slug={slug} size={size} max={max} />
+        </div>
       </div>
     </div>
   );
