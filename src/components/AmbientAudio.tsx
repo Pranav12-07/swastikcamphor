@@ -50,7 +50,7 @@ export function AmbientAudio() {
         onClick={toggle}
         aria-label={playing ? "Mute background music" : "Play background music"}
         title={playing ? "Mute Karpur Gauram" : "Play Karpur Gauram"}
-        className="float-lift group fixed bottom-6 left-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-gold/40 bg-background/80 text-accent shadow-lg backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:bg-accent/15 md:bottom-24"
+        className="float-lift group fixed bottom-24 left-5 z-40 hidden h-11 w-11 items-center justify-center rounded-full border border-gold/40 bg-background/80 text-accent shadow-lg backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:bg-accent/15 md:flex"
       >
         {playing ? (
           <span className="relative flex items-center justify-center">

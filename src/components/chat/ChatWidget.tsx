@@ -50,13 +50,13 @@ export function ChatWidget() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close chat assistant" : "Open chat assistant"}
-        className="float-lift fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full border border-gold/50 bg-primary text-primary-foreground shadow-[var(--shadow-lift)] transition-transform duration-300 hover:scale-105"
+        className="float-lift fixed bottom-4 right-4 z-50 grid h-12 w-12 place-items-center rounded-full border border-gold/50 bg-primary text-primary-foreground shadow-[var(--shadow-lift)] transition-transform duration-300 hover:scale-105 md:bottom-5 md:right-5 md:h-14 md:w-14"
       >
         {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5 animate-flicker" />}
       </button>
 
       {open && (
-        <div className="surface-glass animate-rise-in fixed bottom-24 right-4 z-50 flex h-[min(70vh,560px)] w-[min(92vw,25rem)] flex-col rounded-3xl p-4">
+        <div className="surface-glass animate-rise-in fixed bottom-20 right-4 z-50 flex h-[min(70vh,560px)] w-[min(92vw,25rem)] flex-col rounded-3xl p-4 md:bottom-24">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-gold/25 pb-3">
             <div className="flex min-w-0 items-center gap-2">
               <img src={logoAsset.url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" width={36} height={36} />

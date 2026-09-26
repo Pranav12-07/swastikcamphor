@@ -389,5 +389,27 @@
   }
 }
 
+/* Anchored section titles must never hide under the sticky header. */
+section[id],
+div[id],
+nav[id] {
+  scroll-margin-top: 5.5rem;
+}
+@media (min-width: 1280px) {
+  section[id],
+  div[id],
+  nav[id] {
+    scroll-margin-top: 6rem;
+  }
+}
+
+/* The sticky header animates height/background; reduced-motion users get no transition. */
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .site-header * {
+    transition: none;
+  }
+}
+
 /* Reveal-on-scroll animations briefly sit off-screen; clip so the page never scrolls sideways. */
 html, body { overflow-x: clip; }
