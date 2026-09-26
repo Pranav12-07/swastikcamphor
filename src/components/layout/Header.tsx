@@ -141,7 +141,7 @@ export function Header() {
                   <Link
                     to="/account"
                     aria-label={t("My account")}
-                    className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+                    className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
                   >
                     <User className="h-4 w-4" aria-hidden="true" />
                   </Link>
@@ -154,7 +154,7 @@ export function Header() {
                     type="button"
                     onClick={signOut}
                     aria-label={t("Sign out")}
-                    className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+                    className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -166,7 +166,7 @@ export function Header() {
             <Link
               to="/auth"
               aria-label={t("Sign in")}
-              className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+              className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
             >
               <User className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">{t("Sign in")}</span>
@@ -184,10 +184,11 @@ export function Header() {
             <TooltipTrigger asChild>
               <Link
                 to="/cart"
-                aria-label={`${t("Cart")} — ${count}`}
-                className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 xl:h-10 xl:w-10"
+                aria-label={`${t("Cart")}, ${count} ${t("items")}`}
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 xl:h-10 xl:w-auto xl:px-3.5"
               >
-                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                <ShoppingBasket className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden text-sm font-medium xl:inline">{t("Cart")}</span>
                 {count > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[0.65rem] font-bold text-maroon-deep">
                     {count}
@@ -202,7 +203,7 @@ export function Header() {
             onClick={() => setOpen(true)}
             aria-expanded={open}
             aria-label={t("Menu")}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/40 xl:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/40 lg:hidden"
           >
             <Menu className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -212,9 +213,9 @@ export function Header() {
 
     </header>
 
-      {/* Mobile / tablet drawer (below 1280px) */}
+      {/* Mobile / tablet drawer (below 1024px) */}
       {open && (
-        <div className="fixed inset-0 z-[60] xl:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
+        <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
           <button
             type="button"
             aria-label={t("Close menu")}
