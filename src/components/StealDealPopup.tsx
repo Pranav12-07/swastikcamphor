@@ -113,7 +113,7 @@ export function StealDealPopup({
               <p className="text-[11px] text-muted-foreground">{packContents(twin)}</p>
               <p className="mt-1.5 text-base font-semibold">
                 {formatINR(twin.price)}{" "}
-                {twin.mrp > twin.price && <span className="text-xs font-normal text-muted-foreground line-through">{formatINR(twin.mrp)}</span>}
+                {twin.mrp != null && twin.mrp > twin.price && <span className="text-xs font-normal text-muted-foreground line-through">{formatINR(twin.mrp)}</span>}
               </p>
               {twinPer100 != null && <p className="text-[11px] text-muted-foreground">₹{twinPer100} / 100 g</p>}
             </div>
