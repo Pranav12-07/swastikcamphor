@@ -1,7 +1,8 @@
 import { site } from "@/config/site";
 
 /** Canonical origin used for canonical tags, og:url, sitemap and JSON-LD. */
-export const SITE_URL = "https://swastikcamphor.lovable.app";
+/** The live custom domain. Canonicals, og:url, JSON-LD and the sitemap all use this. */
+export const SITE_URL = "https://swastikcamphor.in";
 
 export const canonical = (path = "/") => `${SITE_URL}${path === "/" ? "" : path}`;
 
@@ -42,7 +43,7 @@ export const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: site.name,
-  legalName: site.name,
+  legalName: site.legalName,
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
   email: site.email,

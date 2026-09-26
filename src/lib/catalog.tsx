@@ -29,7 +29,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,is_featured,is_bestseller,stock_quantity,admin_rating",
+          "slug,name,short_description,description,price,compare_at_price,sizes,features,image_url,category,is_featured,is_bestseller,stock_quantity,admin_rating,admin_rating_count",
         )
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
@@ -49,6 +49,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         category: row.category ?? null,
         stock: Number(row.stock_quantity ?? 0),
         rating: row.admin_rating != null ? Number(row.admin_rating) : null,
+        ratingCount: Number(row.admin_rating_count ?? 0),
       }));
     },
   });
