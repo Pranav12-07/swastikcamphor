@@ -1,19 +1,19 @@
 import { canonical, canonicalLink } from "@/lib/seo";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flame, Leaf, Pause, Play, ShieldCheck, Tag, Truck } from "lucide-react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { Flame, Leaf, ShieldCheck, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
 import heroDiyaLoopWebm from "@/assets/hero-diya-loop.webm.asset.json";
 import about from "@/assets/about.jpg";
 import { ProductCard } from "@/components/ProductCard";
+import { PackCard, type PackRef } from "@/components/PackCard";
+import { InfiniteSlider } from "@/components/InfiniteSlider";
 import { TraditionVideo } from "@/components/TraditionVideo";
 import { PromoCarousel } from "@/components/PromoCarousel";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { TrustStrip } from "@/components/TrustStrip";
 
 import { useCatalog } from "@/lib/catalog";
-import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 import { site } from "@/config/site";
 import { useReveal } from "@/hooks/use-reveal";
@@ -21,95 +21,7 @@ import { useBanners } from "@/hooks/use-banners";
 import { listBlogs } from "@/lib/blog.functions";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
 import { withServerProducts } from "@/lib/catalog-ssr";
-import { formatINR, isTwinPack, pctOff, per100g, twinSavings, type SizeOption } from "@/data/products";
-
-type PackRef = {
-  product: { slug: string; name: string; image: string; sizeOptions?: SizeOption[] };
-  option: SizeOption;
-};
-
-/** Card for one pack option (homepage Twin Pack Offers / Popular packs). */
-function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
-  const { product, option } = pack;
-  const { t } = useI18n();
-  const { add } = useCart();
-  const navigate = useNavigate();
-  const off = pctOff(option.mrp, option.price);
-  const save = twinSavings(product, option);
-  const rate = per100g(option);
-  const outOfStock = option.stock != null && option.stock <= 0;
-
-  const buyNow = () => {
-    add(product.slug, option.label, 1, { skipUpsell: true });
-    void navigate({ to: "/checkout" });
-  };
-
-  return (
-    <div className="card-premium group relative flex flex-col overflow-hidden">
-      {bestValue && (
-        <span className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow">
-          {t("Best value")}
-        </span>
-      )}
-      {off > 0 && (
-        <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
-          {off}% {t("OFF")}
-        </span>
-      )}
-      <Link
-        to="/products/$slug"
-        params={{ slug: product.slug }}
-        search={{ size: option.label }}
-        aria-label={`${product.name} – ${option.label}`}
-        className="block"
-      >
-        <img
-          src={option.image ?? product.image}
-          alt={`${product.name} – ${option.label}`}
-          loading="lazy"
-          className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-      </Link>
-      <div className="flex flex-1 flex-col p-3 md:p-4">
-        <h3 className="truncate font-body text-[13px] font-semibold leading-snug md:text-sm">{product.name}</h3>
-        <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted-foreground">{option.label}</p>
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-base font-bold">{formatINR(option.price)}</span>
-          {option.mrp != null && option.mrp > option.price && (
-            <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
-          )}
-        </div>
-        {save != null ? (
-          <p className="mt-1 text-xs font-medium text-emerald-700">
-            {t("Save")} {formatINR(save)} {t("vs 2 single jars")}
-          </p>
-        ) : rate != null ? (
-          <p className="mt-1 text-xs font-medium text-muted-foreground">
-            {formatINR(rate)} {t("per 100 g")}
-          </p>
-        ) : null}
-        <div className="mt-3 flex flex-col gap-2 lg:flex-row">
-          <button
-            type="button"
-            disabled={outOfStock}
-            onClick={() => add(product.slug, option.label)}
-            className="h-11 w-full whitespace-nowrap rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50 lg:flex-1"
-          >
-            {outOfStock ? t("Out of stock") : t("Add to cart")}
-          </button>
-          <button
-            type="button"
-            disabled={outOfStock}
-            onClick={buyNow}
-            className="h-11 w-full whitespace-nowrap rounded-full border border-gold/50 px-4 text-xs font-semibold transition-colors hover:bg-accent/15 disabled:opacity-50 lg:flex-1"
-          >
-            {t("Buy now")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { isTwinPack, per100g } from "@/data/products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -163,177 +75,25 @@ const values = [
   { icon: Truck, title: "Pan-India Delivery", text: "Dispatched in 1-2 days, delivered across India." },
 ];
 
-/** All 9 single packs in the homepage carousel — Refill Pouch first, then Tablets small→large, then Bhimseni small→large. */
-const SINGLE_PACKS: { slug: string; packHint: string }[] = [
+/** Ritual rows: Refill Pouch first, then Tablets small→large; then Bhimseni small→large. */
+const TABLET_PACKS: { slug: string; packHint: string }[] = [
   { slug: "camphor-tablets-refill-pouch", packHint: "100 g" },
   { slug: "camphor-tablets", packHint: "50 g" },
   { slug: "camphor-tablets", packHint: "100 g" },
   { slug: "camphor-tablets", packHint: "250 g" },
   { slug: "camphor-tablets", packHint: "500 g" },
+];
+const BHIMSENI_PACKS: { slug: string; packHint: string }[] = [
   { slug: "bhimseni-camphor", packHint: "50 g" },
   { slug: "bhimseni-camphor", packHint: "100 g" },
   { slug: "bhimseni-camphor", packHint: "250 g" },
   { slug: "bhimseni-camphor", packHint: "450 g" },
 ];
 
-const CAROUSEL_INTERVAL = 5000;
-const CAROUSEL_RESUME_AFTER = 10000;
+type CatalogProduct = PublicProduct & { sizeOptions?: PackRef["product"]["sizeOptions"] };
 
-/** Auto-scrolling single-pack carousel: 2 visible on phones, 4 on desktop, all cards in the HTML. */
-function SinglePackCarousel({ packs }: { packs: PackRef[] }) {
-  const { t } = useI18n();
-  const [page, setPage] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [pageSize, setPageSize] = useState(2);
-  const touchX = useRef<number | null>(null);
-  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const update = () => setPageSize(mq.matches ? 4 : 2);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  const pages = Math.max(1, Math.ceil(packs.length / pageSize));
-  const multi = pages > 1;
-  const go = useCallback((p: number) => setPage(((p % pages) + pages) % pages), [pages]);
-
-  useEffect(() => {
-    if (page >= pages) setPage(0);
-  }, [pages, page]);
-
-  // Pause autoplay for a while after any manual interaction.
-  const interact = useCallback(() => {
-    setPaused(true);
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => setPaused(false), CAROUSEL_RESUME_AFTER);
-  }, []);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!multi || paused || reduced || document.hidden) return;
-    const timer = setInterval(() => setPage((p) => (p + 1) % pages), CAROUSEL_INTERVAL);
-    return () => clearInterval(timer);
-  }, [multi, paused, pages]);
-
-  useEffect(() => {
-    const onVisibility = () => setPaused(document.hidden);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, []);
-
-  useEffect(() => () => {
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-  }, []);
-
-  return (
-    <div
-      role="region"
-      aria-roledescription="carousel"
-      aria-label={t("Popular packs")}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={interact}
-    >
-      <div
-        className="group relative overflow-hidden"
-        onTouchStart={(e) => (touchX.current = e.touches[0]?.clientX ?? null)}
-        onTouchEnd={(e) => {
-          if (touchX.current == null || !multi) return;
-          const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
-          if (Math.abs(dx) > 40) {
-            go(dx < 0 ? page + 1 : page - 1);
-            interact();
-          }
-          touchX.current = null;
-        }}
-      >
-        <div
-          className="flex transition-transform duration-700 ease-out"
-          style={{ transform: `translateX(-${page * 100}%)` }}
-        >
-          {packs.map((pk, i) => (
-            <div
-              key={`${pk.product.slug}__${pk.option.label}`}
-              className="w-1/2 shrink-0 px-1.5 sm:px-3 lg:w-1/4"
-              role="group"
-              aria-roledescription="slide"
-              aria-label={`${i + 1} of ${packs.length}`}
-            >
-              <PackCard pack={pk} />
-            </div>
-          ))}
-        </div>
-
-        {multi && (
-          <>
-            <button
-              type="button"
-              aria-label={t("Previous packs")}
-              onClick={() => { go(page - 1); interact(); }}
-              className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow transition hover:opacity-100 sm:grid sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              aria-label={t("Next packs")}
-              onClick={() => { go(page + 1); interact(); }}
-              className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow transition hover:opacity-100 sm:grid sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
-      </div>
-
-      {multi && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {Array.from({ length: pages }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`${t("Go to page")} ${i + 1}`}
-              aria-current={i === page}
-              onClick={() => { go(i); interact(); }}
-              className={`h-2 rounded-full transition-all ${i === page ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/70"}`}
-            />
-          ))}
-          <button
-            type="button"
-            aria-label={paused ? t("Play carousel") : t("Pause carousel")}
-            onClick={() => {
-              if (resumeTimer.current) clearTimeout(resumeTimer.current);
-              setPaused((p) => !p);
-            }}
-            className="ml-2 grid h-8 w-8 place-items-center rounded-full border border-gold/40 text-muted-foreground transition-colors hover:bg-accent/15"
-          >
-            {paused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Index() {
-  const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
-  const posts = allPosts.slice(0, 3);
-  const { products: liveProducts } = useCatalog();
-  const products = withServerProducts(liveProducts, serverProducts);
-  const { t } = useI18n();
-
-  // Twin Pack Offers: featured Twin Packs, Tablets first, up to 4.
-  const twinPacks: PackRef[] = products
-    .flatMap((p) => (p.sizeOptions ?? []).filter((o) => o.featured && isTwinPack(o)).map((o) => ({ product: p, option: o })))
-    .sort((a, b) => (a.product.slug === "camphor-tablets" ? -1 : b.product.slug === "camphor-tablets" ? 1 : 0))
-    .slice(0, 4);
-
-  // Single-pack carousel: all 9 single packs in a fixed order.
-  const popularPacks: PackRef[] = SINGLE_PACKS.flatMap((pick) => {
+function pickPacks(products: CatalogProduct[], picks: { slug: string; packHint: string }[]): PackRef[] {
+  return picks.flatMap((pick) => {
     const product = products.find((p) => p.slug === pick.slug);
     if (!product) return [];
     const option = (product.sizeOptions ?? []).find(
@@ -341,6 +101,32 @@ function Index() {
     );
     return option ? [{ product, option }] : [];
   });
+}
+
+/** Smooth-scroll to the Twin Pack Offers section (home-offers). */
+function scrollToOffers() {
+  document.getElementById("home-offers")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function Index() {
+  const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
+  const posts = allPosts.slice(0, 3);
+  const { products: liveProducts } = useCatalog();
+  const products = withServerProducts(liveProducts, serverProducts) as unknown as CatalogProduct[];
+  const { t } = useI18n();
+
+  // Twin Pack Offers: every Twin Pack, Tablets by weight first, then Bhimseni.
+  const twinPacks: PackRef[] = products
+    .flatMap((p) => (p.sizeOptions ?? []).filter((o) => isTwinPack(o)).map((o) => ({ product: p, option: o })))
+    .sort((a, b) => {
+      const aTablets = a.product.slug === "camphor-tablets" ? 0 : 1;
+      const bTablets = b.product.slug === "camphor-tablets" ? 0 : 1;
+      if (aTablets !== bTablets) return aTablets - bTablets;
+      return (a.option.grams ?? 0) - (b.option.grams ?? 0);
+    });
+
+  const tabletPacks = pickPacks(products, TABLET_PACKS);
+  const bhimseniPacks = pickPacks(products, BHIMSENI_PACKS);
 
   // "Best value" = the Twin Pack with the lowest per-100 g price.
   let bestValueKey: string | null = null;
@@ -407,7 +193,7 @@ function Index() {
             className="animate-rise-in mt-4 max-w-xl text-base leading-relaxed text-gold-soft/85 md:mt-6 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {banner?.subtitle ?? t("Swastik 100% pure camphor. Made in Hyderabad, trusted since 1968.")}
+            {banner?.subtitle ?? t("Swastik 100% Pure Camphor — Trusted for Generations.")}
           </p>
           <div
             className="animate-rise-in mt-6 flex flex-col gap-3 sm:flex-row md:mt-9"
@@ -428,14 +214,13 @@ function Index() {
                 {t("Shop Now")}
               </Link>
             )}
-            <Link
-              to="/products"
-              search={{ filter: "twin" }}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-gold/60 px-7 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15 sm:w-auto"
+            <button
+              type="button"
+              onClick={scrollToOffers}
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-gold/60 px-7 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15 sm:w-auto"
             >
-              <Tag className="h-4 w-4" aria-hidden="true" />
-              {t("Twin Pack Offers")}
-            </Link>
+              {t("Explore Products")}
+            </button>
           </div>
         </div>
         <div
@@ -448,7 +233,7 @@ function Index() {
       <CategoryTiles />
 
       {twinPacks.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
+        <section id="home-offers" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 md:px-8 md:py-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Twin Pack Offers")}</p>
@@ -463,19 +248,22 @@ function Index() {
               {t("View all offers")}
             </Link>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 md:mt-8 lg:grid-cols-4">
-            {twinPacks.map((pk) => (
-              <PackCard
-                key={`${pk.product.slug}__${pk.option.label}`}
-                pack={pk}
-                bestValue={bestValueKey === `${pk.product.slug}__${pk.option.label}`}
-              />
-            ))}
+          <div className="mt-6 md:mt-8">
+            <InfiniteSlider
+              ariaLabel={t("Twin Pack Offers")}
+              keys={twinPacks.map((pk) => `${pk.product.slug}__${pk.option.label}`)}
+              items={twinPacks.map((pk) => (
+                <PackCard
+                  pack={pk}
+                  bestValue={bestValueKey === `${pk.product.slug}__${pk.option.label}`}
+                />
+              ))}
+            />
           </div>
         </section>
       )}
 
-      {popularPacks.length > 0 && (
+      {(tabletPacks.length > 0 || bhimseniPacks.length > 0) && (
         <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -487,13 +275,40 @@ function Index() {
               {t("View all products →")}
             </Link>
           </div>
-          <div className="mt-6 md:mt-8">
-            <SinglePackCarousel packs={popularPacks} />
-          </div>
+
+          {tabletPacks.length > 0 && (
+            <div className="mt-8">
+              <h3 className="font-display text-lg md:text-xl">{t("Camphor Tablets")}</h3>
+              <div className="mt-3">
+                <InfiniteSlider
+                  ariaLabel={t("Camphor Tablets")}
+                  keys={tabletPacks.map((pk) => `${pk.product.slug}__${pk.option.label}`)}
+                  items={tabletPacks.map((pk) => (
+                    <PackCard pack={pk} />
+                  ))}
+                />
+              </div>
+            </div>
+          )}
+
+          {bhimseniPacks.length > 0 && (
+            <div className="mt-8">
+              <h3 className="font-display text-lg md:text-xl">{t("Bhimseni Camphor")}</h3>
+              <div className="mt-3">
+                <InfiniteSlider
+                  ariaLabel={t("Bhimseni Camphor")}
+                  keys={bhimseniPacks.map((pk) => `${pk.product.slug}__${pk.option.label}`)}
+                  items={bhimseniPacks.map((pk) => (
+                    <PackCard pack={pk} />
+                  ))}
+                />
+              </div>
+            </div>
+          )}
         </section>
       )}
 
-      {popularPacks.length === 0 && (
+      {tabletPacks.length === 0 && bhimseniPacks.length === 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-20 md:pt-8">
           <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {products.map((p, i) => (

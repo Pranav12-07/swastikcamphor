@@ -91,3 +91,25 @@ Object.assign(translations.hi, {
   "Buy 2 and save more":"2 खरीदें, ज़्यादा बचाएँ","View all offers":"सभी ऑफ़र देखें","Best value":"सबसे अच्छा सौदा","Save":"बचत","vs 2 single jars":"2 सिंगल जार की तुलना में","per 100 g":"प्रति 100 ग्रा","OFF":"छूट",
   "Popular packs":"लोकप्रिय पैक","every Twin Pack beats two single jars.":"हर ट्विन पैक दो सिंगल जार से सस्ता है।"
 });
+Object.assign(translations.te, {
+  "off":"తగ్గింపు","First order":"మొదటి ఆర్డర్","Copy code":"కోడ్ కాపీ చేయండి","Code copied":"కోడ్ కాపీ అయింది","Use code":"కోడ్ ఉపయోగించండి",
+  "on MRP":"MRP పై","Add":"చేర్చండి","Only":"కేవలం","left":"మిగిలాయి",
+  "Previous packs":"మునుపటి ప్యాక్‌లు","Next packs":"తదుపరి ప్యాక్‌లు","Go to page":"పేజీకి వెళ్లండి","Play carousel":"కరోసెల్ ప్లే చేయండి","Pause carousel":"కరోసెల్ ఆపండి",
+  "You're saving":"మీరు ఆదా చేస్తున్నారు","on this order":"ఈ ఆర్డర్‌పై","Pack savings":"ప్యాక్ ఆదా","Steal Deal":"స్టీల్ డీల్","Free shipping":"ఉచిత డెలివరీ",
+  "Twin Pack":"ట్విన్ ప్యాక్","get 2 for":"2 పొందండి","Switch to Twin Pack":"ట్విన్ ప్యాక్‌కు మారండి",
+  "Order Summary":"ఆర్డర్ సారాంశం","Coupon":"కూపన్","You've unlocked FREE shipping":"మీరు ఉచిత డెలివరీ పొందారు","and the":"మరియు","more for FREE shipping":"ఉచిత డెలివరీ కోసం మరింత","Steal Deal unlocks at":"స్టీల్ డీల్ అందుబాటులోకి వస్తుంది","Free shipping progress":"ఉచిత డెలివరీ పురోగతి",
+  "Filter products":"ఉత్పత్తులను ఫిల్టర్ చేయండి","Recommended":"సిఫార్సు చేయబడినవి","Biggest saving":"అత్యధిక ఆదా","products":"ఉత్పత్తులు","No products here right now.":"ఇక్కడ ప్రస్తుతం ఉత్పత్తులు లేవు.","All products":"అన్ని ఉత్పత్తులు",
+  "Camphor Tablets":"కర్పూరం ట్యాబ్లెట్లు","Bhimseni Camphor":"భీమసేని కర్పూరం","Refill Pouch":"రీఫిల్ పౌచ్",
+  "years":"సంవత్సరాలు","of purity, made in Hyderabad":"స్వచ్ఛత, హైదరాబాద్‌లో తయారు","Also on the shelves at":"ఇక్కడ కూడా అమ్మకంలో"
+});
+Object.assign(translations.hi, {
+  "off":"छूट","First order":"पहला ऑर्डर","Copy code":"कोड कॉपी करें","Code copied":"कोड कॉपी हो गया","Use code":"कोड इस्तेमाल करें",
+  "on MRP":"MRP पर","Add":"जोड़ें","Only":"सिर्फ़","left":"बचे हैं",
+  "Previous packs":"पिछले पैक","Next packs":"अगले पैक","Go to page":"पेज पर जाएँ","Play carousel":"कैरोसेल चलाएँ","Pause carousel":"कैरोसेल रोकें",
+  "You're saving":"आप बचा रहे हैं","on this order":"इस ऑर्डर पर","Pack savings":"पैक बचत","Steal Deal":"स्टील डील","Free shipping":"मुफ़्त शिपिंग",
+  "Twin Pack":"ट्विन पैक","get 2 for":"2 पाएँ","Switch to Twin Pack":"ट्विन पैक पर बदलें",
+  "Order Summary":"ऑर्डर सारांश","Coupon":"कूपन","You've unlocked FREE shipping":"आपको मुफ़्त शिपिंग मिल गई","and the":"और","more for FREE shipping":"मुफ़्त शिपिंग के लिए और","Steal Deal unlocks at":"स्टील डील खुलता है","Free shipping progress":"मुफ़्त शिपिंग प्रगति",
+  "Filter products":"प्रोडक्ट फ़िल्टर करें","Recommended":"सुझाए गए","Biggest saving":"सबसे बड़ी बचत","products":"प्रोडक्ट","No products here right now.":"यहाँ अभी कोई प्रोडक्ट नहीं है।","All products":"सभी प्रोडक्ट",
+  "Camphor Tablets":"कपूर टैबलेट","Bhimseni Camphor":"भीमसेनी कपूर","Refill Pouch":"रिफिल पाउच",
+  "years":"वर्ष","of purity, made in Hyderabad":"शुद्धता के, हैदराबाद में निर्मित","Also on the shelves at":"यहाँ भी उपलब्ध"
+});

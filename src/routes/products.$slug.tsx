@@ -1,4 +1,4 @@
-import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BadgeCheck, ChevronRight, Lock, Package, Truck } from "lucide-react";
@@ -23,6 +23,7 @@ import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { StarRating } from "@/components/StarRating";
 import { ProductOffers } from "@/components/products/ProductOffers";
 import { StickyBuyBar } from "@/components/products/StickyBuyBar";
+import { QtyStepper } from "@/components/QtyStepper";
 import { getPublicProduct } from "@/lib/products.functions";
 import { OLD_SLUG_REDIRECTS } from "@/lib/pack-redirects";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
@@ -180,7 +181,8 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductDetail() {
   const { product, related, reviewStats } = Route.useLoaderData();
   const search = Route.useSearch();
-  const { add } = useCart();
+  const { add, lines } = useCart();
+  const navigate = useNavigate();
   const { freeShippingAbove, shippingFlat } = useStoreSettings();
   useReveal();
 
@@ -369,22 +371,28 @@ function ProductDetail() {
           )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div id="pdp-add-to-cart" className="w-full sm:w-auto sm:min-w-44">
+              <QtyStepper
+                slug={product.slug}
+                size={selected?.label ?? ""}
+                max={selected ? (selected.stock ?? product.stock ?? null) : null}
+                disabled={!inStock || !selected}
+                className="[&>button]:h-12 [&>button]:text-sm [&>div]:h-12"
+              />
+            </div>
             <button
-              id="pdp-add-to-cart"
               type="button"
-              disabled={!inStock}
-              onClick={addToCart}
-              className="w-full rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-50 sm:w-auto"
-            >
-              Add to cart
-            </button>
-            <Link
-              to="/checkout"
-              onClick={() => add(product.slug, selected?.label)}
-              className={`w-full rounded-full border border-gold/50 px-7 py-3 text-center text-sm font-medium transition-colors hover:bg-accent/15 sm:w-auto ${!inStock ? "pointer-events-none opacity-50" : ""}`}
+              disabled={!inStock || !selected}
+              onClick={() => {
+                if (!selected) return;
+                const inCart = lines.some((l) => l.slug === product.slug && l.size === selected.label);
+                if (!inCart) add(product.slug, selected.label, 1, { skipUpsell: true });
+                void navigate({ to: "/checkout" });
+              }}
+              className="w-full rounded-full border border-gold/50 px-7 py-3 text-center text-sm font-medium transition-colors hover:bg-accent/15 disabled:opacity-50 sm:w-auto"
             >
               Buy now
-            </Link>
+            </button>
           </div>
 
           {upsellTwin && upsellSave != null && (
@@ -513,14 +521,16 @@ function ProductDetail() {
         </section>
       )}
 
-      {inStock && (
+      {inStock && selected && (
         <StickyBuyBar
           targetId="pdp-add-to-cart"
+          slug={product.slug}
           productName={product.name}
-          size={selected?.short_label ?? selected?.label ?? null}
+          size={selected.label}
+          sizeLabel={selected.short_label ?? selected.label}
           price={price}
           mrp={mrp}
-          onAdd={addToCart}
+          max={selected.stock ?? product.stock ?? null}
         />
       )}
     </div>

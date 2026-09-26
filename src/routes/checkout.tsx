@@ -10,6 +10,8 @@ import { listMyAddresses, saveMyAddress, type SavedAddress } from "@/lib/account
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { useI18n } from "@/lib/i18n";
 import phonepeLogo from "@/assets/phonepe.png";
 
 
@@ -52,6 +54,7 @@ function Checkout() {
   const { products } = useCatalog();
   const cart = useCart();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { session, loading: authLoading } = useAuth();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -386,9 +389,9 @@ function Checkout() {
         </form>
 
         <aside className="card-premium h-fit p-6">
-          <h2 className="font-display text-xl">Your order</h2>
+          <h2 className="font-body text-lg font-semibold">{t("Order Summary")}</h2>
           <div className="gold-rule mt-3 w-14" />
-          <ul className="mt-5 space-y-3 text-sm">
+          <ul className="tnum mt-5 space-y-3 text-sm">
             {cart.lines.map((l) => {
               const p = products.find((x) => x.slug === l.slug);
               if (!p) return null;
@@ -402,28 +405,35 @@ function Checkout() {
               );
             })}
           </ul>
-          <dl className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
+          <dl className="tnum mt-5 space-y-2 border-t border-border pt-4 text-sm">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Shipping</dt>
-              <dd>{cart.shipping === 0 ? "Free" : formatINR(cart.shipping)}</dd>
+              <dt className="text-muted-foreground">{t("Subtotal")}</dt>
+              <dd>{formatINR(cart.subtotal)}</dd>
             </div>
             {cart.discount > 0 && (
               <div className="flex justify-between text-primary">
-                <dt>Discount</dt>
+                <dt>{t("Coupon")}</dt>
                 <dd>-{formatINR(cart.discount)}</dd>
               </div>
             )}
             {cart.stealDeal > 0 && (
               <div className="flex justify-between text-primary">
-                <dt>Steal Deal (Twin Pack)</dt>
+                <dt>{t("Steal Deal")}</dt>
                 <dd>-{formatINR(cart.stealDeal)}</dd>
               </div>
             )}
-            <div className="flex justify-between font-display text-lg">
-              <dt>Total</dt>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">{t("Shipping")}</dt>
+              <dd>{cart.shipping === 0 ? t("Free") : formatINR(cart.shipping)}</dd>
+            </div>
+            <div className="flex justify-between border-t border-gold/25 pt-2 text-lg font-bold text-maroon-deep">
+              <dt>{t("Total")}</dt>
               <dd>{formatINR(cart.total)}</dd>
             </div>
           </dl>
+          <div className="mt-4">
+            <FreeShippingProgress />
+          </div>
         </aside>
       </div>
     </>

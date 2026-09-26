@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Heart, LogOut, Menu, Phone, ShoppingBag, Tag, User, X } from "lucide-react";
+import { Heart, LogOut, Menu, Phone, ShoppingBasket, Tag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/swastik-logo-trimmed.png.asset.json";
 import { site } from "@/config/site";
@@ -12,8 +12,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
 
-/** Desktop nav order (no "Home" — the logo goes home). Twin Pack Offers is the gold pill. */
+/** Full nav from 1024 px. Twin Pack Offers is the gold pill. */
 const NAV = [
+  { label: "Home", to: "/" },
   { label: "Our Products", to: "/products" },
   { label: "Twin Pack Offers", to: "/products", hash: "twin-packs", pill: true },
   { label: "About Us", to: "/about" },
@@ -88,22 +89,22 @@ export function Header() {
             height={92}
             fetchPriority="high"
           />
-          <span className="hidden flex-col leading-none min-[400px]:flex">
-            <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-accent xl:text-[10px]">
+          <span className="flex flex-col leading-none">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-deep lg:text-[13px]">
               100% {t("PURE")} · {t("SINCE")} 1968
             </span>
           </span>
         </Link>
 
-        {/* Desktop nav (from 1280px) */}
-        <nav className="hidden items-center gap-1 xl:flex" aria-label="Primary">
+        {/* Full nav from 1024px; below that the drawer takes over */}
+        <nav className="hidden items-center lg:flex lg:gap-4 xl:gap-6" aria-label="Primary">
           {NAV.map((item) =>
             "pill" in item && item.pill ? (
               <Link
                 key={item.label}
                 to={item.to}
                 hash={item.hash}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gold-soft px-3.5 py-2 text-sm font-semibold text-maroon-deep transition-colors hover:bg-gold/60"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gold-soft px-3 py-1.5 text-sm font-semibold text-maroon-deep transition-colors hover:bg-gold/60 xl:px-3.5 xl:text-[15px]"
               >
                 <Tag className="h-3.5 w-3.5" aria-hidden="true" />
                 {t(item.label)}
@@ -112,7 +113,7 @@ export function Header() {
               <Link
                 key={item.label}
                 to={item.to}
-                className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-foreground/80 underline-offset-8 transition-colors hover:bg-accent/15 hover:text-foreground data-[status=active]:text-foreground data-[status=active]:underline data-[status=active]:decoration-gold data-[status=active]:decoration-2"
+                className="whitespace-nowrap rounded-full px-2 py-2 text-sm font-medium text-foreground/80 underline-offset-8 transition-colors hover:bg-accent/15 hover:text-foreground data-[status=active]:text-foreground data-[status=active]:underline data-[status=active]:decoration-gold data-[status=active]:decoration-2 xl:px-3 xl:text-[15px]"
               >
                 {t(item.label)}
               </Link>
@@ -140,7 +141,7 @@ export function Header() {
                   <Link
                     to="/account"
                     aria-label={t("My account")}
-                    className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+                    className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
                   >
                     <User className="h-4 w-4" aria-hidden="true" />
                   </Link>
@@ -153,7 +154,7 @@ export function Header() {
                     type="button"
                     onClick={signOut}
                     aria-label={t("Sign out")}
-                    className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+                    className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -165,7 +166,7 @@ export function Header() {
             <Link
               to="/auth"
               aria-label={t("Sign in")}
-              className="hidden h-10 w-10 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 xl:grid"
+              className="hidden h-9 w-9 place-items-center rounded-full border border-gold/40 transition-colors hover:bg-accent/15 lg:grid xl:h-10 xl:w-10"
             >
               <User className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">{t("Sign in")}</span>
@@ -183,10 +184,11 @@ export function Header() {
             <TooltipTrigger asChild>
               <Link
                 to="/cart"
-                aria-label={`${t("Cart")} — ${count}`}
-                className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 xl:h-10 xl:w-10"
+                aria-label={`${t("Cart")}, ${count} ${t("items")}`}
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 xl:h-10 xl:w-auto xl:px-3.5"
               >
-                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                <ShoppingBasket className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden text-sm font-medium xl:inline">{t("Cart")}</span>
                 {count > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[0.65rem] font-bold text-maroon-deep">
                     {count}
@@ -201,7 +203,7 @@ export function Header() {
             onClick={() => setOpen(true)}
             aria-expanded={open}
             aria-label={t("Menu")}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/40 xl:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/40 lg:hidden"
           >
             <Menu className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -211,9 +213,9 @@ export function Header() {
 
     </header>
 
-      {/* Mobile / tablet drawer (below 1280px) */}
+      {/* Mobile / tablet drawer (below 1024px) */}
       {open && (
-        <div className="fixed inset-0 z-[60] xl:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
+        <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
           <button
             type="button"
             aria-label={t("Close menu")}

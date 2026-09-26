@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Heart, Minus, Plus, ShieldCheck } from "lucide-react";
+import { Heart, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   defaultSizeOption,
   formatINR,
   isTwinPack,
   pctOff,
-  per100g,
   sizeAvailable,
-  twinSavings,
+  twinSavingsPct,
   type SizeOption,
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
@@ -19,6 +18,7 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import { useBoughtCounts } from "@/lib/catalog";
 import { useI18n } from "@/lib/i18n";
 import { StarRating } from "@/components/StarRating";
+import { QtyStepper } from "@/components/QtyStepper";
 
 export type CardProduct = {
   slug: string;
@@ -44,7 +44,7 @@ export function ProductCard({
   index?: number;
 }) {
   const navigate = useNavigate();
-  const { lines, add, setQty } = useCart();
+  const { lines, add } = useCart();
   const { freeShippingAbove } = useStoreSettings();
   const { session } = useAuth();
   const { has, toggle } = useWishlist();
@@ -64,8 +64,7 @@ export function ProductCard({
   const price = selected?.price ?? product.price;
   const mrp = selected?.mrp ?? product.mrp ?? product.price;
   const discount = pctOff(mrp, price);
-  const per100 = selected ? per100g(selected) : null;
-  const twinSave = selected ? twinSavings(product, selected) : null;
+  const twinPct = selected ? twinSavingsPct(product, selected) : null;
   const inStock = selected ? sizeAvailable(product, selected) : (product.stock ?? 1) > 0;
   const image = selected?.image ?? product.image;
 
@@ -86,11 +85,6 @@ export function ProductCard({
     } else {
       navigate({ to: "/products/$slug", params: { slug: product.slug } });
     }
-  };
-
-  const onAdd = () => {
-    add(product.slug, selected?.label);
-    toast.success(`${product.name} added to cart`);
   };
 
   const onToggleWish = () => {
@@ -193,16 +187,15 @@ export function ProductCard({
         )}
 
         <div className="mt-3 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-lg font-semibold">{formatINR(price)}</span>
-          {mrp > price && <span className="text-sm text-muted-foreground line-through">{formatINR(mrp)}</span>}
+          <span className="tnum text-lg font-semibold">{formatINR(price)}</span>
+          {mrp > price && <span className="tnum text-sm text-muted-foreground line-through">{formatINR(mrp)}</span>}
         </div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Inclusive of all taxes
-          {per100 != null && <span> · ₹{per100.toLocaleString("en-IN")} per 100 g</span>}
-        </p>
-        {twinSave != null && (
-          <p className="mt-0.5 text-xs font-medium text-emerald-700">Save {formatINR(twinSave)} vs 2 single jars</p>
-        )}
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">Inclusive of all taxes</p>
+        {twinPct != null ? (
+          <p className="mt-0.5 text-xs font-semibold text-emerald-700">Save {twinPct}% vs 2 single jars</p>
+        ) : discount >= 1 ? (
+          <p className="mt-0.5 text-xs font-semibold text-emerald-700">Save {discount}% on MRP</p>
+        ) : null}
         {price >= freeShippingAbove && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">Free shipping</p>
         )}
@@ -216,49 +209,27 @@ export function ProductCard({
           );
         })()}
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3" onClick={(e) => e.stopPropagation()}>
-          {packMode ? (
-            <button
-              type="button"
-              disabled={!inStock}
-              onClick={goToDetail}
-              className="min-h-11 w-full rounded-full border border-gold/50 text-sm font-medium transition-colors hover:bg-accent/15 disabled:opacity-50"
-            >
-              {inStock ? "Select options" : "Out of stock"}
-            </button>
-          ) : cartItem ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="Decrease quantity"
-                onClick={() => setQty(product.slug, cartItem.size, cartItem.qty - 1)}
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold/50"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="min-w-6 text-center text-sm font-medium">{cartItem.qty}</span>
-              <button
-                type="button"
-                aria-label="Increase quantity"
-                onClick={() => setQty(product.slug, cartItem.size, cartItem.qty + 1)}
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold/50"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={!inStock}
-              onClick={onAdd}
-              className="min-h-11 w-full rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-50"
-            >
-              {inStock ? "Add" : "Out of stock"}
-            </button>
-          )}
-          {packMode && (
-            <span className="shrink-0 text-[11px] text-muted-foreground">{options.length} options</span>
-          )}
+        <div className="mt-auto flex flex-col gap-2 pt-3 lg:flex-row" onClick={(e) => e.stopPropagation()}>
+          <div className="lg:flex-1">
+            <QtyStepper
+              slug={product.slug}
+              size={selected?.label ?? ""}
+              max={selected ? (selected.stock ?? product.stock ?? null) : null}
+              disabled={!inStock || !selected}
+            />
+          </div>
+          <button
+            type="button"
+            disabled={!inStock || !selected}
+            onClick={() => {
+              if (!selected) return;
+              if (!cartItem) add(product.slug, selected.label, 1, { skipUpsell: true });
+              navigate({ to: "/checkout" });
+            }}
+            className="h-11 w-full whitespace-nowrap rounded-full border border-gold/50 px-4 text-xs font-semibold transition-colors hover:bg-accent/15 disabled:opacity-50 lg:flex-1"
+          >
+            {t("Buy now")}
+          </button>
         </div>
       </div>
     </article>
