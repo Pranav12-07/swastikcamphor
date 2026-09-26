@@ -1,4 +1,4 @@
-import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BadgeCheck, ChevronRight, Lock, Package, Truck } from "lucide-react";
@@ -23,6 +23,7 @@ import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { StarRating } from "@/components/StarRating";
 import { ProductOffers } from "@/components/products/ProductOffers";
 import { StickyBuyBar } from "@/components/products/StickyBuyBar";
+import { QtyStepper } from "@/components/QtyStepper";
 import { getPublicProduct } from "@/lib/products.functions";
 import { OLD_SLUG_REDIRECTS } from "@/lib/pack-redirects";
 import { SITE_URL, breadcrumbJsonLd, canonicalLink, seoMeta } from "@/lib/seo";
@@ -180,7 +181,8 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductDetail() {
   const { product, related, reviewStats } = Route.useLoaderData();
   const search = Route.useSearch();
-  const { add } = useCart();
+  const { add, lines } = useCart();
+  const navigate = useNavigate();
   const { freeShippingAbove, shippingFlat } = useStoreSettings();
   useReveal();
 
