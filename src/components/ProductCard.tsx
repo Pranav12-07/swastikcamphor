@@ -35,9 +35,11 @@ export type CardProduct = {
 export function ProductCard({
   product,
   reveal = true,
+  index = 0,
 }: {
   product: CardProduct;
   reveal?: boolean;
+  index?: number;
 }) {
   const navigate = useNavigate();
   const { lines, add, setQty } = useCart();
@@ -106,6 +108,7 @@ export function ProductCard({
       role="link"
       aria-label={`View ${product.name}`}
       className={`card-premium group flex cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-lg ${reveal ? "reveal" : ""}`}
+      style={reveal && index ? { transitionDelay: `${index * 70}ms` } : undefined}
     >
       <div className="relative">
         <img
