@@ -113,6 +113,23 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
       toast.error("Product name and price are required");
       return;
     }
+    const filledRows = sizeRows.filter((r) => r.label.trim() || r.price);
+    for (const r of filledRows) {
+      const price = Number(r.price);
+      const mrp = r.mrp ? Number(r.mrp) : null;
+      if (!r.label.trim()) {
+        toast.error("Every pack size needs a label");
+        return;
+      }
+      if (!Number.isFinite(price) || price <= 0) {
+        toast.error(`Pack size "${r.label}": price must be above 0`);
+        return;
+      }
+      if (mrp != null && mrp < price) {
+        toast.error(`Pack size "${r.label}": MRP must be at least the price`);
+        return;
+      }
+    }
     setBusy(true);
     try {
       const payload = {
@@ -136,6 +153,13 @@ export function ProductForm({ initial }: { initial?: ProductRow }) {
         images: gallery.map((g) => g.url),
         gallery,
         sizes: csv(form.sizes),
+        size_options: filledRows.map((r) => ({
+          label: r.label.trim(),
+          price: Number(r.price),
+          mrp: r.mrp ? Number(r.mrp) : null,
+          stock: r.stock ? Math.max(0, Math.trunc(Number(r.stock))) : null,
+          popular: r.popular,
+        })),
         features: csv(form.features),
         is_active: asDraft ? false : form.is_active,
         is_featured: form.is_featured,
