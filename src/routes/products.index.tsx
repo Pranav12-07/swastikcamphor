@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCatalog } from "@/lib/catalog";
 import { withServerProducts } from "@/lib/catalog-ssr";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
 import { ProductCard } from "@/components/ProductCard";
 import { useReveal } from "@/hooks/use-reveal";
 import { canonicalLink, seoMeta } from "@/lib/seo";
+import { formatINR, isTwinPack, pctOff, twinSavings, type SizeOption } from "@/data/products";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/products/")({
   head: () => ({
@@ -47,7 +49,17 @@ function ProductsPage() {
   const serverProducts = Route.useLoaderData();
   const { products: liveProducts, loading } = useCatalog();
   const products = withServerProducts(liveProducts, serverProducts);
+  const { t } = useI18n();
   useReveal();
+
+  // Every in-stock Twin Pack across the catalogue, Tablets first — target of #twin-packs links.
+  const twinPacks = products
+    .flatMap((p) =>
+      (p.sizeOptions ?? [])
+        .filter((o) => isTwinPack(o))
+        .map((o) => ({ product: p, option: o })),
+    )
+    .sort((a, b) => (a.product.slug === "camphor-tablets" ? -1 : b.product.slug === "camphor-tablets" ? 1 : 0));
 
   const known = new Set(SECTIONS.flatMap((s) => s.slugs));
   const extra = products.filter((p) => !known.has(p.slug));
@@ -90,6 +102,59 @@ function ProductsPage() {
         </nav>
       )}
 
+      {twinPacks.length > 0 && (
+        <section id="twin-packs" className="mt-10">
+          <h2 className="font-display text-2xl md:text-3xl">{t("Twin Pack Offers")}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            {t("Buy 2 and save more")} — {t("every Twin Pack beats two single jars.")}
+          </p>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {twinPacks.map(({ product, option }) => {
+              const off = pctOff(option.mrp, option.price);
+              const save = twinSavings(product, option);
+              const outOfStock = option.stock != null && option.stock <= 0;
+              return (
+                <Link
+                  key={`${product.slug}__${option.label}`}
+                  to="/products/$slug"
+                  params={{ slug: product.slug }}
+                  search={{ size: option.label }}
+                  className={`card-premium group relative block overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
+                >
+                  {off > 0 && (
+                    <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
+                      {off}% {t("OFF")}
+                    </span>
+                  )}
+                  <img
+                    src={option.image ?? product.image}
+                    alt={`${product.name} – ${option.label}`}
+                    loading="lazy"
+                    className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="p-3 md:p-4">
+                    <h3 className="truncate font-body text-[13px] font-semibold md:text-sm">{product.name}</h3>
+                    <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted-foreground">{option.label}</p>
+                    <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+                      <span className="text-base font-bold">{formatINR(option.price)}</span>
+                      {option.mrp != null && option.mrp > option.price && (
+                        <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
+                      )}
+                    </div>
+                    {save != null && (
+                      <p className="mt-1 text-xs font-medium text-emerald-700">
+                        {t("Save")} {formatINR(save)} {t("vs 2 single jars")}
+                      </p>
+                    )}
+                    {outOfStock && <p className="mt-1 text-xs font-semibold text-destructive">{t("Out of stock")}</p>}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {loading && products.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading products…</p>
       ) : sections.length === 0 ? (
@@ -98,7 +163,7 @@ function ProductsPage() {
         </div>
       ) : (
         sections.map((s, idx) => (
-          <section key={s.id} id={s.id} className={`scroll-mt-32 ${idx === 0 ? "mt-8" : "mt-14"}`}>
+          <section key={s.id} id={s.id} className={idx === 0 ? "mt-14" : "mt-14"}>
             <h2 className="font-display text-2xl md:text-3xl">{s.title}</h2>
             {s.blurb && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{s.blurb}</p>}
             <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
