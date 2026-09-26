@@ -7,9 +7,8 @@ import {
   formatINR,
   isTwinPack,
   pctOff,
-  per100g,
   sizeAvailable,
-  twinSavings,
+  twinSavingsPct,
   type SizeOption,
 } from "@/data/products";
 import { useCart } from "@/lib/cart";
@@ -19,6 +18,7 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import { useBoughtCounts } from "@/lib/catalog";
 import { useI18n } from "@/lib/i18n";
 import { StarRating } from "@/components/StarRating";
+import { QtyStepper } from "@/components/QtyStepper";
 
 export type CardProduct = {
   slug: string;
@@ -64,8 +64,7 @@ export function ProductCard({
   const price = selected?.price ?? product.price;
   const mrp = selected?.mrp ?? product.mrp ?? product.price;
   const discount = pctOff(mrp, price);
-  const per100 = selected ? per100g(selected) : null;
-  const twinSave = selected ? twinSavings(product, selected) : null;
+  const twinPct = selected ? twinSavingsPct(product, selected) : null;
   const inStock = selected ? sizeAvailable(product, selected) : (product.stock ?? 1) > 0;
   const image = selected?.image ?? product.image;
 
