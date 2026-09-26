@@ -50,8 +50,10 @@ export function parseSizeOptions(raw: unknown): SizeOption[] {
     .filter((o): o is SizeOption => o !== null);
 }
 
+type WithSizes = { sizeOptions?: SizeOption[]; stock?: number };
+
 /** Pre-selected size: the "Most chosen" one, else the first in stock, else the first. */
-export function defaultSizeOption(product: Product): SizeOption | null {
+export function defaultSizeOption(product: WithSizes): SizeOption | null {
   const opts = product.sizeOptions ?? [];
   if (!opts.length) return null;
   return (
@@ -62,20 +64,20 @@ export function defaultSizeOption(product: Product): SizeOption | null {
 }
 
 /** A size is sellable when its own stock (or the product stock it falls back to) is above zero. */
-export function sizeAvailable(product: Product & { stock?: number }, opt: SizeOption): boolean {
+export function sizeAvailable(product: WithSizes, opt: SizeOption): boolean {
   const stock = opt.stock ?? product.stock;
   return stock == null || stock > 0;
 }
 
 /** True when nothing sellable remains: product stock 0 and no size with its own stock left. */
-export function isOutOfStock(product: Product & { stock?: number }): boolean {
+export function isOutOfStock(product: WithSizes): boolean {
   const opts = product.sizeOptions ?? [];
   if (opts.length) return opts.every((o) => !sizeAvailable(product, o));
   return product.stock != null && product.stock <= 0;
 }
 
 /** Price for a chosen size label, falling back to the product's base price. */
-export function priceForSize(product: Product, size: string | null | undefined): number {
+export function priceForSize(product: WithSizes & { price: number }, size: string | null | undefined): number {
   const opt = size ? (product.sizeOptions ?? []).find((o) => o.label === size) : undefined;
   return opt?.price ?? product.price;
 }
