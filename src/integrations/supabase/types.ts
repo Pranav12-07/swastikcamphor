@@ -440,13 +440,16 @@ export type Database = {
       }
       coupons: {
         Row: {
+          assigned_user_id: string | null
           code: string
           created_at: string
           discount_type: string
           discount_value: number
           expires_at: string | null
+          first_order_only: boolean
           id: string
           is_active: boolean
+          is_public: boolean
           max_discount: number | null
           min_order_amount: number
           per_customer_limit: number | null
@@ -456,13 +459,16 @@ export type Database = {
           used_count: number
         }
         Insert: {
+          assigned_user_id?: string | null
           code: string
           created_at?: string
           discount_type?: string
           discount_value?: number
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
           is_active?: boolean
+          is_public?: boolean
           max_discount?: number | null
           min_order_amount?: number
           per_customer_limit?: number | null
@@ -472,13 +478,16 @@ export type Database = {
           used_count?: number
         }
         Update: {
+          assigned_user_id?: string | null
           code?: string
           created_at?: string
           discount_type?: string
           discount_value?: number
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
           is_active?: boolean
+          is_public?: boolean
           max_discount?: number | null
           min_order_amount?: number
           per_customer_limit?: number | null
