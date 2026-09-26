@@ -141,9 +141,9 @@ function ProductsPage() {
   const activeFilter: FilterId | "all" = filter ?? "all";
   const activeSort: SortId = sort ?? "recommended";
 
-  const setSearch = (next: { filter?: FilterId; sort?: SortId }) => {
+  const setSearch = (next: { filter?: FilterId | undefined; sort?: SortId | undefined }) => {
     void navigate({
-      search: (prev: Record<string, unknown>) => ({ ...prev, ...next }),
+      search: ((prev: Record<string, unknown>) => ({ ...prev, ...next })) as never,
       replace: true,
     });
   };
