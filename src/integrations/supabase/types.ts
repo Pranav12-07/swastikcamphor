@@ -973,6 +973,7 @@ export type Database = {
           seo_subtitle: string | null
           seo_title: string | null
           short_description: string | null
+          size_options: Json
           sizes: string[]
           sku: string | null
           slug: string
@@ -1009,6 +1010,7 @@ export type Database = {
           seo_subtitle?: string | null
           seo_title?: string | null
           short_description?: string | null
+          size_options?: Json
           sizes?: string[]
           sku?: string | null
           slug: string
@@ -1045,6 +1047,7 @@ export type Database = {
           seo_subtitle?: string | null
           seo_title?: string | null
           short_description?: string | null
+          size_options?: Json
           sizes?: string[]
           sku?: string | null
           slug?: string
