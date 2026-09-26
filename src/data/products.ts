@@ -52,12 +52,12 @@ export function parseSizeOptions(raw: unknown): SizeOption[] {
 
 type WithSizes = { sizeOptions?: SizeOption[]; stock?: number };
 
-/** Pre-selected size: the "Most chosen" one, else the first in stock, else the first. */
+/** Pre-selected size: the "Most chosen" one when in stock, else the first in stock, else the first. */
 export function defaultSizeOption(product: WithSizes): SizeOption | null {
   const opts = product.sizeOptions ?? [];
   if (!opts.length) return null;
   return (
-    opts.find((o) => o.popular) ??
+    opts.find((o) => o.popular && sizeAvailable(product, o)) ??
     opts.find((o) => sizeAvailable(product, o)) ??
     opts[0]!
   );
