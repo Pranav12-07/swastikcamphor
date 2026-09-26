@@ -30,6 +30,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const mrp = selected?.mrp ?? product.mrp;
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const outOfStock = isOutOfStock(product);
+  const selectedAvailable = selected ? sizeAvailable(product, selected) : true;
   const notifyUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     `Namaste! Please notify me when "${product.name}" is back in stock.`,
   )}`;
@@ -168,13 +169,15 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           ) : (
             <button
               type="button"
+              disabled={!selectedAvailable}
+              title={selectedAvailable ? undefined : "This size is out of stock"}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 add(product.slug, selected?.label);
                 toast.success(`${product.name} added to cart`);
               }}
-              className="relative z-20 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 sm:w-auto sm:py-2"
+              className="relative z-20 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:w-auto sm:py-2"
             >
               Add to cart
             </button>
