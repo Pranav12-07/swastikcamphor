@@ -152,6 +152,53 @@ function Checkout() {
     );
   }
 
+  if (totalChanged) {
+    return (
+      <>
+        <PageHeader eyebrow="Checkout" title="Your total has been updated" />
+        <div className="mx-auto max-w-md px-4 py-16 md:px-8">
+          <div className="card-premium p-8 text-center">
+            <p className="text-muted-foreground">Your total has been updated to</p>
+            <p className="tnum mt-2 font-display text-3xl font-bold text-maroon-deep">{formatINR(totalChanged.total)}</p>
+            <dl className="tnum mt-5 space-y-2 border-t border-border pt-4 text-left text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t("Subtotal")}</dt>
+                <dd>{formatINR(totalChanged.subtotal)}</dd>
+              </div>
+              {totalChanged.discount > 0 && (
+                <div className="flex justify-between text-primary">
+                  <dt>{t("Coupon")}</dt>
+                  <dd>-{formatINR(totalChanged.discount)}</dd>
+                </div>
+              )}
+              {totalChanged.stealDeal > 0 && (
+                <div className="flex justify-between text-primary">
+                  <dt>{t("Steal Deal")}</dt>
+                  <dd>-{formatINR(totalChanged.stealDeal)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t("Shipping")}</dt>
+                <dd>{totalChanged.shipping === 0 ? t("Free") : formatINR(totalChanged.shipping)}</dd>
+              </div>
+            </dl>
+            <button
+              type="button"
+              onClick={() => {
+                const { orderNumber: no, total } = totalChanged;
+                setTotalChanged(null);
+                proceed(no, total, session?.user?.email ?? "");
+              }}
+              className="mt-6 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              {t("Confirm")} • {formatINR(totalChanged.total)}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   if (cart.lines.length === 0) {
     return (
       <>
@@ -167,6 +214,16 @@ function Checkout() {
       </>
     );
   }
+
+  const proceed = (orderNo: string, total: number, email: string) => {
+    // The cart is only cleared once the payment is verified (order-success page).
+    if (method === "cod") {
+      navigate({ to: "/order-success/$orderNumber", params: { orderNumber: orderNo } });
+      return;
+    }
+    setPlaced({ email, total });
+    setOrderNumber(orderNo);
+  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -449,6 +506,9 @@ function Checkout() {
               <dd>{formatINR(cart.total)}</dd>
             </div>
           </dl>
+          <div className="mt-4">
+            <CouponForm />
+          </div>
           <div className="mt-4">
             <FreeShippingProgress />
           </div>
