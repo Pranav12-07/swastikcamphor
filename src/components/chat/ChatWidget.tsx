@@ -50,7 +50,7 @@ export function ChatWidget() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close chat assistant" : "Open chat assistant"}
-        className="fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full border border-gold/50 bg-primary text-primary-foreground shadow-[var(--shadow-lift)] transition-transform duration-300 hover:scale-105"
+        className="float-lift fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full border border-gold/50 bg-primary text-primary-foreground shadow-[var(--shadow-lift)] transition-transform duration-300 hover:scale-105"
       >
         {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5 animate-flicker" />}
       </button>
