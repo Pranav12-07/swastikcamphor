@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Heart, Minus, Plus } from "lucide-react";
+import { Heart, Minus, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   defaultSizeOption,
@@ -16,6 +16,8 @@ import { useCart } from "@/lib/cart";
 import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { useBoughtCounts } from "@/lib/catalog";
+import { useI18n } from "@/lib/i18n";
 import { StarRating } from "@/components/StarRating";
 
 export type CardProduct = {
@@ -46,6 +48,8 @@ export function ProductCard({
   const { freeShippingAbove } = useStoreSettings();
   const { session } = useAuth();
   const { has, toggle } = useWishlist();
+  const { t } = useI18n();
+  const boughtCounts = useBoughtCounts();
 
   const options = useMemo(() => product.sizeOptions ?? [], [product.sizeOptions]);
   const packMode = options.length > 1;
@@ -143,11 +147,16 @@ export function ProductCard({
 
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-body text-base font-semibold leading-snug">{product.name}</h3>
-        {typeof product.rating === "number" && product.rating > 0 && (product.ratingCount ?? 0) > 0 && (
+        {typeof product.rating === "number" && product.rating > 0 && (product.ratingCount ?? 0) > 0 ? (
           <div className="mt-1 flex items-center gap-1.5">
             <StarRating rating={product.rating} />
             <span className="text-xs text-muted-foreground">({(product.ratingCount ?? 0).toLocaleString("en-IN")})</span>
           </div>
+        ) : (
+          <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+            {t("Trusted in 5,000+ stores across India")}
+          </p>
         )}
 
         {packMode && (
@@ -197,6 +206,15 @@ export function ProductCard({
         {price >= freeShippingAbove && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">Free shipping</p>
         )}
+        {(() => {
+          const bought = boughtCounts[product.slug]?.[selected?.label ?? ""] ?? 0;
+          if (bought < 10) return null;
+          return (
+            <p className="mt-0.5 text-[11px] font-medium text-primary">
+              {t(`${Math.floor(bought / 10) * 10}+ bought in the past month`)}
+            </p>
+          );
+        })()}
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-3" onClick={(e) => e.stopPropagation()}>
           {packMode ? (

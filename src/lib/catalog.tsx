@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { products as fallbackProducts, parseSizeOptions } from "@/data/products";
+import { getBoughtCounts, getReviewStats } from "@/lib/products.functions";
 import {
   CatalogContext,
   useCatalog,
@@ -91,8 +92,19 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Real ratings come from approved customer reviews only — never manual values.
+  const reviewStatsQuery = useQuery({
+    queryKey: ["review-stats"],
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => getReviewStats(),
+  });
+
   const value = useMemo<CatalogValue>(() => {
-    const list = productsQuery.data ?? [];
+    const stats = reviewStatsQuery.data ?? {};
+    const list = (productsQuery.data ?? []).map((p) => {
+      const s = stats[p.slug];
+      return s ? { ...p, rating: s.average, ratingCount: s.count } : { ...p, rating: null, ratingCount: 0 };
+    });
     const coupons = couponsQuery.data ?? [];
     return {
       products: list,
@@ -101,7 +113,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       getProduct: (slug: string) => list.find((p) => p.slug === slug),
       loading: productsQuery.isLoading,
     };
-  }, [productsQuery.data, productsQuery.isLoading, categoriesQuery.data, couponsQuery.data]);
+  }, [productsQuery.data, productsQuery.isLoading, categoriesQuery.data, couponsQuery.data, reviewStatsQuery.data]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
+}
+
+/** Genuine "bought in the past month" counts per product and pack size (server-computed, cached 1 hour). */
+export function useBoughtCounts(): Record<string, Record<string, number>> {
+  const query = useQuery({
+    queryKey: ["bought-counts"],
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => getBoughtCounts(),
+  });
+  return query.data ?? {};
 }
