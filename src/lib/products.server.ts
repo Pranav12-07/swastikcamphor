@@ -61,6 +61,21 @@ function galleryFrom(row: Row, fallback: string): string[] {
 export function mapProductRow(row: Row): PublicProduct {
   const slug = String(row["slug"]);
   const price = Number(row["price"] ?? 0);
+  const specs = (row["specifications"] as Record<string, unknown> | null) ?? null;
+  const specStr = (k: string) => {
+    const v = specs?.[k];
+    return typeof v === "string" && v.trim() ? v : null;
+  };
+  const marketplace =
+    row["marketplace_name"] && row["marketplace_rating"] != null && row["marketplace_url"]
+      ? {
+          name: String(row["marketplace_name"]),
+          rating: Number(row["marketplace_rating"]),
+          count: Number(row["marketplace_rating_count"] ?? 0),
+          url: String(row["marketplace_url"]),
+          checkedOn: (row["marketplace_checked_on"] as string | null) ?? null,
+        }
+      : null;
   return {
     slug,
     name: String(row["name"] ?? ""),
