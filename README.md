@@ -1,29 +1,69 @@
-# Welcome to your Lovable project
+# Swastik Camphor — Online Store
 
-This project was built with [Lovable](https://lovable.dev).
+Full e-commerce website for **Swastik Camphor** (VIJAYASREE CAMPHOR INDUSTRIES, Hyderabad).
+Customers can browse camphor products, order online with UPI/PhonePe or Cash on Delivery,
+track orders, leave reviews, chat with support, and receive branded order emails.
+A private staff portal manages products, orders, customers, promo posters, coupons,
+shipping, and notifications.
 
-## Build with Lovable
+## Main features
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+- Product catalogue with ratings, discounts, wishlist, and cart
+- Checkout with PhonePe / UPI (QR + deep links) and Cash on Delivery
+- Verified-payment PDF receipts and order confirmation emails
+- Customer accounts (Google sign-in) with address book and order history
+- Multi-language customer site: English, Telugu, Hindi
+- Admin portal: catalogue, orders, customers, promo poster carousel (images + video),
+  coupons, shipping, reviews, analytics
+- Realtime order updates and support chat
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Technologies
 
-## Development
+- **TanStack Start v1** (React 19, SSR) with **Vite 7**
+- **Tailwind CSS v4** + shadcn-style components
+- **Lovable Cloud** (managed database, auth, storage)
+- **PhonePe** payment gateway
+- Order emails via the shop mailbox (`shop@online.swastikcamphor.in`)
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Run locally
+
+Requirements: Node.js 20+ and npm (or bun).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
+npm install
+cp .env.example .env   # then fill in your real values
 npm run dev
 ```
 
-## Built with
+The app runs at `http://localhost:8080`.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Environment variables
+
+All required variables are listed in **`.env.example`** with placeholder values.
+Copy it to `.env` and fill in the real values (database keys, PhonePe credentials,
+mailbox password, etc.). The real `.env` file is git-ignored and must never be committed.
+
+## Build & deploy
+
+```sh
+npm run build
+```
+
+The project is built and hosted on [Lovable](https://lovable.dev); publishing from the
+Lovable editor deploys it to production. The connected GitHub repository stays in
+two-way sync with the Lovable project automatically.
+
+## Project structure
+
+```
+src/
+  routes/          # pages (file-based routing) + /api server endpoints
+  components/      # UI components (storefront, admin, checkout, chat)
+  lib/             # server functions, payments, email, i18n, catalogue
+  integrations/    # generated backend clients (do not edit)
+  assets/          # images & media pointers
+public/            # static files (favicon, product images, robots.txt)
+supabase/          # backend configuration
+```
