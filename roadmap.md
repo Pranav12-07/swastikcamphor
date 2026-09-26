@@ -1,20 +1,20 @@
-# Roadmap — Catalogue restructure (3 products with pack options)
+# Roadmap — Swastik Camphor store
 
-## Done
-- Mobile-first spec: one-line tappable offer strip, new header + drawer menu, two-line hero, 3 category circles, Twin Pack / single-pack card rows with Add to cart + Buy now, India trust stats, floating-button cleanup, Telugu/Hindi strings — verified at 360/390/1280/1440, build OK.
-- DB: 3 master products (tablets / bhimseni / refill pouch), 16 pack options each with own price/MRP/stock/photo/SKU; old 18 listings disabled; reviews & wishlists moved; place_order enforces pack price + per-pack stock + pack SKU; review_votes + review_requests tables; private review-photos bucket.
-- Product page: 301 redirects from old slugs, pack pills (Twin Packs first, gold border, % off), price block with % off + per-100g + savings, upsell, trust row, details table, how-to-use/safety, per-pack gallery image, sticky gallery, JSON-LD AggregateOffer + shipping.
-- Reviews: verified badge, helpful votes, sort + photo/star filters, breakdown, store reply, photo reviews (private storage), ?review=1 form, pack selector.
-- ProductCard: pack mode with selector, % off badge, per-100g, savings, Select options.
-- Homepage: new title/hero/meta, Twin Pack Offers strip, Popular packs, Best value ribbon.
-- /products: 3 sections + sticky chips. Cart: old slugs auto-migrated.
-- Build OK.
+## Done (this round)
+- Steal Deal: server-enforced in place_order (Twin Pack + order ₹500+ → extra ₹50, always the bigger of coupon vs deal), stored on the order, shown in cart/checkout summaries, customer + admin emails, and PDF receipts.
+- Twin Pack upsell popup when a single jar is added (once per product), plus "Switch to Twin Pack" buttons and a Steal Deal progress bar on the cart page.
+- Homepage: hero CTAs, category circles reordered (Tablets, Bhimseni, Pouch), 9-pack auto-scrolling carousel (2 visible on phones, 4 on desktop, pause on hover/touch, arrows + dots + play/pause).
+- /products rebuilt: filter chips (All / Twin Pack Offers / Tablets / Bhimseni / Pouch) with counts, sort dropdown (recommended, price low/high, biggest saving), URL-backed state, empty state; SSR loader/meta preserved.
+- Shop page removed: /shop 301-redirects to /products (old ?category= maps to ?filter=), all nav/footer/blog/cart links updated, sitemap + legacy redirects cleaned.
+- Product cards show real review stars/counts (fallback text when none) and genuine rounded purchase counts from recent paid/delivered orders; admin-set ratings cleared from the DB.
+- Review coupons: approving a first review auto-creates a single-use ₹25 coupon (min ₹299, 60 days) and emails a branded thank-you; coupon marker exposed in review data.
+- Footer top gap removed; build OK.
 
 ## Remaining
-- shop.tsx: align with 3-product catalogue.
-- cart.tsx: "switch to Twin Pack & save" suggestions.
-- Admin ProductForm: new size-table fields (short label, grams, container, SKU, photo, flags) + marketplace settings card.
-- Admin reviews: reply box + QR share card; admin order page: WhatsApp review-request button.
-- legacy-redirects.ts: WordPress /product/* rules; sitemap: image entries.
-- Review-request automation: /api/public/cron/review-requests + pg_cron (needs publish).
-- Publish everything; Resend setup still blocks order emails.
+- Trust strip text: 200+ stores, ESTD 1968, partner list (Ratnadeep, Q Mart, Balaji Grand, Vijetha, SMR Vinay) — config values still 5,000+.
+- Order-success page: show Steal Deal line (getPaymentState now returns it); admin order detail page Steal Deal line.
+- Admin settings: editable Steal Deal (enabled/amount/min) + review-coupon programme controls; admin reviews: show coupon marker.
+- Product page: no-review fallback text, review-coupon incentive line, Buy Now must skip the upsell popup.
+- Telugu/Hindi translations for all new strings.
+- Full responsive + accessibility check (360/390/768/1280/1440), carousel geometry test.
+- Review-request cron + publish; Resend setup still blocks order emails.
