@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PayWithUpi } from "@/components/checkout/PayWithUpi";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { CouponForm } from "@/components/cart/CouponForm";
 import { useI18n } from "@/lib/i18n";
 import phonepeLogo from "@/assets/phonepe.png";
 
