@@ -38,6 +38,7 @@ export type PaymentStateResponse = {
   subtotal: number;
   shipping: number;
   discount: number;
+  stealDeal: number;
   tax: number;
   createdAt: string;
   /** UPI window after which we ask the customer to retry with a fresh payment. */
@@ -265,6 +266,7 @@ export const getPaymentState = createServerFn({ method: "POST" })
       subtotal: Number(order.subtotal),
       shipping: Number(order.shipping),
       discount: Number(order.discount),
+      stealDeal: Number(order.steal_deal_discount ?? 0),
       tax: Number(order.tax),
       items: (lines ?? []).map((l) => ({
         name: l.name,
