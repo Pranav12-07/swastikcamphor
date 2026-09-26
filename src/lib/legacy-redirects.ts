@@ -5,15 +5,15 @@
  */
 
 const EXACT: Record<string, string> = {
-  "/red-color-pouches-tablets-from-swastik-near-me-camphor": "/shop",
+  "/red-color-pouches-tablets-from-swastik-near-me-camphor": "/products",
   "/the-swastik-symbol-a-sacred-emblem": "/blogs",
   "/my-account": "/account",
 };
 
 const PREFIXES: Array<[prefix: string, target: string]> = [
-  ["/product-category/", "/shop"],
-  ["/product/", "/shop"],
-  ["/shop/page/", "/shop"],
+  ["/product-category/", "/products"],
+  ["/product/", "/products"],
+  ["/shop/page/", "/products"],
   ["/category/", "/blogs"],
   ["/tag/", "/blogs"],
   ["/author/", "/blogs"],

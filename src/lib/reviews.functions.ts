@@ -16,6 +16,7 @@ export type Review = {
   created_at: string;
   verified: boolean;
   helpful_by_me: boolean;
+  thank_you: boolean;
 };
 
 const submitSchema = z.object({
@@ -47,7 +48,7 @@ export const listReviews = createServerFn({ method: "POST" })
     const supabasePublic = await publicSupabase();
     const { data: rows, error } = await supabasePublic
       .from("product_reviews")
-      .select("id, product_slug, user_id, name, rating, title, comment, city, size_label, photos, helpful_count, store_reply, created_at")
+      .select("id, product_slug, user_id, name, rating, title, comment, city, size_label, photos, helpful_count, store_reply, thank_you_coupon, created_at")
       .eq("product_slug", data.slug)
       .eq("approved", true)
       .order("created_at", { ascending: false })
@@ -101,6 +102,7 @@ export const listReviews = createServerFn({ method: "POST" })
       created_at: String(r["created_at"]),
       verified: r["user_id"] != null && verifiedIds.has(String(r["user_id"])),
       helpful_by_me: myVotes.has(String(r["id"])),
+      thank_you: Boolean(r["thank_you_coupon"]),
     })) as Review[];
   });
 

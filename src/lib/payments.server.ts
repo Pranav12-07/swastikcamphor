@@ -21,6 +21,7 @@ type OrderRow = {
   subtotal: number;
   shipping: number;
   discount: number;
+  steal_deal_discount: number | null;
   tax: number;
   total: number;
   status: string;
@@ -29,7 +30,7 @@ type OrderRow = {
 };
 
 const ORDER_FIELDS =
-  "id, order_number, user_id, customer_name, email, phone, address, city, state, pincode, subtotal, shipping, discount, tax, total, status, payment_status, created_at";
+  "id, order_number, user_id, customer_name, email, phone, address, city, state, pincode, subtotal, shipping, discount, steal_deal_discount, tax, total, status, payment_status, created_at";
 
 export async function getOrderByNumber(orderNumber: string): Promise<OrderRow | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -162,6 +163,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
       })) ?? "";
@@ -195,6 +197,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
         placedAt,
@@ -237,6 +240,7 @@ export async function settleOrderPaid(
         subtotal: Number(order.subtotal),
         shipping: Number(order.shipping),
         discount: Number(order.discount),
+        stealDealDiscount: Number(order.steal_deal_discount ?? 0),
         tax: Number(order.tax),
         total: Number(order.total),
         adminUrl: `${base}/admin/orders/${order.id}`,

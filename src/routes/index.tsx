@@ -1,6 +1,7 @@
 import { canonical, canonicalLink } from "@/lib/seo";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Flame, Leaf, ShieldCheck, Truck } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Flame, Leaf, Pause, Play, ShieldCheck, Tag, Truck } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import heroDiyaLoop from "@/assets/hero-diya-loop.mp4.asset.json";
 import heroDiyaLoopWebm from "@/assets/hero-diya-loop.webm.asset.json";
@@ -39,7 +40,7 @@ function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
   const outOfStock = option.stock != null && option.stock <= 0;
 
   const buyNow = () => {
-    add(product.slug, option.label);
+    add(product.slug, option.label, 1, { skipUpsell: true });
     void navigate({ to: "/checkout" });
   };
 
@@ -162,13 +163,161 @@ const values = [
   { icon: Truck, title: "Pan-India Delivery", text: "Dispatched in 1-2 days, delivered across India." },
 ];
 
-/** The 4 single packs shown in "Camphor for every ritual" (Tablets first, never Twin Packs). */
-const POPULAR_PICKS: { slug: string; packHint: string }[] = [
-  { slug: "camphor-tablets", packHint: "100 g Jar" },
-  { slug: "camphor-tablets", packHint: "250 g Jar" },
-  { slug: "bhimseni-camphor", packHint: "100 g Jar" },
-  { slug: "bhimseni-camphor", packHint: "450 g Jar" },
+/** All 9 single packs in the homepage carousel — Refill Pouch first, then Tablets small→large, then Bhimseni small→large. */
+const SINGLE_PACKS: { slug: string; packHint: string }[] = [
+  { slug: "camphor-tablets-refill-pouch", packHint: "100 g" },
+  { slug: "camphor-tablets", packHint: "50 g" },
+  { slug: "camphor-tablets", packHint: "100 g" },
+  { slug: "camphor-tablets", packHint: "250 g" },
+  { slug: "camphor-tablets", packHint: "500 g" },
+  { slug: "bhimseni-camphor", packHint: "50 g" },
+  { slug: "bhimseni-camphor", packHint: "100 g" },
+  { slug: "bhimseni-camphor", packHint: "250 g" },
+  { slug: "bhimseni-camphor", packHint: "450 g" },
 ];
+
+const CAROUSEL_INTERVAL = 5000;
+const CAROUSEL_RESUME_AFTER = 10000;
+
+/** Auto-scrolling single-pack carousel: 2 visible on phones, 4 on desktop, all cards in the HTML. */
+function SinglePackCarousel({ packs }: { packs: PackRef[] }) {
+  const { t } = useI18n();
+  const [page, setPage] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [pageSize, setPageSize] = useState(2);
+  const touchX = useRef<number | null>(null);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setPageSize(mq.matches ? 4 : 2);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const pages = Math.max(1, Math.ceil(packs.length / pageSize));
+  const multi = pages > 1;
+  const go = useCallback((p: number) => setPage(((p % pages) + pages) % pages), [pages]);
+
+  useEffect(() => {
+    if (page >= pages) setPage(0);
+  }, [pages, page]);
+
+  // Pause autoplay for a while after any manual interaction.
+  const interact = useCallback(() => {
+    setPaused(true);
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => setPaused(false), CAROUSEL_RESUME_AFTER);
+  }, []);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!multi || paused || reduced || document.hidden) return;
+    const timer = setInterval(() => setPage((p) => (p + 1) % pages), CAROUSEL_INTERVAL);
+    return () => clearInterval(timer);
+  }, [multi, paused, pages]);
+
+  useEffect(() => {
+    const onVisibility = () => setPaused(document.hidden);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  useEffect(() => () => {
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+  }, []);
+
+  return (
+    <div
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={t("Popular packs")}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={interact}
+    >
+      <div
+        className="group relative overflow-hidden"
+        onTouchStart={(e) => (touchX.current = e.touches[0]?.clientX ?? null)}
+        onTouchEnd={(e) => {
+          if (touchX.current == null || !multi) return;
+          const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
+          if (Math.abs(dx) > 40) {
+            go(dx < 0 ? page + 1 : page - 1);
+            interact();
+          }
+          touchX.current = null;
+        }}
+      >
+        <div
+          className="flex transition-transform duration-700 ease-out"
+          style={{ transform: `translateX(-${page * 100}%)` }}
+        >
+          {packs.map((pk, i) => (
+            <div
+              key={`${pk.product.slug}__${pk.option.label}`}
+              className="w-1/2 shrink-0 px-1.5 sm:px-3 lg:w-1/4"
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${packs.length}`}
+            >
+              <PackCard pack={pk} />
+            </div>
+          ))}
+        </div>
+
+        {multi && (
+          <>
+            <button
+              type="button"
+              aria-label={t("Previous packs")}
+              onClick={() => { go(page - 1); interact(); }}
+              className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow transition hover:opacity-100 sm:grid sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label={t("Next packs")}
+              onClick={() => { go(page + 1); interact(); }}
+              className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow transition hover:opacity-100 sm:grid sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {multi && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {Array.from({ length: pages }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`${t("Go to page")} ${i + 1}`}
+              aria-current={i === page}
+              onClick={() => { go(i); interact(); }}
+              className={`h-2 rounded-full transition-all ${i === page ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/70"}`}
+            />
+          ))}
+          <button
+            type="button"
+            aria-label={paused ? t("Play carousel") : t("Pause carousel")}
+            onClick={() => {
+              if (resumeTimer.current) clearTimeout(resumeTimer.current);
+              setPaused((p) => !p);
+            }}
+            className="ml-2 grid h-8 w-8 place-items-center rounded-full border border-gold/40 text-muted-foreground transition-colors hover:bg-accent/15"
+          >
+            {paused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Index() {
   const { posts: allPosts, products: serverProducts } = Route.useLoaderData();
@@ -183,8 +332,8 @@ function Index() {
     .sort((a, b) => (a.product.slug === "camphor-tablets" ? -1 : b.product.slug === "camphor-tablets" ? 1 : 0))
     .slice(0, 4);
 
-  // Popular packs: the 4 fixed single packs above.
-  const popularPacks: PackRef[] = POPULAR_PICKS.flatMap((pick) => {
+  // Single-pack carousel: all 9 single packs in a fixed order.
+  const popularPacks: PackRef[] = SINGLE_PACKS.flatMap((pick) => {
     const product = products.find((p) => p.slug === pick.slug);
     if (!product) return [];
     const option = (product.sizeOptions ?? []).find(
@@ -273,7 +422,7 @@ function Index() {
               </a>
             ) : (
               <Link
-                to="/shop"
+                to="/products"
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-accent px-7 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1 sm:w-auto"
               >
                 {t("Shop Now")}
@@ -281,9 +430,11 @@ function Index() {
             )}
             <Link
               to="/products"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-gold/60 px-7 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15 sm:w-auto"
+              search={{ filter: "twin" }}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-gold/60 px-7 text-sm font-semibold text-gold-soft transition-colors duration-300 hover:bg-gold/15 sm:w-auto"
             >
-              {t("Explore Products")}
+              <Tag className="h-4 w-4" aria-hidden="true" />
+              {t("Twin Pack Offers")}
             </Link>
           </div>
         </div>
@@ -297,7 +448,7 @@ function Index() {
       <CategoryTiles />
 
       {twinPacks.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-8 md:pb-16 md:pt-10">
+        <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Twin Pack Offers")}</p>
@@ -325,7 +476,7 @@ function Index() {
       )}
 
       {popularPacks.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-16">
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8 md:pb-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("Popular packs")}</p>
@@ -336,16 +487,14 @@ function Index() {
               {t("View all products →")}
             </Link>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6 md:mt-8 lg:grid-cols-4">
-            {popularPacks.map((pk) => (
-              <PackCard key={`${pk.product.slug}__${pk.option.label}`} pack={pk} />
-            ))}
+          <div className="mt-6 md:mt-8">
+            <SinglePackCarousel packs={popularPacks} />
           </div>
         </section>
       )}
 
       {popularPacks.length === 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-16 md:pt-8">
+        <section className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-8 md:pb-20 md:pt-8">
           <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {products.map((p, i) => (
               <ProductCard key={p.slug} product={p} index={i} />
@@ -358,7 +507,7 @@ function Index() {
 
       <PromoCarousel />
 
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {values.map((v, i) => (
             <div key={v.title} className="card-premium reveal reveal-zoom p-6" style={{ transitionDelay: `${i * 110}ms` }}>
@@ -375,7 +524,7 @@ function Index() {
 
 
 
-      <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <div className="reveal reveal-left overflow-hidden rounded-3xl">
             <img
@@ -406,7 +555,7 @@ function Index() {
       </section>
 
       {posts.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
           <h2 className="reveal font-display text-3xl">{t("Latest camphor guides")}</h2>
           <div className="gold-rule mt-3 w-16" />
           <div className="mt-8 grid gap-6 md:grid-cols-3">

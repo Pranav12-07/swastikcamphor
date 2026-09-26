@@ -4,6 +4,70 @@ import { publicSupabase, PRODUCT_SELECT, mapProductRow, type PublicProduct } fro
 
 export type { PublicProduct };
 
+/* ---- Genuine social-proof aggregates (server-computed, cached 1 hour) ---- */
+
+const CACHE_MS = 60 * 60 * 1000;
+let boughtCache: { at: number; data: Record<string, Record<string, number>> } | null = null;
+let reviewCache: { at: number; data: Record<string, { average: number; count: number }> } | null = null;
+
+/** Genuine "bought in the past month" counts per product + pack size (paid/delivered orders only). */
+export const getBoughtCounts = createServerFn({ method: "GET" }).handler(async () => {
+  if (boughtCache && Date.now() - boughtCache.at < CACHE_MS) return boughtCache.data;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: orders } = await supabaseAdmin
+    .from("orders")
+    .select("id,email")
+    .gte("created_at", since)
+    .or("payment_status.eq.paid,status.eq.delivered")
+    .limit(2000);
+  const ids = (orders ?? [])
+    .filter((o) => !String(o.email ?? "").toLowerCase().endsWith("@example.com"))
+    .map((o) => o.id as string);
+  const counts: Record<string, Record<string, number>> = {};
+  if (ids.length) {
+    const { data: items } = await supabaseAdmin
+      .from("order_items")
+      .select("product_slug,size,qty")
+      .in("order_id", ids)
+      .limit(10000);
+    for (const it of items ?? []) {
+      const slug = String(it.product_slug ?? "");
+      const size = String(it.size ?? "");
+      if (!slug) continue;
+      counts[slug] ??= {};
+      counts[slug][size] = (counts[slug][size] ?? 0) + Number(it.qty ?? 0);
+    }
+  }
+  boughtCache = { at: Date.now(), data: counts };
+  return counts;
+});
+
+/** Real star ratings per product — approved customer reviews only, never manual values. */
+export const getReviewStats = createServerFn({ method: "GET" }).handler(async () => {
+  if (reviewCache && Date.now() - reviewCache.at < CACHE_MS) return reviewCache.data;
+  const supabase = await publicSupabase();
+  const { data } = await supabase
+    .from("product_reviews")
+    .select("product_slug,rating")
+    .eq("approved", true)
+    .limit(5000);
+  const stats: Record<string, { average: number; count: number }> = {};
+  const sums: Record<string, { sum: number; count: number }> = {};
+  for (const r of data ?? []) {
+    const slug = String(r.product_slug ?? "");
+    if (!slug) continue;
+    sums[slug] ??= { sum: 0, count: 0 };
+    sums[slug].sum += Number(r.rating ?? 0);
+    sums[slug].count += 1;
+  }
+  for (const [slug, s] of Object.entries(sums)) {
+    stats[slug] = { average: Math.round((s.sum / s.count) * 10) / 10, count: s.count };
+  }
+  reviewCache = { at: Date.now(), data: stats };
+  return stats;
+});
+
 /** Public: every active product (used by the product pages and the sitemap). */
 export const listPublicProducts = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = await publicSupabase();

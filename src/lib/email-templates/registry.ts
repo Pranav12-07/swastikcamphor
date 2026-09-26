@@ -3,6 +3,7 @@ import { template as newOrderNotification } from './new-order-notification'
 import { template as orderConfirmation } from './order-confirmation'
 import { template as adminAlert } from './admin-alert'
 import { template as orderStatusUpdate } from './order-status-update'
+import { template as reviewThankYou } from './review-thank-you'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -22,4 +23,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'order-confirmation': orderConfirmation,
   'admin-alert': adminAlert,
   'order-status-update': orderStatusUpdate,
+  'review-thank-you': reviewThankYou,
 }

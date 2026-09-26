@@ -5,8 +5,8 @@ import { useI18n } from "@/lib/i18n";
 
 /** Fixed category shortcuts under the hero — always these 3 products, never the admin category list. */
 const TILES = [
-  { label: "Bhimseni Camphor Jars", slug: "bhimseni-camphor", packHint: "100 g Jar" },
   { label: "Camphor Tablets Jars", slug: "camphor-tablets", packHint: "100 g Jar" },
+  { label: "Bhimseni Camphor Jars", slug: "bhimseni-camphor", packHint: "100 g Jar" },
   { label: "Camphor Tablets Pouch", slug: "camphor-tablets-refill-pouch", packHint: "100 g" },
 ] as const;
 

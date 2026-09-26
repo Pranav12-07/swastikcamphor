@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const ORDER_COLUMNS =
-  "id, order_number, status, payment_status, payment_provider, total, subtotal, shipping, discount, tax, items, customer_name, email, phone, address, city, state, pincode, tracking_number, courier, expected_delivery, delivery_note, created_at, updated_at";
+  "id, order_number, status, payment_status, payment_provider, total, subtotal, shipping, discount, steal_deal_discount, tax, items, customer_name, email, phone, address, city, state, pincode, tracking_number, courier, expected_delivery, delivery_note, created_at, updated_at";
 
 export type TrackedOrder = {
   id: string;
@@ -15,6 +15,7 @@ export type TrackedOrder = {
   subtotal: number;
   shipping: number;
   discount: number;
+  steal_deal_discount: number | null;
   tax: number;
   items: Array<{ name?: string; size?: string; qty?: number; quantity?: number; price?: number }>;
   customer_name: string;

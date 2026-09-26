@@ -726,6 +726,7 @@ export type Database = {
           shipping: number
           state: string
           status: string
+          steal_deal_discount: number
           subtotal: number
           tax: number
           total: number
@@ -761,6 +762,7 @@ export type Database = {
           shipping?: number
           state: string
           status?: string
+          steal_deal_discount?: number
           subtotal?: number
           tax?: number
           total?: number
@@ -796,6 +798,7 @@ export type Database = {
           shipping?: number
           state?: string
           status?: string
+          steal_deal_discount?: number
           subtotal?: number
           tax?: number
           total?: number
@@ -929,6 +932,7 @@ export type Database = {
           replied_at: string | null
           size_label: string | null
           store_reply: string | null
+          thank_you_coupon: string | null
           title: string | null
           user_id: string | null
         }
@@ -946,6 +950,7 @@ export type Database = {
           replied_at?: string | null
           size_label?: string | null
           store_reply?: string | null
+          thank_you_coupon?: string | null
           title?: string | null
           user_id?: string | null
         }
@@ -963,6 +968,7 @@ export type Database = {
           replied_at?: string | null
           size_label?: string | null
           store_reply?: string | null
+          thank_you_coupon?: string | null
           title?: string | null
           user_id?: string | null
         }

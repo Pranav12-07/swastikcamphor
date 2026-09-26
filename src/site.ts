@@ -73,7 +73,6 @@ export const marketplaces = [
 export const mainNav = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/about" },
-  { label: "Shop", to: "/shop" },
   { label: "Our Products", to: "/products" },
   { label: "Blogs", to: "/blogs" },
   { label: "Contact Us", to: "/contact" },

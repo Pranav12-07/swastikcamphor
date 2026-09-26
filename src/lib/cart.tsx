@@ -3,8 +3,9 @@ import { useCatalog } from "@/lib/catalog";
 import { useStoreSettings } from "@/lib/store-settings";
 import { useAuth } from "@/lib/auth";
 import { getMyCart, syncMyCart } from "@/lib/cart.functions";
-import { defaultSizeOption, priceForSize } from "@/data/products";
+import { defaultSizeOption, isTwinPack, matchingTwin, priceForSize, sizeAvailable } from "@/data/products";
 import { migrateCartLine } from "@/lib/pack-redirects";
+import { StealDealPopup } from "@/components/StealDealPopup";
 
 /** Carts saved before the catalogue restructure point at old listings; move them to the matching pack. */
 function migrateLines(lines: CartLine[]): CartLine[] {
@@ -23,7 +24,7 @@ export type CartLine = { slug: string; size: string; qty: number };
 
 type CartValue = {
   lines: CartLine[];
-  add: (slug: string, size?: string, qty?: number) => void;
+  add: (slug: string, size?: string, qty?: number, opts?: { skipUpsell?: boolean }) => void;
   setQty: (slug: string, size: string, qty: number) => void;
   remove: (slug: string, size: string) => void;
   clear: () => void;
@@ -34,6 +35,13 @@ type CartValue = {
   subtotal: number;
   shipping: number;
   discount: number;
+  /** Steal Deal (Twin Pack) discount actually applied — the bigger of coupon vs deal. */
+  stealDeal: number;
+  /** A Twin Pack is in the cart. */
+  hasTwin: boolean;
+  stealDealEnabled: boolean;
+  stealDealAmount: number;
+  stealDealMin: number;
   total: number;
   coupon: string | null;
   freeShippingAbove: number;
@@ -47,12 +55,14 @@ const COUPON_KEY = "swastik-coupon-v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products, coupons } = useCatalog();
-  const { shippingFlat, freeShippingAbove } = useStoreSettings();
+  const { shippingFlat, freeShippingAbove, stealDealEnabled, stealDealAmount, stealDealMin } = useStoreSettings();
   const { session } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [coupon, setCoupon] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const mergedFor = useRef<string | null>(null);
+  const [prompt, setPrompt] = useState<{ slug: string; size: string } | null>(null);
+  const prompted = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     try {
@@ -141,10 +151,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const add: CartValue["add"] = useCallback(
-    (slug, size, qty = 1) => {
+    (slug, size, qty = 1, opts) => {
       const product = products.find((p) => p.slug === slug);
       if (!product) return;
       const resolved = size ?? defaultSizeOption(product)?.label ?? product.sizes[0] ?? "Standard";
+      // Steal Deal upsell: once per product per visit, only for single packs with an in-stock Twin Pack.
+      if (!opts?.skipUpsell && !prompted.current.has(slug)) {
+        const opt = (product.sizeOptions ?? []).find((o) => o.label === resolved);
+        const twin = opt ? matchingTwin(product, opt) : null;
+        if (opt && twin && sizeAvailable(product, twin)) {
+          prompted.current.add(slug);
+          setPrompt({ slug, size: resolved });
+        }
+      }
       setLines((prev) => {
         const found = prev.find((l) => l.slug === slug && l.size === resolved);
         const next = found
@@ -200,6 +219,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : Math.round((subtotal * active.discount_value) / 100);
       if (active.max_discount !== null) discount = Math.min(discount, active.max_discount);
     }
+    const hasTwin = lines.some((l) => {
+      const p = products.find((x) => x.slug === l.slug);
+      return isTwinPack(p?.sizeOptions?.find((o) => o.label === l.size));
+    });
+    // Steal Deal mirrors the server rule: the customer always gets the bigger of coupon vs deal.
+    let stealDeal = 0;
+    if (stealDealEnabled && hasTwin && subtotal >= stealDealMin && stealDealAmount > 0) {
+      stealDeal = stealDealAmount;
+    }
+    if (stealDeal > discount) {
+      discount = 0;
+    } else {
+      stealDeal = 0;
+    }
     const shipping = subtotal === 0 || subtotal - discount >= freeShippingAbove ? 0 : shippingFlat;
     return {
       lines,
@@ -213,7 +246,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal,
       shipping,
       discount,
-      total: subtotal - discount + shipping,
+      stealDeal,
+      hasTwin,
+      stealDealEnabled,
+      stealDealAmount,
+      stealDealMin,
+      total: subtotal - discount - stealDeal + shipping,
       coupon,
       freeShippingAbove,
       applyCoupon: (code: string) => {
@@ -237,9 +275,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [lines, coupon, coupons, products, add, setQty, remove, clear, shippingFlat, freeShippingAbove]);
+  }, [lines, coupon, coupons, products, add, setQty, remove, clear, shippingFlat, freeShippingAbove, stealDealEnabled, stealDealAmount, stealDealMin]);
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  const promptData = useMemo(() => {
+    if (!prompt) return null;
+    const product = products.find((p) => p.slug === prompt.slug);
+    const single = product?.sizeOptions?.find((o) => o.label === prompt.size);
+    const twin = product && single ? matchingTwin(product, single) : null;
+    if (!product || !single || !twin || !sizeAvailable(product, twin)) return null;
+    return { product, single, twin };
+  }, [prompt, products]);
+
+  const upgradeToTwin = useCallback(() => {
+    if (!promptData) return;
+    setQty(promptData.product.slug, promptData.single.label, 0);
+    add(promptData.product.slug, promptData.twin.label, 1, { skipUpsell: true });
+    setPrompt(null);
+  }, [promptData, setQty, add]);
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      {promptData && (
+        <StealDealPopup
+          productName={promptData.product.name}
+          image={promptData.twin.image ?? promptData.product.image}
+          single={promptData.single}
+          twin={promptData.twin}
+          product={promptData.product}
+          dealAmount={stealDealAmount}
+          dealMin={stealDealMin}
+          dealEnabled={stealDealEnabled}
+          onClose={() => setPrompt(null)}
+          onUpgrade={upgradeToTwin}
+        />
+      )}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {

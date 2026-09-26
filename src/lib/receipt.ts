@@ -15,6 +15,7 @@ export type ReceiptData = {
   subtotal: number;
   shipping: number;
   discount: number;
+  stealDealDiscount?: number;
   tax: number;
   total: number;
 };
@@ -135,6 +136,7 @@ export async function buildReceiptDoc(data: ReceiptData) {
   };
   totalRow("Subtotal", rupees(data.subtotal));
   if (data.discount > 0) totalRow("Discount", `- ${rupees(data.discount)}`);
+  if ((data.stealDealDiscount ?? 0) > 0) totalRow("Steal Deal (Twin Pack)", `- ${rupees(data.stealDealDiscount ?? 0)}`);
   totalRow("Shipping", data.shipping === 0 ? "Free" : rupees(data.shipping));
   if (data.tax > 0) totalRow("Tax / GST", rupees(data.tax));
   totalRow("Total paid", rupees(data.total), true);

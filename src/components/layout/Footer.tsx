@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n";
 export function Footer() {
   const { t } = useI18n();
   return (
-    <footer className="mt-24 border-t border-gold/25 bg-secondary/60">
+    <footer className="border-t border-gold/25 bg-secondary/60">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:px-8 lg:grid-cols-4">
         <div>
           <div className="flex min-w-0">

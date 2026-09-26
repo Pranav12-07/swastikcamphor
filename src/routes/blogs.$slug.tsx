@@ -148,7 +148,7 @@ function BlogPostPage() {
             Manufactured in Hyderabad since 1968 and dispatched across India.
           </p>
           <Link
-            to="/shop"
+            to="/products"
             className="mt-5 inline-flex rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground"
           >
             Shop camphor products

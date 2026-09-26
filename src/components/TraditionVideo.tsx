@@ -246,7 +246,7 @@ export function TraditionVideo() {
           </div>
 
           <Link
-            to="/shop"
+            to="/products"
             className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform duration-300 hover:-translate-y-1"
           >
             Shop Now

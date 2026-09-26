@@ -1,11 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Tag, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { formatINR, priceForSize } from "@/data/products";
+import { formatINR, isTwinPack, matchingTwin, priceForSize, sizeAvailable } from "@/data/products";
 import { useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const { products } = useCatalog();
   const cart = useCart();
+  const { t } = useI18n();
   const [code, setCode] = useState("");
 
   return (
@@ -33,13 +35,42 @@ function CartPage() {
           <div className="card-premium p-10 text-center">
             <p className="text-muted-foreground">Your cart is empty.</p>
             <Link
-              to="/shop"
+              to="/products"
               className="mt-6 inline-flex rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
             >
               Start shopping
             </Link>
           </div>
         ) : (
+          <div>
+          {cart.stealDealEnabled && cart.stealDealAmount > 0 && (
+            <div className="mb-6 rounded-2xl border border-gold/30 bg-secondary/50 p-4">
+              {cart.stealDeal > 0 ? (
+                <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <Tag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {t("Steal Deal applied — extra")} {formatINR(cart.stealDeal)} {t("off at checkout")}
+                </p>
+              ) : cart.hasTwin ? (
+                <>
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <Tag className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                    {t("Twin Pack added — add")} {formatINR(Math.max(0, cart.stealDealMin - cart.subtotal))} {t("more to unlock the extra")} {formatINR(cart.stealDealAmount)} {t("Steal Deal")}
+                  </p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={cart.stealDealMin} aria-valuenow={Math.min(cart.subtotal, cart.stealDealMin)}>
+                    <div
+                      className="h-full rounded-full bg-gold transition-all"
+                      style={{ width: `${Math.min(100, Math.round((cart.subtotal / cart.stealDealMin) * 100))}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Tag className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                  {t("Add a Twin Pack to unlock the Steal Deal — extra")} {formatINR(cart.stealDealAmount)} {t("off on orders")} {formatINR(cart.stealDealMin)}+
+                </p>
+              )}
+            </div>
+          )}
           <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
             <ul className="space-y-4">
               {cart.lines.map((line) => {
@@ -77,6 +108,25 @@ function CartPage() {
                           </button>
                         </div>
                         <span className="font-medium">{formatINR(priceForSize(product, line.size) * line.qty)}</span>
+                        {(() => {
+                          const opt = (product.sizeOptions ?? []).find((o) => o.label === line.size);
+                          const twin = opt && !isTwinPack(opt) ? matchingTwin(product, opt) : null;
+                          if (!twin || !sizeAvailable(product, twin)) return null;
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                cart.setQty(line.slug, line.size, 0);
+                                cart.add(line.slug, twin.label, 1, { skipUpsell: true });
+                                toast.success(t("Switched to the Twin Pack"));
+                              }}
+                              className="inline-flex min-h-9 items-center gap-1 rounded-full border border-gold/60 px-3 text-xs font-semibold text-primary transition-colors hover:bg-accent/15"
+                            >
+                              <Tag className="h-3.5 w-3.5" aria-hidden="true" />
+                              {t("Switch to Twin Pack")}
+                            </button>
+                          );
+                        })()}
                         <button
                           type="button"
                           onClick={() => cart.remove(line.slug, line.size)}
@@ -103,6 +153,12 @@ function CartPage() {
                   <div className="flex justify-between text-primary">
                     <dt>Discount ({cart.coupon})</dt>
                     <dd>-{formatINR(cart.discount)}</dd>
+                  </div>
+                )}
+                {cart.stealDeal > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <dt>{t("Steal Deal (Twin Pack)")}</dt>
+                    <dd>-{formatINR(cart.stealDeal)}</dd>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -158,6 +214,7 @@ function CartPage() {
                 Proceed to checkout
               </Link>
             </aside>
+          </div>
           </div>
         )}
       </div>

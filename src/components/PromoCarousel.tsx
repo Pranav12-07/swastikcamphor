@@ -18,7 +18,7 @@ export function promoHref(b: Pick<PromoBanner, "destination_type" | "destination
   const v = b.destination_value?.trim();
   if (!v || b.destination_type === "none") return null;
   if (b.destination_type === "product") return `/products/${encodeURIComponent(v)}`;
-  if (b.destination_type === "category") return `/shop?category=${encodeURIComponent(v)}`;
+  if (b.destination_type === "category") return `/products?filter=${encodeURIComponent(v)}`;
   return v;
 }
 

@@ -136,6 +136,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       order_id: string;
       subtotal: number;
       discount: number;
+      steal_deal: number;
       shipping: number;
       total: number;
     };
@@ -178,6 +179,7 @@ export const placeOrder = createServerFn({ method: "POST" })
           subtotal: result.subtotal,
           shipping: result.shipping,
           discount: result.discount,
+          stealDealDiscount: result.steal_deal,
           couponCode: data.coupon_code ?? "",
           placedAt,
           total: result.total,
@@ -207,6 +209,7 @@ export const placeOrder = createServerFn({ method: "POST" })
           subtotal: result.subtotal,
           shipping: result.shipping,
           discount: result.discount,
+          stealDealDiscount: result.steal_deal,
           tax: 0,
           total: result.total,
           placedAt,
@@ -230,6 +233,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       subtotal: result.subtotal,
       shipping: result.shipping,
       discount: result.discount,
+      stealDeal: result.steal_deal,
       total: result.total,
     };
 

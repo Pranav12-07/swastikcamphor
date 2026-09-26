@@ -36,6 +36,7 @@ interface Props {
   subtotal?: number
   shipping?: number
   discount?: number
+  stealDealDiscount?: number
   tax?: number
   total?: number
   adminUrl?: string
@@ -61,6 +62,7 @@ const Email = ({
   subtotal = 0,
   shipping = 0,
   discount = 0,
+  stealDealDiscount = 0,
   tax = 0,
   total = 0,
   adminUrl = '',
@@ -109,6 +111,7 @@ const Email = ({
           ))}
           <Text style={value}>Subtotal: {inr(subtotal)}</Text>
           {discount ? <Text style={value}>Discount: -{inr(discount)}</Text> : null}
+          {stealDealDiscount ? <Text style={value}>Steal Deal (Twin Pack): -{inr(stealDealDiscount)}</Text> : null}
           {tax ? <Text style={value}>GST / tax: {inr(tax)}</Text> : null}
           <Text style={value}>Shipping: {shipping ? inr(shipping) : 'Free'}</Text>
           <Text style={totalStyle}>Total: {inr(total)}</Text>
