@@ -113,3 +113,29 @@ Object.assign(translations.hi, {
   "Camphor Tablets":"कपूर टैबलेट","Bhimseni Camphor":"भीमसेनी कपूर","Refill Pouch":"रिफिल पाउच",
   "years":"वर्ष","of purity, made in Hyderabad":"शुद्धता के, हैदराबाद में निर्मित","Also on the shelves at":"यहाँ भी उपलब्ध"
 });
+Object.assign(translations.te, {
+  "Swastik 100% Pure Camphor — Trusted Since Generations.":"స్వస్తిక్ 100% స్వచ్ఛమైన కర్పూరం — తరతరాల నమ్మకం.",
+  "View all →":"అన్నీ చూడండి →","jars separately":"జార్లు విడివిడిగా","You save":"మీరు ఆదా చేస్తారు",
+  "Best saving":"అత్యధిక ఆదా","Total savings":"మొత్తం ఆదా","Coupon code":"కూపన్ కోడ్","Apply":"వర్తింపజేయండి","Checking…":"తనిఖీ చేస్తున్నాం…",
+  "Coupon applied":"కూపన్ వర్తించింది","Remove coupon":"కూపన్ తొలగించండి","This code is not valid":"ఈ కోడ్ చెల్లదు",
+  "This code has expired":"ఈ కోడ్ గడువు ముగిసింది","This code has been fully used":"ఈ కోడ్ పూర్తిగా ఉపయోగించబడింది",
+  "This code belongs to another account":"ఈ కోడ్ మరో ఖాతాది","Valid on your first order only":"మీ మొదటి ఆర్డర్‌పై మాత్రమే చెల్లుతుంది",
+  "You have already used this code the maximum number of times":"ఈ కోడ్‌ను మీరు ఇప్పటికే గరిష్టంగా ఉపయోగించారు",
+  "Could not check this code right now. Please try again.":"ఈ కోడ్‌ను ఇప్పుడు తనిఖీ చేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.",
+  "Confirm":"నిర్ధారించండి","Your total has been updated":"మీ మొత్తం నవీకరించబడింది",
+  "Since 1976":"1976 నుండి","Crafting camphor since generations":"తరతరాలుగా కర్పూరం తయారీ",
+  "Trusted in 5,000+ stores across India":"భారతదేశమంతటా 5,000+ దుకాణాల్లో నమ్మకం"
+});
+Object.assign(translations.hi, {
+  "Swastik 100% Pure Camphor — Trusted Since Generations.":"स्वस्तिक 100% शुद्ध कपूर — पीढ़ियों का भरोसा।",
+  "View all →":"सभी देखें →","jars separately":"जार अलग-अलग","You save":"आप बचाते हैं",
+  "Best saving":"सबसे बड़ी बचत","Total savings":"कुल बचत","Coupon code":"कूपन कोड","Apply":"लागू करें","Checking…":"जाँच हो रही है…",
+  "Coupon applied":"कूपन लागू हुआ","Remove coupon":"कूपन हटाएँ","This code is not valid":"यह कोड मान्य नहीं है",
+  "This code has expired":"यह कोड समाप्त हो गया है","This code has been fully used":"यह कोड पूरी तरह इस्तेमाल हो चुका है",
+  "This code belongs to another account":"यह कोड किसी दूसरे खाते का है","Valid on your first order only":"सिर्फ़ आपके पहले ऑर्डर पर मान्य",
+  "You have already used this code the maximum number of times":"आप यह कोड अधिकतम बार इस्तेमाल कर चुके हैं",
+  "Could not check this code right now. Please try again.":"अभी यह कोड जाँचा नहीं जा सका। कृपया फिर प्रयास करें।",
+  "Confirm":"पुष्टि करें","Your total has been updated":"आपका कुल अपडेट हो गया है",
+  "Since 1976":"1976 से","Crafting camphor since generations":"पीढ़ियों से कपूर निर्माण",
+  "Trusted in 5,000+ stores across India":"भारत भर के 5,000+ स्टोर में भरोसा"
+});
