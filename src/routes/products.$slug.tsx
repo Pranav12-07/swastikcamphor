@@ -222,10 +222,12 @@ function ProductDetail() {
           )}
 
           <dl className="mt-6 grid gap-2 text-sm text-muted-foreground">
-            <div className="flex gap-2">
-              <dt className="text-foreground">Available in:</dt>
-              <dd>{product.sizes.join(" • ")}</dd>
-            </div>
+            {sizeOptions.length === 0 && (
+              <div className="flex gap-2">
+                <dt className="text-foreground">Available in:</dt>
+                <dd>{product.sizes.join(" • ")}</dd>
+              </div>
+            )}
             <div className="flex gap-2">
               <dt className="text-foreground">SKU:</dt>
               <dd>{product.sku}</dd>
@@ -260,8 +262,8 @@ function ProductDetail() {
             </button>
             <Link
               to="/checkout"
-              onClick={() => add(product.slug)}
-              className="rounded-full border border-gold/50 px-7 py-3 text-sm font-medium transition-colors hover:bg-accent/15"
+              onClick={() => add(product.slug, selected?.label)}
+              className={`rounded-full border border-gold/50 px-7 py-3 text-sm font-medium transition-colors hover:bg-accent/15 ${!inStock ? "pointer-events-none opacity-50" : ""}`}
             >
               Buy now
             </Link>
@@ -314,8 +316,9 @@ function ProductDetail() {
         <StickyBuyBar
           targetId="pdp-add-to-cart"
           productName={product.name}
-          price={product.price}
-          mrp={product.mrp}
+          size={selected?.label ?? null}
+          price={price}
+          mrp={mrp}
           onAdd={addToCart}
         />
       )}
