@@ -19,6 +19,54 @@ import { useBanners } from "@/hooks/use-banners";
 import { listBlogs } from "@/lib/blog.functions";
 import { listPublicProducts, type PublicProduct } from "@/lib/products.functions";
 import { withServerProducts } from "@/lib/catalog-ssr";
+import { formatINR, isTwinPack, pctOff, per100g, twinSavings, type SizeOption } from "@/data/products";
+
+type PackRef = { product: PublicProduct; option: SizeOption };
+
+/** Card for one pack option (homepage Twin Pack Offers / Popular packs). */
+function PackCard({ pack, bestValue }: { pack: PackRef; bestValue?: boolean }) {
+  const { product, option } = pack;
+  const off = pctOff(option.mrp, option.price);
+  const save = twinSavings(product, option);
+  return (
+    <Link
+      to="/products/$slug"
+      params={{ slug: product.slug }}
+      search={{ size: option.label }}
+      className="card-premium group relative block overflow-hidden"
+    >
+      {bestValue && (
+        <span className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow">
+          Best value
+        </span>
+      )}
+      {off > 0 && (
+        <span className="absolute right-2 top-2 z-10 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow">
+          {off}% OFF
+        </span>
+      )}
+      <img
+        src={option.image ?? product.image}
+        alt={`${product.name} – ${option.label}`}
+        loading="lazy"
+        className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <div className="p-4">
+        <h3 className="font-body text-sm font-semibold leading-snug">{product.name}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{option.label}</p>
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
+          <span className="text-base font-semibold">{formatINR(option.price)}</span>
+          {option.mrp != null && option.mrp > option.price && (
+            <span className="text-xs text-muted-foreground line-through">{formatINR(option.mrp)}</span>
+          )}
+        </div>
+        {save != null && (
+          <p className="mt-1 text-xs font-medium text-emerald-700">Save {formatINR(save)} vs 2 single jars</p>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
