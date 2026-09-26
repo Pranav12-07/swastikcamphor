@@ -122,6 +122,19 @@ export function twinSavings(product: WithSizes, twin: SizeOption): number | null
   return save > 0 ? save : null;
 }
 
+/** Twin Pack saving as a whole % vs the same weight in single jars. Null when not a Twin Pack or under 1%. */
+export function twinSavingsPct(product: WithSizes, twin: SizeOption): number | null {
+  if (!isTwinPack(twin) || !twin.unit_grams) return null;
+  const single = (product.sizeOptions ?? []).find(
+    (o) => !isTwinPack(o) && o.unit_grams === twin.unit_grams,
+  );
+  if (!single) return null;
+  const full = single.price * (twin.pack_count || 2);
+  if (full <= 0) return null;
+  const pct = Math.floor(((full - twin.price) / full) * 100);
+  return pct >= 1 ? pct : null;
+}
+
 /** The matching Twin Pack for a single-pack option (same unit weight), when one exists. */
 export function matchingTwin(product: WithSizes, single: SizeOption): SizeOption | null {
   if (isTwinPack(single) || !single.unit_grams) return null;

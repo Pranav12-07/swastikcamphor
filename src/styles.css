@@ -101,6 +101,8 @@
 
   --gold: oklch(0.79 0.128 78);
   --gold-soft: oklch(0.88 0.09 84);
+  /* Darker gold for small text on the cream background (4.5:1+ contrast). */
+  --gold-deep: oklch(0.45 0.1 70);
   --maroon-deep: oklch(0.26 0.09 28);
   --gradient-royal: linear-gradient(135deg, oklch(0.3 0.1 28), oklch(0.42 0.14 26));
   --gradient-gold: linear-gradient(120deg, oklch(0.72 0.13 62), oklch(0.88 0.1 88), oklch(0.74 0.13 70));
@@ -178,6 +180,7 @@
 @theme inline {
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
   --color-maroon-deep: var(--maroon-deep);
   --font-display: "Marcellus", ui-serif, Georgia, serif;
   --font-body: "Karla", ui-sans-serif, system-ui, sans-serif;
@@ -413,3 +416,43 @@ nav[id] {
 
 /* Reveal-on-scroll animations briefly sit off-screen; clip so the page never scrolls sideways. */
 html, body { overflow-x: clip; }
+
+/* Offer-strip ticker: the track holds two identical copies and scrolls halfway. */
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-ticker {
+  animation-name: ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker {
+    animation: none;
+  }
+}
+
+/* One gentle pulse when the Steal Deal activates (cart savings card). */
+@keyframes savings-pulse {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.55 0.12 145 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 14px oklch(0.55 0.12 145 / 0);
+  }
+}
+.animate-savings-pulse {
+  animation: savings-pulse 1.1s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-savings-pulse {
+    animation: none;
+  }
+}
+
+/* Amount columns: same figures everywhere, digits line up. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
