@@ -311,7 +311,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [lines, coupon, coupons, products, add, setQty, remove, clear, shippingFlat, freeShippingAbove, stealDealEnabled, stealDealAmount, stealDealMin]);
+  }, [lines, coupon, couponRule, coupons, products, add, setQty, remove, clear, shippingFlat, freeShippingAbove, stealDealEnabled, stealDealAmount, stealDealMin]);
 
   const promptData = useMemo(() => {
     if (!prompt) return null;
