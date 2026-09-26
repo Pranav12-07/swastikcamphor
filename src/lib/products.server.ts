@@ -98,6 +98,10 @@ export function mapProductRow(row: Row): PublicProduct {
     ratingCount: Number(row["admin_rating_count"] ?? 0),
     sizeOptions: parseSizeOptions(row["size_options"]),
     gallery: galleryFrom(row, usableImage(row["image_url"]) ? (row["image_url"] as string) : (staticImage(slug) ?? fallbackProducts[0]!.image)),
+    form: specStr("form"),
+    howToUse: specStr("how_to_use"),
+    safety: specStr("safety"),
+    marketplace,
   };
 }
 
