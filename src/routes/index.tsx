@@ -26,16 +26,17 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:url", content: canonical("/") },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Swastik Camphor — 100% Pure Camphor for Pooja & Wellness" },
+      { title: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         name: "description",
         content:
-          "Buy 100% pure, natural camphor tablets, Bhimseni camphor, cones and pooja gift packs from Swastik Camphor, Hyderabad. Clean burn, no residue, chemical free.",
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
       },
-      { property: "og:title", content: "Swastik Camphor — Purity in Every Tablet" },
+      { property: "og:title", content: "Swastik Camphor – 100% Pure Camphor for Pooja, Aarti and Fresh Air" },
       {
         property: "og:description",
-        content: "Pure camphor for pooja, aarti, aromatherapy and everyday freshness. Made in Hyderabad.",
+        content:
+          "Buy 100% pure camphor tablets and Bhimseni camphor online from Swastik Camphor, Hyderabad. Trusted since 1968. Free shipping above ₹499.",
       },
     ],
   }),
@@ -121,9 +122,9 @@ function Index() {
               banner.title
             ) : (
               <>
-                <strong className="font-bold">PURE CAMPHOR</strong>
+                <strong className="font-bold">SWASTIK 100% PURE</strong>
                 <br />
-                <strong className="font-bold">PURE TRADITION</strong>
+                <strong className="font-bold">CAMPHOR</strong>
               </>
             )}
           </h1>
@@ -131,8 +132,7 @@ function Index() {
             className="animate-rise-in mt-6 max-w-xl text-base leading-relaxed text-gold-soft/85 md:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            {banner?.subtitle ??
-              `${site.name} brings you 100% pure, natural and chemical-free camphor — crafted for pooja, aarti, aromatherapy and a fresher home.`}
+            {banner?.subtitle ?? "Made in Hyderabad. Trusted since 1968."}
           </p>
           <div className="animate-rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
             {banner?.link_url ? (
