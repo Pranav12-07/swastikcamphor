@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { publicSupabase } from "@/lib/products.server";
 
 export const Route = createFileRoute("/api/public/product-image/$")({
   server: {
@@ -9,8 +10,8 @@ export const Route = createFileRoute("/api/public/product-image/$")({
         if (!path || path.includes("..") || !/^products\/[A-Za-z0-9._/-]+$/.test(path)) {
           return new Response("Not found", { status: 404 });
         }
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data, error } = await supabaseAdmin.storage.from("product-images").download(path);
+        const supabase = await publicSupabase();
+        const { data, error } = await supabase.storage.from("product-images").download(path);
         if (error || !data) return new Response("Not found", { status: 404 });
         return new Response(await data.arrayBuffer(), {
           headers: {
