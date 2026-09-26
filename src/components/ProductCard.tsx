@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Heart, Minus, Plus, ShieldCheck } from "lucide-react";
+import { Heart, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   defaultSizeOption,
@@ -44,7 +44,7 @@ export function ProductCard({
   index?: number;
 }) {
   const navigate = useNavigate();
-  const { lines, add, setQty } = useCart();
+  const { lines, add } = useCart();
   const { freeShippingAbove } = useStoreSettings();
   const { session } = useAuth();
   const { has, toggle } = useWishlist();
@@ -85,11 +85,6 @@ export function ProductCard({
     } else {
       navigate({ to: "/products/$slug", params: { slug: product.slug } });
     }
-  };
-
-  const onAdd = () => {
-    add(product.slug, selected?.label);
-    toast.success(`${product.name} added to cart`);
   };
 
   const onToggleWish = () => {
